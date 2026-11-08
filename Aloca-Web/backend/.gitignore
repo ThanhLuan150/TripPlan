@@ -1,0 +1,18 @@
+/node_modules
+
+package-lock.json
+
+# secrets: keep only the example file in git
+.env
+.env.*
+!.env.example
+
+aloca-ec2.pem
+
+serverviceAccountKey.json
+
+# Yarn: keep the offline cache out of git, only yarn.lock + .yarnrc.yml
+.yarn/*
+!.yarn/releases
+.yarn/install-state.gz
+.pnp.*

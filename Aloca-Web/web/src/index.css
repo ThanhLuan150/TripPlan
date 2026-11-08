@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+
+/* ---------- design tokens ---------- */
+@theme {
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+
+  /* Aloca teal (#2AB6AD = brand-500) */
+  --color-brand-50: #effdfb;
+  --color-brand-100: #d0fff9;
+  --color-brand-200: #a5f3ea;
+  --color-brand-300: #6fe3d8;
+  --color-brand-400: #3fcbc1;
+  --color-brand-500: #2ab6ad;
+  --color-brand-600: #1f928b;
+  --color-brand-700: #1d7470;
+  --color-brand-800: #1c5d5a;
+  --color-brand-900: #1b4d4b;
+
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px rgb(15 23 42 / 0.06);
+  --shadow-lift: 0 10px 30px -10px rgb(42 182 173 / 0.55);
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-pop-in: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-slide-down: slide-down 0.25s ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* ---------- base ---------- */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-slate-50 font-sans text-slate-800 antialiased;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+/* ---------- small shared building blocks ---------- */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60;
+}
+
+@utility btn-primary {
+  @apply bg-brand-500 text-white shadow-lift hover:bg-brand-600;
+}
+
+@utility btn-outline {
+  @apply border border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700;
+}
+
+@utility btn-ghost {
+  @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+}
+
+@utility btn-danger {
+  @apply bg-rose-500 text-white hover:bg-rose-600;
+}
+
+@utility field {
+  @apply h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-900 transition outline-none placeholder:text-slate-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 disabled:bg-slate-100 read-only:bg-slate-50 read-only:text-slate-500;
+}
+
+@utility card {
+  @apply rounded-2xl bg-white shadow-soft ring-1 ring-slate-100;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,9 @@
+node_modules
+dist
+*.log
+*.tsbuildinfo
+
+# secrets: keep only the example file in git
+.env
+.env.*
+!.env.example

@@ -1,0 +1,39 @@
+{
+  "name": "aloca-web",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.59.0",
+    "axios": "1.7.7",
+    "formik": "2.4.6",
+    "i18next": "25.10.10",
+    "i18next-browser-languagedetector": "8.3.0",
+    "leaflet": "1.9.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-i18next": "15.7.4",
+    "react-icons": "5.3.0",
+    "react-leaflet": "4.2.1",
+    "react-router-dom": "6.26.2",
+    "yup": "1.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.18",
+    "@types/leaflet": "1.9.12",
+    "@types/node": "20.17.6",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "@vitejs/plugin-react": "4.3.2",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.6.2",
+    "vite": "5.4.8"
+  },
+  "packageManager": "yarn@3.6.4+sha512.e70835d4d6d62c07be76b3c1529cb640c7443f0fe434ef4b6478a5a399218cbaf1511b396b3c56eb03bc86424cff2320f6167ad2fde273aa0df6e60b7754029f"
+}
