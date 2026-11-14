@@ -1,4 +1,4 @@
-import geolib from "geolib";
+import { getDistance } from "geolib";
 import challengeRepository from "../repositories/challengeRepository.js";
 import challengeProgressRepository from "../repositories/challengeProgressRepository.js";
 import userRepository from "../repositories/userRepository.js";
@@ -18,7 +18,7 @@ const checkProgress = async (progress, { lat, lng }) => {
     if (lat === undefined || lng === undefined) {
         throw new HttpError(400, "Missing lat / lng");
     }
-    const distance = geolib.getDistance(
+    const distance = getDistance(
         { latitude: lat, longitude: lng },
         { latitude: challenge.latitude, longitude: challenge.longitude },
     );

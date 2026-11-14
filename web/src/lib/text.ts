@@ -16,7 +16,8 @@ export const removeVietnameseTones = (str: string) => {
     // Some system encode vietnamese combining accent as individual utf-8 characters
     // Một vài bộ encode coi các dấu mũ, dấu chữ như một kí tự riêng biệt nên thêm hai dòng này
     str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ''); // ̀ ́ ̃ ̉ ̣  huyền, sắc, ngã, hỏi, nặng
-    str = str.replace(/\u02C6|\u0306|\u031B/g, ''); // ˆ ̆ ̛  Â, Ê, Ă, Ơ, Ư
+    // \u0302 is the combining circumflex (NFD Â, Ê, Ô); \u02C6 is its spacing form
+    str = str.replace(/\u0302|\u02C6|\u0306|\u031B/g, ''); // ˆ ̆ ̛  Â, Ê, Ă, Ơ, Ư
     // Remove extra spaces
     // Bỏ các khoảng trắng liền nhau
     str = str.replace(/ + /g, ' ');
@@ -24,7 +25,7 @@ export const removeVietnameseTones = (str: string) => {
     // Remove punctuations
     // Bỏ dấu câu, kí tự đặc biệt
     str = str.replace(
-        /!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g,
+        /!|@|%|\^|\*|\(|\)|\+|=|<|>|\?|\/|,|\.|:|;|'|"|&|#|\[|\]|~|\$|_|`|-|{|}|\||\\/g,
         ' ',
     );
     return str;

@@ -1,0 +1,146 @@
+name: CD
+
+# main / version tag -> CI -> Docker images on GHCR -> deploy to the server.
+#
+# Images: ghcr.io/<owner>/<repo>-backend and -web, tagged sha-<commit>,
+# the branch name, `latest` (main) and the version (v1.2.3 tags).
+#
+# The deploy job only runs once the repository variable DEPLOY_HOST is set
+# (Settings > Secrets and variables > Actions). See README > CI/CD.
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # never cancel a deployment half-way; queue the next one
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    with:
+      skip_docker: true
+
+  images:
+    name: Image · ${{ matrix.service }}
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        service: [backend, web]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}-${{ matrix.service }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+          provenance: mode=max
+          sbom: true
+
+  deploy:
+    name: Deploy · production
+    needs: images
+    if: ${{ vars.DEPLOY_HOST != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      # add required reviewers on this environment for a manual approval step
+      name: production
+      url: ${{ vars.PUBLIC_WEB_URL }}
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'ubuntu' }}
+      # absolute, or relative to the SSH user's home
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'tripplan' }}
+      PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+      # secrets cannot be tested in `if:` directly
+      HAS_GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            docker-compose.yml
+            deploy
+          sparse-checkout-cone-mode: false
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [[ -z "$SSH_KEY" || -z "$KNOWN_HOSTS" ]]; then
+            echo "::error::Set the DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS secrets (see README > CI/CD)"
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # pinned host key: no blind trust-on-first-use
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf 'Host target\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
+            "$DEPLOY_HOST" "$DEPLOY_USER" > ~/.ssh/config
+
+      - name: Copy stack files
+        run: |
+          ssh target "mkdir -p $DEPLOY_PATH/backend"
+          scp docker-compose.yml deploy/deploy.sh "target:$DEPLOY_PATH/"
+
+      - name: Log the server in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          GHCR_USER: ${{ vars.GHCR_USER || github.repository_owner }}
+        # only needed while the GHCR packages are private
+        if: ${{ env.HAS_GHCR_TOKEN == 'true' }}
+        run: printf '%s' "$GHCR_TOKEN" | ssh target "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+
+      - name: Deploy (health check + automatic rollback)
+        run: |
+          owner="${GITHUB_REPOSITORY,,}"
+          tag="sha-${GITHUB_SHA::7}"
+          ssh target "cd $DEPLOY_PATH && BACKEND_IMAGE=ghcr.io/$owner-backend WEB_IMAGE=ghcr.io/$owner-web bash deploy.sh $tag"
+
+      - name: Smoke test (public URL)
+        if: ${{ env.PUBLIC_API_URL != '' }}
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors "${PUBLIC_API_URL%/}/health"
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -rf ~/.ssh

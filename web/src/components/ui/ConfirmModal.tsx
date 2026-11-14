@@ -1,8 +1,6 @@
 import {ReactNode, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 
-// Replaces the RN <Modal transparent> + dark <Pressable> backdrop + white card
-// with "Hủy" / "Xác nhận" buttons used by the trip screens.
 interface Props {
   visible: boolean;
   title: ReactNode;

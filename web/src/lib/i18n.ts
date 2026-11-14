@@ -25,6 +25,8 @@ i18n
     supportedLngs: languages.map(l => l.code),
     load: 'languageOnly',
     interpolation: {escapeValue: false},
+    // no promotional console message from i18next (browser console, test output)
+    showSupportNotice: false,
     // Vietnamese unless the user picked another language (saved in localStorage)
     detection: {
       order: ['localStorage'],
