@@ -9,6 +9,7 @@ import {
   saveUserLocation,
   watchLocationPermission,
 } from '@/lib/location';
+import {api} from '@/lib/apiClient';
 import {storage, StorageKeys} from '@/lib/storage';
 
 // jsdom has no navigator.maxTouchPoints: replace the whole navigator
@@ -167,11 +168,11 @@ describe('watchLocationPermission', () => {
 });
 
 describe('saveUserLocation', () => {
-  const fetchMock = vi.fn();
+  const get = vi.fn();
 
   beforeEach(() => {
-    vi.stubGlobal('fetch', fetchMock);
-    fetchMock.mockResolvedValue({json: async () => ({items: [{address: {county: 'Quận 1'}}]})});
+    vi.spyOn(api, 'get').mockImplementation(get);
+    get.mockResolvedValue({data: {province: 'Quận 1'}});
   });
 
   it('does nothing until location has been allowed', async () => {
@@ -179,28 +180,28 @@ describe('saveUserLocation', () => {
 
     await saveUserLocation();
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(get).not.toHaveBeenCalled();
   });
 
-  it('stores the county of the given position', async () => {
+  it('asks the backend for the province of the given position, and stores it', async () => {
     await saveUserLocation({latitude: 10.77, longitude: 106.7});
 
-    expect(fetchMock.mock.calls[0][0]).toContain('at=10.77,106.7');
+    expect(get).toHaveBeenCalledWith('/geo/reverse', {params: {lat: 10.77, lng: 106.7}});
     expect(storage.getItem(StorageKeys.userLocation)).toBe('Quận 1');
   });
 
-  it('uses the current position when allowed, and keeps the old value without county', async () => {
+  it('uses the current position when allowed, and keeps the old value when no province is known', async () => {
     vi.stubGlobal('isSecureContext', true);
     vi.stubGlobal('navigator', {
       permissions: {query: vi.fn(async () => ({state: 'granted'}))},
       geolocation: {getCurrentPosition: (ok: PositionCallback) => ok({coords: {latitude: 1, longitude: 2}} as GeolocationPosition)},
     });
     storage.setItem(StorageKeys.userLocation, 'Hoàn Kiếm');
-    fetchMock.mockResolvedValue({json: async () => ({items: []})});
+    get.mockResolvedValue({data: {province: null}});
 
     await saveUserLocation();
 
-    expect(fetchMock.mock.calls[0][0]).toContain('at=1,2');
+    expect(get).toHaveBeenCalledWith('/geo/reverse', {params: {lat: 1, lng: 2}});
     expect(storage.getItem(StorageKeys.userLocation)).toBe('Hoàn Kiếm');
   });
 });

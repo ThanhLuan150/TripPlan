@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     seedAdmin: vi.fn(),
     seedSampleData: vi.fn(),
     seedContent: vi.fn(),
+    backfillLocations: vi.fn(),
     disconnect: vi.fn(),
 }));
 
@@ -13,6 +14,7 @@ vi.mock("../../../src/config/db.js", () => ({ default: mocks.connectDatabase }))
 vi.mock("../../../src/seed/seedAdmin.js", () => ({ default: mocks.seedAdmin }));
 vi.mock("../../../src/seed/seedSampleData.js", () => ({ default: mocks.seedSampleData }));
 vi.mock("../../../src/seed/seedContent.js", () => ({ default: mocks.seedContent }));
+vi.mock("../../../src/seed/backfillLocations.js", () => ({ default: mocks.backfillLocations }));
 vi.mock("mongoose", () => ({ default: { disconnect: mocks.disconnect } }));
 
 const argv = process.argv;
@@ -67,6 +69,13 @@ describe("seed runner", () => {
         await vi.waitFor(() => expect(mocks.disconnect).toHaveBeenCalled());
 
         expect(mocks.seedContent).toHaveBeenCalledWith({ reset: true });
+    });
+
+    it("'locations' backfills the coordinates of the challenges", async () => {
+        await run("locations");
+
+        expect(mocks.backfillLocations).toHaveBeenCalledOnce();
+        expect(mocks.seedAdmin).not.toHaveBeenCalled();
     });
 
     it("'all' runs both, admin first", async () => {

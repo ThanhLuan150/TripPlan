@@ -279,7 +279,8 @@
       "perPerson": "/person · estimate",
       "earned": "You earned {{points}} points",
       "updateFailed": "Could not update the challenge",
-      "loadFailed": "Could not load this plan."
+      "loadFailed": "Could not load this plan.",
+      "challengeNoLocation": "This place has no coordinates yet, so your position cannot be checked. Try another challenge or come back later."
     },
     "map": {
       "back": "Back to the plan",

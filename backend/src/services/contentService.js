@@ -5,6 +5,7 @@ import { SHOWCASE_KINDS, SHOWCASE_STATUSES } from "../models/Showcase.js";
 import { ANNOUNCEMENT_STATUSES } from "../models/Announcement.js";
 import { REPORT_REASONS, REPORT_TYPES } from "../models/ContentReport.js";
 import HttpError from "../utils/HttpError.js";
+import { isEmail } from "../utils/validators.js";
 import { youtubeThumbnail } from "../utils/youtube.js";
 import activityLogService from "./activityLogService.js";
 import { LIST_LIMIT } from "./adminService.js";
@@ -306,7 +307,7 @@ const saveSettings = async (actor, body = {}) => {
     if (data.appName === "") {
         throw bad("Invalid appName");
     }
-    if (data.supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.supportEmail)) {
+    if (data.supportEmail && !isEmail(data.supportEmail)) {
         throw bad("Invalid supportEmail");
     }
     if (data.hotline && !/^[0-9+().\s-]+$/.test(data.hotline)) {

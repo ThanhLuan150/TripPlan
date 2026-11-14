@@ -2,6 +2,7 @@ import {type ReactNode, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import Field from '@/components/ui/Field';
 import {apiMessage} from '@/lib/apiClient';
+import {isEmail} from '@/lib/validators';
 import AdminCard from '../components/AdminCard';
 import AdminEmptyState from '../components/AdminEmptyState';
 import AdminLoadingState from '../components/AdminLoadingState';
@@ -11,7 +12,6 @@ import {useAdminSettings, useSaveSettings} from '../hooks/useAdminData';
 import {useAdminToast} from '../hooks/useAdminToast';
 import type {AdminSettings} from '../types';
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^[0-9+().\s-]+$/;
 
 // Settings the app reads: its name, the support e-mail and the hotline.
@@ -55,7 +55,7 @@ function SettingsForm({initial}: {initial: AdminSettings}) {
 
   const errors: Partial<Record<keyof AdminSettings, string>> = {};
   if (!values.appName.trim()) errors.appName = t('admin.settings.errors.appName');
-  if (values.supportEmail.trim() && !EMAIL.test(values.supportEmail.trim())) errors.supportEmail = t('admin.settings.errors.email');
+  if (values.supportEmail.trim() && !isEmail(values.supportEmail.trim())) errors.supportEmail = t('admin.settings.errors.email');
   if (values.hotline.trim() && !PHONE.test(values.hotline.trim())) errors.hotline = t('admin.settings.errors.hotline');
 
   const text = (key: keyof AdminSettings, type = 'text') => (

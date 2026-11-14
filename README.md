@@ -159,7 +159,7 @@ Page được test như người dùng thật (Testing Library): gõ, bấm, xem
 ### Ngưỡng coverage
 
 CI fail nếu coverage thấp hơn **95%** (statements, branches, functions, lines), tính trên **toàn bộ** mã nguồn.
-Lần chạy gần nhất: backend 478 test, 99,7% statements / 96,7% branches / 100% functions; web 725 test, 99,2% statements / 96,5% branches / 97,7% functions.
+Lần chạy gần nhất: backend 487 test, 99,7% statements / 96,7% branches / 100% functions; web 736 test, 99,2% statements / 96,5% branches / 97,7% functions.
 
 ## CI/CD (GitHub Actions)
 
@@ -278,6 +278,7 @@ Danh sách trả tối đa 1000 bản ghi mới nhất.
   - Access token hết hạn luôn bị trả 401 "session expired" dù refresh token còn hạn (payload JWT có `exp` dạng số bị hiểu là "đã hết hạn"), nên tính năng tự cấp lại token không bao giờ chạy.
   - Không tìm được toạ độ địa điểm thì lưu kế hoạch bị lỗi.
 - Tài khoản bị admin khóa (`suspended`) không đăng nhập hay quên mật khẩu được (403); phiên cũ bị thu hồi. `lastLoginAt` / `lastActiveAt` ghi lần hoạt động gần nhất.
+- Giới hạn số request theo IP (`express-rate-limit`): mọi route 600 request / 15 phút, riêng `/auth/*` (đăng nhập, mã xác thực, quên mật khẩu) 40 request / 15 phút; quá giới hạn trả 429 `{ message }` kèm header `RateLimit-*` / `Retry-After`. Chỉnh bằng `RATE_LIMIT_MAX`, `RATE_LIMIT_AUTH_MAX`; đặt `TRUST_PROXY=1` khi API chạy sau nginx / load balancer để đếm đúng IP thật. Tắt khi chạy test.
 - Lỗi luôn trả JSON `{ message }`.
 - Khoá HERE API được chuyển từ code vào `.env` (`HERE_API_KEY`).
 

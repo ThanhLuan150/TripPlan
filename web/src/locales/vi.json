@@ -278,7 +278,8 @@
       "perPerson": "/người · ước tính",
       "earned": "Bạn đã nhận được {{points}} điểm",
       "updateFailed": "Không thể cập nhật thử thách",
-      "loadFailed": "Không tải được kế hoạch."
+      "loadFailed": "Không tải được kế hoạch.",
+      "challengeNoLocation": "Địa điểm này chưa có tọa độ nên chưa thể kiểm tra vị trí. Vui lòng thử thử thách khác hoặc quay lại sau."
     },
     "map": {
       "back": "Quay lại kế hoạch",

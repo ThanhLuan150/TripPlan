@@ -13,9 +13,27 @@ describe('youtube links', () => {
     expect(youtubeId(link)).toBe(id);
   });
 
-  it('has no id in other links', () => {
-    expect(youtubeId('https://example.com/watch?v=abcdefghijk')).toBeNull();
-    expect(youtubeId('')).toBeNull();
+  it('has no id in other links, nor when youtube.com is only part of another address', () => {
+    for (const link of [
+      'https://example.com/watch?v=abcdefghijk',
+      'https://notyoutube.com/watch?v=abcdefghijk',
+      'https://youtube.com.evil.example/watch?v=abcdefghijk',
+      'https://evil.example/youtube.com/watch?v=abcdefghijk',
+      'https://evil.example/?next=https://youtu.be/abcdefghijk',
+      'javascript://youtube.com/watch?v=abcdefghijk',
+      'https://youtu.be/too-short',
+      '',
+    ]) {
+      expect(youtubeId(link)).toBeNull();
+    }
+    expect(youtubeThumbnail('https://notyoutube.com/watch?v=abcdefghijk')).toBe('');
+    expect(isYoutubeShort('https://evil.example/youtube.com/shorts/abcdefghijk')).toBe(false);
+    expect(isYoutubeShort('not a url')).toBe(false);
+  });
+
+  it('accepts the mobile and music hosts', () => {
+    expect(youtubeId('https://m.youtube.com/watch?v=abcdefghijk')).toBe('abcdefghijk');
+    expect(youtubeId('https://music.youtube.com/watch?v=abcdefghijk')).toBe('abcdefghijk');
   });
 
   it('builds the thumbnail and the embed URL, and tells shorts', () => {

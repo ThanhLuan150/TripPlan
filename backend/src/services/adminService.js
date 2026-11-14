@@ -6,6 +6,7 @@ import tripPlanRepository from "../repositories/tripPlanRepository.js";
 import userRepository from "../repositories/userRepository.js";
 import { ROLES } from "../models/User.js";
 import HttpError from "../utils/HttpError.js";
+import { isEmail } from "../utils/validators.js";
 import activityLogService from "./activityLogService.js";
 
 // Data of the admin panel, shaped for the web app (ids as strings, dates as
@@ -139,7 +140,6 @@ const listUsers = async () => {
 const PROFILE_LIMIT = 50;
 const USERNAME_PATTERN = /^[a-z0-9_.]{3,30}$/;
 const PHONE_PATTERN = /^[0-9+\s().-]{6,20}$/;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // One account with its trips, challenges and what it did lately.
 const getUser = async (id) => {
@@ -264,7 +264,7 @@ const updateUser = async (actor, id, body = {}) => {
     }
     if (email !== undefined) {
         const address = String(email).trim().toLowerCase();
-        if (!EMAIL_PATTERN.test(address)) {
+        if (!isEmail(address)) {
             throw new HttpError(400, "Email is not valid");
         }
         const owner = await userRepository.findByEmail(address);
@@ -337,7 +337,7 @@ const createUser = async (actor, { fullname, username, email, phone, role = "use
     if (!USERNAME_PATTERN.test(login)) {
         throw new HttpError(400, "Username: 3-30 letters, digits, dot or underscore");
     }
-    if (!EMAIL_PATTERN.test(address)) {
+    if (!isEmail(address)) {
         throw new HttpError(400, "Email is not valid");
     }
     if (number && !PHONE_PATTERN.test(number)) {

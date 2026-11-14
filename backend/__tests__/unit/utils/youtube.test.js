@@ -13,7 +13,14 @@ describe("youtubeId", () => {
         expect(youtubeId(link)).toBe(id);
     });
 
-    it.each(["https://example.com/watch?v=abcdefghijk", "https://youtu.be/", "https://youtube.com/shorts/", "not a url", "", undefined])(
+    it.each([
+        "https://notyoutube.com/watch?v=abcdefghijk",
+        "https://youtube.com.evil.example/watch?v=abcdefghijk",
+        "https://evil.example/youtube.com/watch?v=abcdefghijk",
+        "https://evil.example/?next=https://youtu.be/abcdefghijk",
+        "javascript://youtube.com/watch?v=abcdefghijk",
+        "https://youtu.be/too-short",
+        "https://example.com/watch?v=abcdefghijk", "https://youtu.be/", "https://youtube.com/shorts/", "not a url", "", undefined])(
         "has none in %j",
         (link) => {
             expect(youtubeId(link)).toBeNull();

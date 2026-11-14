@@ -3,10 +3,12 @@ import connectDatabase from "../config/db.js";
 import seedAdmin from "./seedAdmin.js";
 import seedSampleData from "./seedSampleData.js";
 import seedContent from "./seedContent.js";
+import backfillLocations from "./backfillLocations.js";
 
 // Usage:
 //   npm run seed          -> admin account
 //   npm run seed:sample   -> demo account, sample trip, ranking users + the content below
+//   npm run backfill:locations -> coordinates for challenges saved without them
 //   npm run seed:content  -> videos, home page pictures and announcements only
 //                            (add `-- --reset` to replace what is there)
 //   node src/seed/index.js all
@@ -14,6 +16,7 @@ const seeders = {
     admin: [seedAdmin],
     sample: [seedSampleData],
     content: [seedContent],
+    locations: [backfillLocations],
     all: [seedAdmin, seedSampleData],
 };
 

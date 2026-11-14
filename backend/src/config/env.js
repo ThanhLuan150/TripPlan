@@ -12,6 +12,12 @@ const env = {
     // (default: taken from the request, e.g. http://localhost:8080)
     publicUrl: (process.env.PUBLIC_URL || "").replace(/\/+$/, ""),
     maxImageMb: Number(process.env.MAX_IMAGE_MB) || 5,
+    // requests per client IP and 15 minutes: all routes / the /auth routes
+    rateLimitMax: Number(process.env.RATE_LIMIT_MAX) || 600,
+    rateLimitAuthMax: Number(process.env.RATE_LIMIT_AUTH_MAX) || 40,
+    // number of reverse proxies in front of the API (nginx, a load balancer...),
+    // so the limits see the real client IP; leave empty when there is none
+    trustProxy: process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) : 0,
 
     mongodbUri: process.env.MONGODB_URI,
     mongodbDbName: process.env.MONGODB_DB_NAME,

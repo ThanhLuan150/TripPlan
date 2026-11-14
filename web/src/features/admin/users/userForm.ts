@@ -1,4 +1,5 @@
 import type {Role} from '@/features/auth/types';
+import {isEmail} from '@/lib/validators';
 import type {AdminUser} from '../types';
 
 export interface UserFormValues {
@@ -12,7 +13,6 @@ export interface UserFormValues {
 export type UserFormErrors = Partial<Record<'fullname' | 'email' | 'phone', string>>;
 
 // same rules as the backend (adminService.updateUser)
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\s().-]{6,20}$/;
 
 export const toFormValues = (user: AdminUser): UserFormValues => ({
@@ -31,7 +31,7 @@ export const validateUserForm = ({fullname, email, phone}: UserFormValues): User
   }
   if (!email.trim()) {
     errors.email = 'admin.users.errors.emailRequired';
-  } else if (!EMAIL_PATTERN.test(email.trim())) {
+  } else if (!isEmail(email.trim())) {
     errors.email = 'admin.users.errors.emailInvalid';
   }
   if (phone.trim() && !PHONE_PATTERN.test(phone.trim())) {

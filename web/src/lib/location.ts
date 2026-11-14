@@ -1,3 +1,4 @@
+import {api} from './apiClient';
 import {storage, StorageKeys} from './storage';
 
 export interface Coords {
@@ -122,7 +123,8 @@ export const formatDistance = (meters: number, locale = 'vi') =>
     ? `${Math.round(meters)} m`
     : `${(meters / 1000).toLocaleString(locale, {maximumFractionDigits: 1})} km`;
 
-// Reverse-geocode the user's position with HERE and keep the county name as
+// Ask the backend which province the user's position is in (GET /geo/reverse:
+// the place service and its key stay on the server) and keep it as
 // 'userLocation' (sent when generating trips), like the mobile App.tsx did.
 // Only runs when the user has already allowed location: we never prompt on
 // page load, the prompt is shown when a feature needs it (challenge photos).
@@ -131,12 +133,10 @@ export const saveUserLocation = async (coords?: Coords) => {
     return;
   }
   const {latitude, longitude} = coords ?? (await getCurrentPosition());
-  const response = await fetch(
-    `https://revgeocode.search.hereapi.com/v1/revgeocode?apikey=TYWNfgg1aUErbBEMMhjeeiX4uDup2tkboazOS0PY4BQ&at=${latitude},${longitude}&lang=vi`,
-  );
-  const data = await response.json();
-  const county = data?.items?.[0]?.address?.county;
-  if (county) {
-    storage.setItem(StorageKeys.userLocation, county);
+  const {data} = await api.get<{province: string | null}>('/geo/reverse', {
+    params: {lat: latitude, lng: longitude},
+  });
+  if (data.province) {
+    storage.setItem(StorageKeys.userLocation, data.province);
   }
 };

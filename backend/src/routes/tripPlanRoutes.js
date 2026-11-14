@@ -4,8 +4,12 @@ import authenticate from "../middleware/auth.js";
 import requireRole from "../middleware/requireRole.js";
 import logActivity from "../middleware/logActivity.js";
 import { ownTrip } from "../middleware/ownership.js";
+import { apiLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
+
+// rate limited before anything else (sign-in checks, database access)
+router.use(apiLimiter);
 
 router.use(authenticate, requireRole("user", "admin"));
 

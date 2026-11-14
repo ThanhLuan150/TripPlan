@@ -1,22 +1,28 @@
-// Video id of a YouTube link (watch?v=, youtu.be/, /shorts/, /embed/), or null.
+// The host is compared as a whole: searching the link for "youtube.com" would
+// also accept "notyoutube.com" or "https://evil.example/youtube.com/...".
+const ID = /^[\w-]{11}$/;
+
+const isYoutubeHost = (host) => host === "youtube.com" || host.endsWith(".youtube.com");
+
+// Video id of a YouTube link (watch?v=, youtu.be/, /shorts/, /embed/, /live/), or null.
 export const youtubeId = (link) => {
     try {
         const url = new URL(link);
-        const host = url.hostname.replace(/^www\./, "");
-        if (host === "youtu.be") {
-            return url.pathname.slice(1).split("/")[0] || null;
+        if (url.protocol !== "https:" && url.protocol !== "http:") {
+            return null;
         }
-        if (host.endsWith("youtube.com")) {
-            const [, kind, id] = url.pathname.split("/");
-            if (["shorts", "embed", "live"].includes(kind)) {
-                return id || null;
-            }
-            return url.searchParams.get("v");
+        let id = null;
+        if (url.hostname === "youtu.be") {
+            id = url.pathname.slice(1).split("/")[0];
+        } else if (isYoutubeHost(url.hostname)) {
+            const [, kind, value] = url.pathname.split("/");
+            id = ["shorts", "embed", "live"].includes(kind) ? value : url.searchParams.get("v");
         }
+        return id && ID.test(id) ? id : null;
     } catch {
         // not a URL
+        return null;
     }
-    return null;
 };
 
 // Still image of the video, for cards without a video file.

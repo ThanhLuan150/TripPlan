@@ -14,7 +14,7 @@ import {
   saveUserLocation,
   watchLocationPermission,
 } from '@/lib/location';
-import {networkError, pending, renderWithProviders, t} from '../../../utils/render';
+import {httpError, networkError, pending, renderWithProviders, t} from '../../../utils/render';
 
 vi.mock('@/features/trips/api/tripsApi');
 vi.mock('@/lib/location', async importOriginal => ({
@@ -228,6 +228,13 @@ describe('ChallengeLocationDialog', () => {
     await user.click(screen.getByRole('button', {name: t('location.retry')}));
 
     expect(await screen.findByRole('heading', {name: t('location.nearTitle')})).toBeInTheDocument();
+  });
+
+  it('explains when the place has no coordinates', async () => {
+    vi.mocked(challengeApi.checkProgress).mockRejectedValue(httpError(400, {message: 'This challenge has no location'}));
+    render();
+
+    expect(await screen.findByText(t('trips.detail.challengeNoLocation'))).toBeInTheDocument();
   });
 
   it('other API errors use the generic message', async () => {
