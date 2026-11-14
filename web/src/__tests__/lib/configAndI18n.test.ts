@@ -8,7 +8,11 @@ describe('config (backend URL)', () => {
     vi.resetModules();
   });
 
-  const load = async () => (await import('@/lib/config')).API_URL;
+  // a fresh copy of the module (the setup file already loaded one through the API client)
+  const load = async () => {
+    vi.resetModules();
+    return (await import('@/lib/config')).API_URL;
+  };
 
   it('uses VITE_API_URL without trailing slashes', async () => {
     vi.stubEnv('VITE_API_URL', 'https://api.aloca.vn///');

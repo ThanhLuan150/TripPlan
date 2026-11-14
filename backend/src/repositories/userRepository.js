@@ -28,7 +28,7 @@ const incrementExperience = (id, points) =>
 // "Điểm cao nhất" ranking
 const topByExperience = (limit = 100) =>
     User.aggregate([
-        { $match: { isActive: { $ne: "delete" } } },
+        { $match: { isActive: "active", role: { $ne: "admin" } } },
         { $sort: { experience: -1 } },
         { $limit: limit },
         { $project: { _id: "$_id", fullname: "$fullname", experience: "$experience", image: "$image" } },

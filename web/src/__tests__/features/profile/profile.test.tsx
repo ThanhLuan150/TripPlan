@@ -1,4 +1,4 @@
-import {fireEvent, screen} from '@testing-library/react';
+import {fireEvent, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import BenefitPage from '@/features/about/pages/BenefitPage';
@@ -10,11 +10,12 @@ import EditProfilePage from '@/features/profile/pages/EditProfilePage';
 import NotificationsPage from '@/features/profile/pages/NotificationsPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import VideosPage from '@/features/videos/pages/VideosPage';
-import {allVideos} from '@/features/videos/data/videos';
+import {videosApi, type VideoItem} from '@/features/videos/api';
 import {uploadImage} from '@/lib/upload';
 import {currentPath, httpError, networkError, pending, renderWithProviders, t} from '../../utils/render';
 
 vi.mock('@/features/profile/api/profileApi');
+vi.mock('@/features/videos/api');
 vi.mock('@/lib/upload', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/upload')>()),
   uploadImage: vi.fn(),
@@ -56,6 +57,18 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('link', {name: t('profile.whatIs')})).toHaveAttribute('href', '/what-aloca');
     expect(screen.getByText(t('profile.genzTitle')).closest('a')).toHaveAttribute('href', '/benefit');
     expect(screen.getByRole('link', {name: t('profile.hotline')})).toHaveAttribute('href', 'tel:19001009');
+  });
+
+  it('links admins (only) to the admin panel', async () => {
+    saveSession({accessToken: 't', data: user});
+    const {unmount} = renderWithProviders(<ProfilePage />, {route: '/profile'});
+    await screen.findByText(user.fullname ?? user.username!);
+    expect(screen.queryByRole('link', {name: t('profile.adminPanel')})).toBeNull();
+    unmount();
+
+    saveSession({accessToken: 't', data: {...user, role: 'admin'}});
+    renderWithProviders(<ProfilePage />, {route: '/profile'});
+    expect(await screen.findByRole('link', {name: t('profile.adminPanel')})).toHaveAttribute('href', '/admin/dashboard');
   });
 
   it("falls back to 'A' when signed out", () => {
@@ -221,6 +234,24 @@ describe('NotificationsPage', () => {
     expect(screen.getByText('Check-in Hồ Gươm')).toBeInTheDocument();
   });
 
+  it('marks the notifications as read when the screen opens, and shows when they were published', async () => {
+    vi.mocked(profileApi.notifications).mockResolvedValue([
+      {id: 'a1', name: 'Bảo trì', description: 'Tối nay', publishAt: '2026-03-05T10:30:00.000Z'},
+    ]);
+    renderWithProviders(<NotificationsPage />, {route: '/notification'});
+
+    expect(await screen.findByText('Bảo trì')).toBeInTheDocument();
+    expect(screen.getByText(/2026/)).toBeInTheDocument();
+    await waitFor(() => expect(JSON.parse(window.localStorage.getItem('seenNotifications') ?? '[]')).toEqual(['a1']));
+  });
+
+  it('says when they cannot be loaded', async () => {
+    vi.mocked(profileApi.notifications).mockRejectedValue(httpError(500));
+    renderWithProviders(<NotificationsPage />, {route: '/notification'});
+
+    expect(await screen.findByText(t('profile.notificationsFailed'))).toBeInTheDocument();
+  });
+
   it('says when there is none', async () => {
     vi.mocked(profileApi.notifications).mockResolvedValue([]);
     renderWithProviders(<NotificationsPage />, {route: '/notification'});
@@ -230,13 +261,59 @@ describe('NotificationsPage', () => {
 });
 
 describe('static pages', () => {
-  it('VideosPage lists every video', () => {
+  it('VideosPage lists every published video', async () => {
+    const allVideos: VideoItem[] = [
+      {id: 'v1', title: 'A', location: '', youtubeLink: 'https://youtu.be/aaaaaaaaaaa', src: '', thumbnail: 'https://img/a.jpg'},
+      {id: 'v2', title: 'B', location: '', youtubeLink: 'https://youtu.be/bbbbbbbbbbb', src: 'https://cdn/b.mp4', thumbnail: ''},
+    ];
+    vi.mocked(videosApi.list).mockResolvedValue(allVideos);
     renderWithProviders(<VideosPage />, {route: '/videos'});
 
     expect(screen.getByRole('heading', {name: t('videos.title')})).toBeInTheDocument();
-    const links = screen.getAllByRole('link', {name: t('common.watchOnYoutube')});
-    expect(links).toHaveLength(allVideos.length);
-    expect(links.map(a => a.getAttribute('href'))).toEqual(allVideos.map(v => v.youtubeLink));
+    const tiles = await screen.findAllByRole('button', {name: /^(Xem video|Play video)/});
+    expect(tiles).toHaveLength(allVideos.length);
+  });
+
+  it('VideosPage plays a video in a dialog: YouTube player, video file, or a notice', async () => {
+    vi.mocked(videosApi.list).mockResolvedValue([
+      {id: 'v1', title: 'Hạ Long', location: '', youtubeLink: 'https://www.youtube.com/watch?v=aaaaaaaaaaa', src: '', thumbnail: ''},
+      {id: 'v2', title: 'Clip', location: '', youtubeLink: '', src: 'https://cdn/clip.mp4', thumbnail: ''},
+      {id: 'v3', title: 'Trống', location: '', youtubeLink: '', src: '', thumbnail: ''},
+      {id: 'v4', title: 'Short', location: '', youtubeLink: 'https://youtube.com/shorts/ccccccccccc', src: '', thumbnail: ''},
+    ]);
+    const user = userEvent.setup();
+    renderWithProviders(<VideosPage />, {route: '/videos'});
+
+    await user.click(await screen.findByRole('button', {name: t('videos.play', {title: 'Hạ Long'})}));
+    let dialog = screen.getByRole('dialog', {name: 'Hạ Long'});
+    expect(within(dialog).getByTitle('Hạ Long')).toHaveAttribute('src', expect.stringContaining('/embed/aaaaaaaaaaa'));
+    // YouTube stays one click away
+    expect(within(dialog).getByRole('link', {name: t('common.watchOnYoutube')})).toHaveAttribute('href', 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
+    await user.click(within(dialog).getByRole('button', {name: t('common.close')}));
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    await user.click(screen.getByRole('button', {name: t('videos.play', {title: 'Clip'})}));
+    dialog = screen.getByRole('dialog', {name: 'Clip'});
+    expect(dialog.querySelector('video')).toHaveAttribute('src', 'https://cdn/clip.mp4');
+    expect(within(dialog).queryByRole('link')).toBeNull();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    await user.click(screen.getByRole('button', {name: t('videos.play', {title: 'Trống'})}));
+    expect(within(screen.getByRole('dialog')).getByText(t('videos.unavailable'))).toBeInTheDocument();
+    // the backdrop closes it too
+    await user.click(screen.getByRole('dialog').previousElementSibling!);
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    await user.click(screen.getByRole('button', {name: t('videos.play', {title: 'Short'})}));
+    expect(screen.getByRole('dialog').className).toContain('max-w-sm');
+  });
+
+  it('VideosPage says when there is no video', async () => {
+    vi.mocked(videosApi.list).mockResolvedValue([]);
+    renderWithProviders(<VideosPage />, {route: '/videos'});
+
+    expect(await screen.findByText(t('videos.empty'))).toBeInTheDocument();
   });
 
   it('WhatAlocaPage', () => {

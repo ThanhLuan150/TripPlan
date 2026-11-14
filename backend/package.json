@@ -9,6 +9,7 @@
     "start": "node ./src/server.js",
     "seed": "node ./src/seed/index.js admin",
     "seed:sample": "node ./src/seed/index.js sample",
+    "seed:content": "node ./src/seed/index.js content",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",

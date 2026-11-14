@@ -1,16 +1,18 @@
-// src/seed/index.js runs on import: `node src/seed/index.js <admin|sample|all>`
+// src/seed/index.js runs on import: `node src/seed/index.js <admin|sample|content|all>`
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
     connectDatabase: vi.fn(),
     seedAdmin: vi.fn(),
     seedSampleData: vi.fn(),
+    seedContent: vi.fn(),
     disconnect: vi.fn(),
 }));
 
 vi.mock("../../../src/config/db.js", () => ({ default: mocks.connectDatabase }));
 vi.mock("../../../src/seed/seedAdmin.js", () => ({ default: mocks.seedAdmin }));
 vi.mock("../../../src/seed/seedSampleData.js", () => ({ default: mocks.seedSampleData }));
+vi.mock("../../../src/seed/seedContent.js", () => ({ default: mocks.seedContent }));
 vi.mock("mongoose", () => ({ default: { disconnect: mocks.disconnect } }));
 
 const argv = process.argv;
@@ -48,6 +50,23 @@ describe("seed runner", () => {
 
         expect(mocks.seedSampleData).toHaveBeenCalledOnce();
         expect(mocks.seedAdmin).not.toHaveBeenCalled();
+    });
+
+    it("'content' seeds the videos, pictures and announcements only", async () => {
+        await run("content");
+
+        expect(mocks.seedContent).toHaveBeenCalledOnce();
+        expect(mocks.seedSampleData).not.toHaveBeenCalled();
+        expect(mocks.seedAdmin).not.toHaveBeenCalled();
+    });
+
+    it("'content --reset' asks the content seed to replace what is there", async () => {
+        process.argv = [argv[0], "src/seed/index.js", "content", "--reset"];
+        vi.resetModules();
+        await import("../../../src/seed/index.js");
+        await vi.waitFor(() => expect(mocks.disconnect).toHaveBeenCalled());
+
+        expect(mocks.seedContent).toHaveBeenCalledWith({ reset: true });
     });
 
     it("'all' runs both, admin first", async () => {

@@ -1,11 +1,12 @@
 // Each feature API calls the right backend endpoint with the right body and
 // unwraps the response.
-import axios from 'axios';
 import {afterEach, beforeEach, describe, expect, it, vi, type MockInstance} from 'vitest';
 import {api} from '@/lib/apiClient';
 import {authApi} from '@/features/auth/api/authApi';
 import {CHAT_ERROR, CHAT_SUCCESS, chatApi} from '@/features/assistant/api/chatApi';
 import {profileApi} from '@/features/profile/api/profileApi';
+import {homeApi} from '@/features/home/api';
+import {videosApi} from '@/features/videos/api';
 import {rankingApi} from '@/features/ranking/api/rankingApi';
 import {challengeApi, tripsApi} from '@/features/trips/api/tripsApi';
 import type {GenerateTripParams} from '@/features/trips/types';
@@ -120,12 +121,31 @@ describe('profileApi', () => {
     expect(post).toHaveBeenCalledWith('/user/profile', data);
   });
 
-  it('notifications come from the demo mock API (not the backend)', async () => {
-    const axiosGet = vi.spyOn(axios, 'get').mockResolvedValue({data: [{id: 1, name: 'n', description: 'd'}]});
+  it('notifications are the announcements the admin published', async () => {
+    get.mockResolvedValue(reply([{id: 'a1', title: 'Bảo trì', message: 'Tối nay 22h', publishAt: '2026-01-01'}]));
 
-    await expect(profileApi.notifications()).resolves.toEqual([{id: 1, name: 'n', description: 'd'}]);
-    expect(axiosGet.mock.calls[0][0]).toMatch(/^https:\/\/(?:[a-zA-Z0-9-]+\.)*mockapi\.io(?:\/|$)/);
-    expect(get).not.toHaveBeenCalled();
+    await expect(profileApi.notifications()).resolves.toEqual([{id: 'a1', name: 'Bảo trì', description: 'Tối nay 22h', publishAt: '2026-01-01'}]);
+    expect(get).toHaveBeenCalledWith('/announcements');
+  });
+});
+
+describe('homeApi', () => {
+  it('reads the slider and the suggestions of the home page', async () => {
+    get.mockResolvedValue(reply({banners: [], suggestions: []}));
+
+    await expect(homeApi.get()).resolves.toEqual({banners: [], suggestions: []});
+    expect(get).toHaveBeenCalledWith('/home');
+  });
+});
+
+describe('videosApi', () => {
+  it('lists every published video, or only those of the home page', async () => {
+    get.mockResolvedValue(reply([{id: 'v1'}]));
+
+    await expect(videosApi.list()).resolves.toEqual([{id: 'v1'}]);
+    expect(get).toHaveBeenLastCalledWith('/videos', {params: undefined});
+    await videosApi.list(true);
+    expect(get).toHaveBeenLastCalledWith('/videos', {params: {home: 1}});
   });
 });
 

@@ -1,6 +1,5 @@
 import {ReactNode} from 'react';
-import {useQueryClient} from '@tanstack/react-query';
-import {Link, useNavigate} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {
   AiOutlineCustomerService,
@@ -14,13 +13,13 @@ import {
   IoLanguageOutline,
   IoLogOutOutline,
   IoNotificationsOutline,
+  IoShieldCheckmarkOutline,
   IoStar,
 } from 'react-icons/io5';
-import {routes} from '@/app/routes';
+import {adminRoutes, routes} from '@/app/routes';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import {useProfile} from '@/hooks/useProfile';
-import {clearSession} from '@/features/auth/store/session';
-import {resetChatCache} from '@/features/assistant/store/chatCache';
+import {useLogout} from '@/hooks/useLogout';
 import vector from '@/assets/images/Vector.png';
 import genz from '@/assets/images/Genz.png';
 import userImg from '@/assets/images/user.png';
@@ -42,16 +41,8 @@ function RowContent({icon, label}: {icon: ReactNode; label: string}) {
 
 export default function ProfilePage() {
   const {t} = useTranslation();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const {user, name} = useProfile();
-
-  const handleLogout = () => {
-    clearSession();
-    resetChatCache();
-    queryClient.clear();
-    navigate(routes.LandingPage, {replace: true});
-  };
+  const handleLogout = useLogout();
 
   return (
     <div className="space-y-5 px-4 py-5 md:px-6 md:py-8">
@@ -105,6 +96,18 @@ export default function ProfilePage() {
           </span>
           <span className="font-semibold text-slate-800">{t('profile.plans')}</span>
         </Link>
+        {/* only admins: the way back to the admin panel */}
+        {user?.role === 'admin' && (
+          <Link
+            to={adminRoutes.dashboard}
+            className="card col-span-2 flex items-center gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-md">
+            <span className="grid size-11 place-items-center rounded-xl bg-slate-100 text-slate-700">
+              <IoShieldCheckmarkOutline size={22} />
+            </span>
+            <span className="font-semibold text-slate-800">{t('profile.adminPanel')}</span>
+            <IoChevronForward size={16} className="ml-auto text-slate-400" />
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

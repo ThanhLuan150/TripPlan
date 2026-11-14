@@ -26,6 +26,11 @@ const authenticate = asyncHandler(async (req, res, next) => {
         res.setHeader("Authorization", `Bearer ${generateAccessToken(user)}`);
     }
 
+    // "last active": at most one write every 5 minutes per user
+    if (!user.lastActiveAt || Date.now() - new Date(user.lastActiveAt).getTime() > 5 * 60_000) {
+        Promise.resolve(userRepository.updateById(user._id, { lastActiveAt: new Date() })).catch(() => {});
+    }
+
     req.user = user;
     req.userData = user;
     next();

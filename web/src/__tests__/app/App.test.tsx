@@ -5,9 +5,11 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import App from '@/app/App';
 import {saveSession} from '@/features/auth/store/session';
 import {saveUserLocation} from '@/lib/location';
+import {t} from '../utils/render';
 
 const {stub} = vi.hoisted(() => ({stub: (name: string) => ({default: () => <p>{name}</p>})}));
 
+vi.mock('@/features/admin/users/api', () => ({fetchUsers: () => new Promise(() => undefined)}));
 vi.mock('@/features/auth/pages/LandingPage', () => stub('LandingPage'));
 vi.mock('@/features/auth/pages/LoginPage', () => stub('LoginPage'));
 vi.mock('@/features/auth/pages/RegisterPage', () => stub('RegisterPage'));
@@ -124,6 +126,44 @@ describe('signed-in routes', () => {
 
     expect(await screen.findByText('ChatPage')).toBeVisible();
     expect(window.location.pathname).toBe('/assistant/chat');
+  });
+});
+
+describe('admin routes', () => {
+  const signInAs = (role: 'user' | 'admin') => saveSession({accessToken: 't', data: {username: 'lan', role}});
+
+  it('send visitors to the landing page', async () => {
+    open('/admin/users');
+
+    expect(await screen.findByText('LandingPage')).toBeInTheDocument();
+  });
+
+  it('send a plain user home', async () => {
+    signInAs('user');
+    open('/admin/users');
+
+    expect(await screen.findByText('HomePage')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/home');
+  });
+
+  it('open the admin panel (its own layout, loaded on demand) for an admin', async () => {
+    signInAs('admin');
+    open('/admin/users');
+
+    // (the first visit downloads / transforms the whole admin chunk)
+    const title = await screen.findByRole('heading', {level: 1, name: t('admin.users.title')}, {timeout: 10_000});
+    expect(title).toBeInTheDocument();
+    expect(screen.getByRole('navigation', {name: t('admin.nav.label')})).toBeInTheDocument();
+    // not the user app's tab bar
+    expect(screen.queryByRole('navigation', {name: t('nav.main')})).toBeNull();
+  });
+
+  it.each(['/admin', '/admin/no-such-page'])('%s opens the dashboard of an admin', async path => {
+    signInAs('admin');
+    open(path);
+
+    expect(await screen.findByRole('heading', {level: 1, name: t('admin.dashboard.title')})).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/admin/dashboard');
   });
 });
 

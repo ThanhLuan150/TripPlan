@@ -148,7 +148,12 @@
     "videos": "Video nổi bật",
     "suggestions": "Có thể bạn sẽ thích?",
     "rankingTitle": "Bảng xếp hạng 'Vua du lịch'",
-    "rankingEmpty": "Chưa có ai trên bảng xếp hạng. Hãy là người đầu tiên!"
+    "rankingEmpty": "Chưa có ai trên bảng xếp hạng. Hãy là người đầu tiên!",
+    "videosEmpty": "Chưa có video nổi bật nào.",
+    "unread": "{{count}} thông báo chưa đọc",
+    "bannersEmpty": "Chưa có hình ảnh nổi bật nào.",
+    "suggestionsEmpty": "Chưa có gợi ý điểm đến nào.",
+    "planFor": "Lên kế hoạch đi {{place}}"
   },
   "assistant": {
     "welcome1": "Xin chào, tôi là Aloca, trợ lý du lịch của bạn. Tôi có thể giúp bạn lên kế hoạch cho chuyến đi, giới thiệu điểm đến, giới thiệu khách sạn hoặc trả lời bất kỳ câu hỏi nào liên quan đến du lịch.",
@@ -300,6 +305,7 @@
     "edit": "Chỉnh sửa",
     "notifications": "Thông báo",
     "plans": "Kế hoạch",
+    "adminPanel": "Trang quản trị",
     "about": "Về Aloca",
     "whatIs": "Aloca là gì ?",
     "genzTitle": "Aloca for GenZ",
@@ -330,10 +336,14 @@
     "missingInfo": "Vui lòng nhập đầy đủ thông tin",
     "invalidPhone": "Số điện thoại không hợp lệ",
     "notificationsTitle": "Thông báo của bạn",
-    "noNotifications": "Bạn chưa có thông báo nào."
+    "noNotifications": "Bạn chưa có thông báo nào.",
+    "notificationsFailed": "Không tải được thông báo. Vui lòng thử lại."
   },
   "videos": {
-    "title": "Video du lịch"
+    "title": "Video du lịch",
+    "empty": "Chưa có video nào.",
+    "play": "Xem video {{title}}",
+    "unavailable": "Video này chưa có nguồn phát."
   },
   "about": {
     "whatTitle": "Aloca là gì",
@@ -406,5 +416,666 @@
       "Bấm ✕ cạnh \"Truy cập vị trí: Đã chặn\" để bỏ chặn.",
       "Bấm Thử lại, rồi chọn Cho phép khi Firefox hỏi."
     ]
+  },
+  "admin": {
+    "title": "Aloca Admin",
+    "panel": "Trang quản trị",
+    "nav": {
+      "label": "Điều hướng quản trị",
+      "groups": {
+        "overview": "Tổng quan",
+        "management": "Quản lý",
+        "system": "Hệ thống"
+      },
+      "dashboard": "Bảng điều khiển",
+      "reports": "Báo cáo",
+      "users": "Người dùng",
+      "trips": "Chuyến đi",
+      "challenges": "Thử thách",
+      "ai": "Trợ lý AI",
+      "videos": "Video",
+      "notifications": "Thông báo",
+      "moderation": "Kiểm duyệt",
+      "activityLogs": "Nhật ký hoạt động",
+      "roles": "Vai trò & quyền",
+      "settings": "Cài đặt",
+      "home": "Trang chủ app"
+    },
+    "layout": {
+      "home": "Quản trị",
+      "breadcrumb": "Đường dẫn",
+      "openMenu": "Mở menu",
+      "closeMenu": "Đóng menu",
+      "collapse": "Thu gọn",
+      "expand": "Mở rộng",
+      "skipToContent": "Chuyển đến nội dung chính",
+      "notifications": "Thông báo",
+      "notificationsLabel": "Thông báo ({{count}} chưa đọc)",
+      "markAllRead": "Đánh dấu tất cả đã đọc",
+      "alerts": {
+        "newUsers": "{{count}} người dùng mới đăng ký hôm nay",
+        "pendingModeration": "{{count}} nội dung đang chờ kiểm duyệt",
+        "aiErrors": "{{count}} lỗi trợ lý AI trong giờ qua",
+        "reportReady": "Báo cáo tuần đã sẵn sàng"
+      },
+      "account": "Tài khoản",
+      "userApp": "Về trang người dùng",
+      "logout": "Đăng xuất"
+    },
+    "common": {
+      "actions": "Thao tác",
+      "status": "Trạng thái",
+      "allStatuses": "Mọi trạng thái",
+      "refresh": "Làm mới",
+      "export": "Xuất dữ liệu",
+      "delete": "Xóa",
+      "viewItem": "Xem {{name}}",
+      "editItem": "Sửa {{name}}",
+      "deleteItem": "Xóa {{name}}",
+      "viewAll": "Xem tất cả",
+      "clearSearch": "Xóa từ khóa",
+      "noResults": "Không tìm thấy kết quả",
+      "noResultsHint": "Thử từ khóa hoặc bộ lọc khác.",
+      "resetFilters": "Xóa bộ lọc",
+      "loading": "Đang tải dữ liệu",
+      "showTable": "Xem dạng bảng",
+      "increase": "Tăng",
+      "decrease": "Giảm",
+      "noChange": "Không đổi",
+      "vsLastMonth": "so với tháng trước",
+      "vsPreviousPeriod": "so với kỳ trước",
+      "demoTitle": "Bản giao diện",
+      "demoText": "Thao tác này chưa được kết nối với máy chủ.",
+      "actionFailed": "Thao tác không thành công",
+      "tryAgain": "Vui lòng thử lại."
+    },
+    "pagination": {
+      "label": "Phân trang",
+      "summary": "Hiển thị {{from}}–{{to}} trên {{total}}",
+      "previous": "Trang trước",
+      "next": "Trang sau",
+      "page": "Trang {{page}}",
+      "pageOf": "Trang {{page}}/{{pages}}"
+    },
+    "roles": {
+      "admin": "Quản trị viên",
+      "user": "Người dùng"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "notActive": "Chưa xác minh",
+      "deleted": "Đã xóa",
+      "ok": "Bình thường",
+      "aiError": "Lỗi AI",
+      "published": "Đã đăng",
+      "hidden": "Đã ẩn",
+      "processing": "Đang xử lý",
+      "sent": "Đã gửi",
+      "scheduled": "Đã lên lịch",
+      "draft": "Bản nháp",
+      "info": "Thông tin",
+      "warning": "Cảnh báo",
+      "error": "Lỗi",
+      "pending": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "rejected": "Đã từ chối",
+      "suspended": "Bị khóa"
+    },
+    "dashboard": {
+      "title": "Bảng điều khiển",
+      "description": "Tình hình hoạt động của Aloca trong 30 ngày qua.",
+      "stats": {
+        "users": "Người dùng",
+        "trips": "Kế hoạch chuyến đi",
+        "challengesCompleted": "Thử thách hoàn thành",
+        "aiChats": "Cuộc trò chuyện AI"
+      },
+      "newUsers": "Người dùng mới",
+      "newUsersHint": "Số tài khoản đăng ký mỗi tháng, 12 tháng gần nhất",
+      "topDestinations": "Điểm đến phổ biến",
+      "topDestinationsHint": "Theo số kế hoạch đã tạo",
+      "tripsCount": "{{value}} chuyến",
+      "recentActivity": "Hoạt động gần đây",
+      "pendingModeration": "Chờ kiểm duyệt",
+      "pendingCount": "{{count}} mục đang chờ xử lý"
+    },
+    "users": {
+      "title": "Quản lý người dùng",
+      "description": "Quản lý tài khoản và hoạt động của người dùng Aloca.",
+      "exportUsers": "Xuất người dùng",
+      "search": "Tìm theo tên hoặc email",
+      "allRoles": "Mọi vai trò",
+      "registrationDate": "Ngày đăng ký",
+      "sortBy": "Sắp xếp theo",
+      "never": "Chưa đăng nhập",
+      "notProvided": "Chưa cập nhật",
+      "pageSize": "Số dòng mỗi trang",
+      "selectPage": "Chọn tất cả người dùng của trang",
+      "selectUser": "Chọn {{name}}",
+      "moreActions": "Thao tác với {{name}}",
+      "viewDetails": "Xem chi tiết",
+      "editUser": "Chỉnh sửa người dùng",
+      "changeRole": "Đổi vai trò",
+      "suspendAccount": "Khóa tài khoản",
+      "reactivateAccount": "Mở khóa tài khoản",
+      "deleteAccount": "Xóa tài khoản",
+      "backToUsers": "Quay lại danh sách",
+      "joinedOn": "Tham gia {{date}}",
+      "suspendedBanner": "Tài khoản đang bị khóa.",
+      "noReason": "Không có lý do.",
+      "notFound": "Không tìm thấy người dùng",
+      "notFoundHint": "Tài khoản không tồn tại hoặc đã bị xóa khỏi hệ thống.",
+      "statistics": "Thống kê người dùng",
+      "basicInfo": "Thông tin cơ bản",
+      "recentActivity": "Hoạt động gần đây",
+      "stats": {
+        "total": "Tổng người dùng",
+        "active": "Đang hoạt động",
+        "new": "Người dùng mới (30 ngày)",
+        "suspended": "Bị khóa",
+        "totalTrips": "Tổng chuyến đi",
+        "completedTrips": "Chuyến đi hoàn thành",
+        "challengesJoined": "Thử thách đã tham gia",
+        "points": "Tổng điểm",
+        "aiConversations": "Cuộc trò chuyện AI"
+      },
+      "columns": {
+        "user": "Người dùng",
+        "email": "Email",
+        "role": "Vai trò",
+        "status": "Trạng thái",
+        "joined": "Ngày tham gia",
+        "lastActive": "Hoạt động gần nhất",
+        "trips": "Chuyến đi"
+      },
+      "fields": {
+        "fullname": "Họ và tên",
+        "username": "Tên đăng nhập",
+        "email": "Email",
+        "phone": "Số điện thoại",
+        "city": "Thành phố",
+        "password": "Mật khẩu"
+      },
+      "registered": {
+        "all": "Mọi thời điểm",
+        "7d": "7 ngày qua",
+        "30d": "30 ngày qua",
+        "90d": "90 ngày qua",
+        "year": "12 tháng qua"
+      },
+      "lastActiveFilter": {
+        "all": "Mọi hoạt động",
+        "24h": "Trong 24 giờ",
+        "7d": "Trong 7 ngày",
+        "30d": "Trong 30 ngày",
+        "inactive": "Không hoạt động > 30 ngày",
+        "never": "Chưa từng đăng nhập"
+      },
+      "sort": {
+        "newest": "Mới đăng ký nhất",
+        "oldest": "Đăng ký lâu nhất",
+        "nameAsc": "Tên A → Z",
+        "nameDesc": "Tên Z → A",
+        "mostTrips": "Nhiều chuyến đi nhất",
+        "recentlyActive": "Hoạt động gần đây",
+        "points": "Điểm cao nhất"
+      },
+      "points": "{{value}} điểm",
+      "bulk": {
+        "label": "Thao tác hàng loạt",
+        "selected": "Đã chọn {{count}} người dùng",
+        "export": "Xuất đã chọn",
+        "suspend": "Khóa đã chọn",
+        "reactivate": "Mở khóa đã chọn",
+        "clear": "Bỏ chọn"
+      },
+      "tabs": {
+        "label": "Chi tiết người dùng",
+        "overview": "Tổng quan",
+        "trips": "Kế hoạch chuyến đi",
+        "challenges": "Thử thách & thành tích",
+        "activity": "Lịch sử hoạt động"
+      },
+      "trips": {
+        "name": "Chuyến đi",
+        "destination": "Điểm đến",
+        "days": "Số ngày",
+        "start": "Khởi hành",
+        "view": "Xem",
+        "empty": "Chưa có chuyến đi",
+        "emptyHint": "Người dùng này chưa tạo kế hoạch chuyến đi nào.",
+        "created": "Ngày tạo",
+        "details": "Chi tiết chuyến đi",
+        "phaseLabel": "Tình trạng",
+        "phase": {
+          "upcoming": "Sắp đi",
+          "ongoing": "Đang đi",
+          "completed": "Đã hoàn thành"
+        },
+        "total": "Tổng chi phí",
+        "challengesCount": "Thử thách",
+        "dayN": "Ngày {{day}}",
+        "noDays": "Kế hoạch chưa có lịch trình theo ngày."
+      },
+      "challenges": {
+        "joined": "Đã tham gia",
+        "completed": "Đã hoàn thành",
+        "points": "Điểm thưởng nhận được",
+        "unknown": "Thử thách đã bị xóa",
+        "completedOn": "Hoàn thành {{date}}",
+        "inProgress": "Đang thực hiện",
+        "statusDone": "Hoàn thành",
+        "statusActive": "Đang làm",
+        "empty": "Chưa tham gia thử thách",
+        "emptyHint": "Người dùng này chưa tham gia thử thách nào."
+      },
+      "activity": {
+        "signup": "Đăng ký tài khoản",
+        "hint": "Các hoạt động được ghi nhận trong nhật ký hệ thống, mới nhất ở trên."
+      },
+      "dialogs": {
+        "editText": "Cập nhật thông tin hồ sơ và vai trò. Mật khẩu không thể thay đổi tại đây.",
+        "saveChanges": "Lưu thay đổi",
+        "saving": "Đang lưu…",
+        "deleting": "Đang xóa…",
+        "roleText": "Vai trò quyết định người dùng có truy cập được khu vực quản trị hay không.",
+        "currentRole": "Vai trò hiện tại",
+        "newRole": "Vai trò mới",
+        "confirmRole": "Đổi vai trò",
+        "roleImpact": {
+          "user": "Dùng ứng dụng Aloca: lên kế hoạch, trò chuyện với AI, tham gia thử thách. Không vào được khu vực quản trị.",
+          "admin": "Toàn quyền quản trị: quản lý người dùng, nội dung, kiểm duyệt và cài đặt hệ thống."
+        },
+        "suspendText": "Người dùng sẽ bị đăng xuất và không thể đăng nhập cho đến khi được mở khóa.",
+        "suspendMany": "Khóa {{count}} tài khoản",
+        "reason": "Lý do khóa tài khoản",
+        "reasonPlaceholder": "Ví dụ: Vi phạm quy tắc cộng đồng, spam…",
+        "confirmSuspension": "Xác nhận khóa",
+        "reactivateText": "Người dùng sẽ có thể đăng nhập và sử dụng Aloca trở lại.",
+        "reactivateMany": "Mở khóa {{count}} tài khoản",
+        "confirmReactivation": "Xác nhận mở khóa",
+        "deleteText": "Tài khoản sẽ bị vô hiệu hóa và người dùng không thể đăng nhập vào Aloca.",
+        "deleteWarning": "Thao tác này không thể hoàn tác từ giao diện quản trị.",
+        "deleteMany": "Xóa {{count}} tài khoản",
+        "selectedCount": "{{count}} người dùng được chọn",
+        "andMore": "và {{count}} người khác",
+        "changePhoto": "Đổi ảnh đại diện",
+        "uploading": "Đang tải ảnh…",
+        "createText": "Tạo tài khoản đã kích hoạt sẵn. Người dùng có thể đổi mật khẩu bằng \"Quên mật khẩu\".",
+        "createAccount": "Tạo tài khoản",
+        "passwordHint": "Ít nhất 8 ký tự."
+      },
+      "errors": {
+        "generic": "Không thể hoàn tất thao tác. Vui lòng thử lại.",
+        "loadFailed": "Không tải được dữ liệu người dùng",
+        "loadFailedHint": "Kiểm tra kết nối đến máy chủ rồi thử lại.",
+        "fullnameRequired": "Vui lòng nhập họ và tên.",
+        "fullnameLong": "Họ và tên tối đa 100 ký tự.",
+        "emailRequired": "Vui lòng nhập email.",
+        "emailInvalid": "Email không hợp lệ.",
+        "phoneInvalid": "Số điện thoại không hợp lệ.",
+        "reasonRequired": "Vui lòng nhập lý do (ít nhất 3 ký tự).",
+        "usernameInvalid": "Tên đăng nhập 3–30 ký tự: chữ, số, dấu chấm hoặc gạch dưới.",
+        "passwordShort": "Mật khẩu cần ít nhất 8 ký tự.",
+        "usernameTaken": "Tên đăng nhập đã được sử dụng.",
+        "emailTaken": "Email đã được sử dụng.",
+        "uploadFailed": "Không tải được ảnh. Vui lòng thử lại."
+      },
+      "toasts": {
+        "updated": "Đã cập nhật người dùng",
+        "roleChanged": "Đã đổi vai trò",
+        "suspended": "Đã khóa {{count}} tài khoản",
+        "reactivated": "Đã mở khóa {{count}} tài khoản",
+        "deleted": "Đã xóa {{count}} tài khoản",
+        "skipped": "{{count}} tài khoản không thể thay đổi (chính bạn, quản trị viên hoặc đã ở trạng thái này).",
+        "exported": "Đã xuất {{count}} người dùng",
+        "created": "Đã tạo tài khoản"
+      },
+      "add": "Thêm người dùng"
+    },
+    "trips": {
+      "title": "Chuyến đi",
+      "description": "Các kế hoạch chuyến đi người dùng đã lưu.",
+      "search": "Tìm theo tên chuyến đi, điểm đến, người tạo",
+      "destination": "Điểm đến",
+      "allDestinations": "Mọi điểm đến",
+      "columns": {
+        "trip": "Chuyến đi",
+        "owner": "Người tạo",
+        "dates": "Khởi hành",
+        "challenges": "Thử thách",
+        "cost": "Tổng chi phí",
+        "status": "Trạng thái"
+      },
+      "days": "{{count}} ngày",
+      "deleteTitle": "Xóa chuyến đi?",
+      "deleteText": "Kế hoạch \"{{name}}\" sẽ bị ẩn khỏi danh sách của người dùng.",
+      "deleted": "Đã xóa chuyến đi \"{{name}}\""
+    },
+    "challenges": {
+      "title": "Thử thách",
+      "description": "Địa điểm thử thách, điểm thưởng và tỉ lệ hoàn thành.",
+      "add": "Thêm thử thách",
+      "search": "Tìm theo địa điểm",
+      "allProvinces": "Mọi tỉnh thành",
+      "stats": {
+        "total": "Địa điểm thử thách",
+        "participants": "Lượt tham gia",
+        "completed": "Lượt hoàn thành",
+        "avgPoints": "Điểm thưởng trung bình"
+      },
+      "columns": {
+        "place": "Địa điểm",
+        "province": "Tỉnh thành",
+        "points": "Điểm",
+        "participants": "Tham gia",
+        "completion": "Tỉ lệ hoàn thành"
+      },
+      "deleteTitle": "Xóa thử thách?",
+      "deleteText": "Thử thách tại {{name}} sẽ không còn xuất hiện trong các kế hoạch mới.",
+      "deleted": "Đã xóa thử thách \"{{name}}\"",
+      "updated": "Đã cập nhật thử thách",
+      "edit": "Sửa thử thách",
+      "fields": {
+        "summary": "Mô tả"
+      },
+      "errors": {
+        "nameRequired": "Vui lòng nhập tên địa điểm.",
+        "points": "Điểm là số nguyên từ 0 đến {{max}}."
+      }
+    },
+    "ai": {
+      "title": "Trợ lý AI",
+      "description": "Mức sử dụng và chất lượng phản hồi của trợ lý du lịch AI.",
+      "stats": {
+        "conversations": "Cuộc trò chuyện",
+        "messages": "Tin nhắn",
+        "avgResponse": "Thời gian phản hồi TB",
+        "errorRate": "Tỉ lệ lỗi",
+        "activeUsers": "Người dùng đã chat",
+        "avgMessages": "Tin nhắn mỗi cuộc trò chuyện"
+      },
+      "seconds": "{{value}} giây",
+      "dailyMessages": "Tin nhắn mỗi ngày",
+      "dailyMessagesHint": "14 ngày gần nhất",
+      "conversations": "Cuộc trò chuyện gần đây",
+      "search": "Tìm theo chủ đề, người dùng",
+      "columns": {
+        "title": "Chủ đề",
+        "user": "Người dùng",
+        "messages": "Tin nhắn",
+        "response": "Phản hồi TB",
+        "updated": "Cập nhật",
+        "status": "Trạng thái"
+      }
+    },
+    "videos": {
+      "title": "Video",
+      "description": "Video du lịch hiển thị trên trang chủ và trang video.",
+      "upload": "Tải video lên",
+      "search": "Tìm theo tiêu đề, địa điểm",
+      "views": "{{value}} lượt xem",
+      "deleteTitle": "Xóa video?",
+      "deleteText": "Video \"{{name}}\" sẽ bị gỡ khỏi ứng dụng.",
+      "add": "Thêm video",
+      "edit": "Sửa video",
+      "created": "Đã thêm video",
+      "updated": "Đã cập nhật video",
+      "deleted": "Đã xóa video \"{{name}}\"",
+      "onHome": "Trang chủ",
+      "fields": {
+        "title": "Tiêu đề",
+        "location": "Địa điểm",
+        "youtubeLink": "Liên kết YouTube",
+        "duration": "Thời lượng (giây)",
+        "showOnHome": "Hiển thị ở trang chủ ứng dụng"
+      },
+      "errors": {
+        "titleRequired": "Vui lòng nhập tiêu đề.",
+        "linkInvalid": "Liên kết phải bắt đầu bằng http:// hoặc https://.",
+        "duration": "Thời lượng là số nguyên không âm."
+      }
+    },
+    "notifications": {
+      "title": "Thông báo",
+      "description": "Thông báo gửi đến người dùng ứng dụng.",
+      "create": "Tạo thông báo",
+      "search": "Tìm theo tiêu đề",
+      "channelLabel": "Kênh gửi",
+      "allChannels": "Mọi kênh",
+      "columns": {
+        "title": "Tiêu đề",
+        "audience": "Người nhận",
+        "recipients": "Số người nhận",
+        "time": "Thời gian gửi",
+        "status": "Trạng thái"
+      },
+      "audience": {
+        "all": "Tất cả người dùng",
+        "active": "Người dùng hoạt động",
+        "inactive": "Người dùng chưa quay lại",
+        "admins": "Quản trị viên"
+      },
+      "channel": {
+        "push": "Thông báo đẩy",
+        "email": "Email",
+        "inApp": "Trong ứng dụng"
+      },
+      "deleteTitle": "Xóa thông báo?",
+      "deleteText": "Thông báo \"{{name}}\" sẽ bị xóa.",
+      "edit": "Sửa thông báo",
+      "created": "Đã tạo thông báo",
+      "updated": "Đã cập nhật thông báo",
+      "deleted": "Đã xóa thông báo \"{{name}}\"",
+      "formText": "Thông báo đã đăng sẽ hiện cho mọi người dùng trong ứng dụng từ thời điểm đã chọn.",
+      "publish": "Đăng",
+      "fields": {
+        "message": "Nội dung"
+      },
+      "errors": {
+        "titleRequired": "Vui lòng nhập tiêu đề.",
+        "dateInvalid": "Thời gian không hợp lệ."
+      }
+    },
+    "reports": {
+      "title": "Báo cáo",
+      "description": "Số liệu tăng trưởng và hành trình theo thời gian.",
+      "period": "Khoảng thời gian",
+      "periods": {
+        "7d": "7 ngày qua",
+        "30d": "30 ngày qua",
+        "90d": "90 ngày qua"
+      },
+      "stats": {
+        "newUsers": "Người dùng mới",
+        "tripsCreated": "Kế hoạch được tạo",
+        "completionRate": "Tỉ lệ hoàn thành thử thách",
+        "avgTripCost": "Chi phí TB mỗi chuyến"
+      },
+      "tripsCreated": "Kế hoạch được tạo",
+      "byProvince": "Theo tỉnh thành",
+      "columns": {
+        "province": "Tỉnh thành",
+        "trips": "Kế hoạch",
+        "completed": "Thử thách hoàn thành",
+        "avgCost": "Chi phí TB"
+      }
+    },
+    "moderation": {
+      "title": "Kiểm duyệt",
+      "description": "Nội dung bị báo cáo và ảnh thử thách cần xem xét.",
+      "search": "Tìm theo nội dung, người đăng",
+      "type": "Loại nội dung",
+      "allTypes": "Mọi loại nội dung",
+      "types": {
+        "challengePhoto": "Ảnh thử thách",
+        "chatMessage": "Tin nhắn",
+        "profile": "Hồ sơ",
+        "video": "Video"
+      },
+      "reasons": {
+        "spam": "Spam",
+        "inappropriate": "Không phù hợp",
+        "wrongLocation": "Sai vị trí",
+        "copyright": "Bản quyền"
+      },
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "approveItem": "Duyệt: {{name}}",
+      "rejectItem": "Từ chối: {{name}}",
+      "approveTitle": "Duyệt nội dung này?",
+      "approveText": "Nội dung sẽ tiếp tục hiển thị và báo cáo được đóng lại.",
+      "rejectTitle": "Từ chối nội dung này?",
+      "rejectText": "Nội dung sẽ bị ẩn và người đăng sẽ nhận được thông báo.",
+      "emptyTitle": "Không có nội dung chờ duyệt",
+      "approved": "Đã duyệt nội dung",
+      "rejected": "Đã từ chối nội dung"
+    },
+    "activityLogs": {
+      "title": "Nhật ký hoạt động",
+      "description": "Thao tác của người dùng và quản trị viên trên hệ thống.",
+      "search": "Tìm theo người thực hiện, đối tượng, IP",
+      "allActions": "Mọi hành động",
+      "allLevels": "Mọi mức độ",
+      "columns": {
+        "time": "Thời gian",
+        "actor": "Người thực hiện",
+        "action": "Hành động",
+        "target": "Đối tượng",
+        "ip": "Địa chỉ IP",
+        "level": "Mức độ"
+      },
+      "actions": {
+        "login": "Đăng nhập",
+        "createTrip": "Tạo kế hoạch",
+        "deleteTrip": "Xóa kế hoạch",
+        "completeChallenge": "Hoàn thành thử thách",
+        "updateProfile": "Cập nhật hồ sơ",
+        "deleteUser": "Xóa người dùng",
+        "changeRole": "Đổi vai trò",
+        "updateSettings": "Đổi cài đặt",
+        "aiError": "Lỗi trợ lý AI",
+        "restoreUser": "Mở khóa người dùng",
+        "suspendUser": "Khóa người dùng",
+        "updateUser": "Sửa người dùng",
+        "register": "Kích hoạt tài khoản",
+        "useAi": "Dùng trợ lý AI",
+        "createUser": "Tạo người dùng",
+        "updateChallenge": "Sửa thử thách",
+        "manageVideo": "Quản lý video",
+        "manageAnnouncement": "Quản lý thông báo",
+        "moderate": "Kiểm duyệt nội dung",
+        "manageShowcase": "Quản lý ảnh trang chủ"
+      }
+    },
+    "rolesPage": {
+      "title": "Vai trò & quyền",
+      "description": "Vai trò của tài khoản và những gì mỗi vai trò được phép làm.",
+      "readOnly": "Vai trò được định nghĩa ở máy chủ (người dùng và quản trị viên). Trang này chỉ để xem; chỉnh sửa phân quyền sẽ có khi máy chủ hỗ trợ.",
+      "adminDescription": "Toàn quyền trên trang quản trị và mọi tài khoản.",
+      "userDescription": "Lên kế hoạch, trò chuyện với trợ lý AI và tham gia thử thách.",
+      "members": "Thành viên",
+      "permissionCount": "Quyền",
+      "matrix": "Bảng phân quyền",
+      "matrixHint": "Quyền của từng vai trò",
+      "permission": "Quyền",
+      "allowed": "Được phép",
+      "notAllowed": "Không được phép",
+      "permissions": {
+        "planTrips": "Lên kế hoạch chuyến đi",
+        "chatAi": "Trò chuyện với trợ lý AI",
+        "completeChallenges": "Tham gia thử thách",
+        "viewRanking": "Xem bảng xếp hạng",
+        "deleteOwnAccount": "Xóa tài khoản của mình",
+        "deleteAnyAccount": "Xóa tài khoản bất kỳ",
+        "manageContent": "Quản lý nội dung (thử thách, video, thông báo)",
+        "moderate": "Kiểm duyệt nội dung",
+        "viewReports": "Xem báo cáo và nhật ký",
+        "manageSettings": "Thay đổi cài đặt hệ thống"
+      }
+    },
+    "settings": {
+      "title": "Cài đặt",
+      "description": "Cấu hình chung của ứng dụng Aloca.",
+      "sections": {
+        "general": "Thông tin chung",
+        "generalHint": "Hiển thị cho người dùng trong ứng dụng",
+        "locale": "Ngôn ngữ & khu vực",
+        "localeHint": "Áp dụng cho người dùng mới",
+        "notifications": "Thông báo cho quản trị viên",
+        "notificationsHint": "Khi nào bạn nhận được thông báo",
+        "security": "Bảo mật",
+        "securityHint": "Đăng nhập và phiên làm việc"
+      },
+      "fields": {
+        "appName": "Tên ứng dụng",
+        "supportEmail": "Email hỗ trợ",
+        "hotline": "Hotline",
+        "defaultLanguage": "Ngôn ngữ mặc định",
+        "timezone": "Múi giờ",
+        "emailOnReport": "Email khi có báo cáo mới",
+        "dailySummary": "Bản tóm tắt hằng ngày",
+        "aiErrorAlert": "Cảnh báo lỗi trợ lý AI",
+        "requireEmailVerification": "Bắt buộc xác minh email",
+        "sessionTimeout": "Tự đăng xuất sau"
+      },
+      "hints": {
+        "emailOnReport": "Gửi email khi người dùng báo cáo nội dung",
+        "dailySummary": "Số liệu của ngày hôm trước, gửi lúc 8:00",
+        "aiErrorAlert": "Khi tỉ lệ lỗi AI vượt 5% trong một giờ",
+        "requireEmailVerification": "Tài khoản mới phải nhập mã gửi qua email"
+      },
+      "minutes": "{{count}} phút",
+      "unsaved": "Bạn có thay đổi chưa lưu.",
+      "saved": "Mọi thay đổi đã được lưu.",
+      "reset": "Hoàn tác",
+      "save": "Lưu thay đổi",
+      "savedToast": "Đã lưu cài đặt",
+      "errors": {
+        "appName": "Vui lòng nhập tên ứng dụng.",
+        "email": "Email không hợp lệ.",
+        "hotline": "Số hotline không hợp lệ."
+      }
+    },
+    "showcase": {
+      "title": "Trang chủ app",
+      "description": "Hình ảnh hiển thị ở trang chủ của ứng dụng: ảnh trượt và gợi ý điểm đến.",
+      "kinds": {
+        "banner": "ảnh trượt",
+        "suggestion": "gợi ý điểm đến"
+      },
+      "sections": {
+        "banner": "Ảnh trượt đầu trang",
+        "bannerHint": "Các ảnh chạy tự động ở đầu trang chủ.",
+        "suggestion": "Có thể bạn sẽ thích?",
+        "suggestionHint": "Bấm vào gợi ý sẽ mở màn lên kế hoạch cho tỉnh thành đã chọn."
+      },
+      "add": "Thêm {{kind}}",
+      "edit": "Sửa {{kind}}",
+      "created": "Đã thêm hình ảnh",
+      "updated": "Đã cập nhật hình ảnh",
+      "deleted": "Đã xóa hình ảnh",
+      "deleteTitle": "Xóa hình ảnh?",
+      "deleteText": "Hình ảnh sẽ không còn xuất hiện ở trang chủ ứng dụng.",
+      "untitled": "Chưa có tiêu đề",
+      "orderValue": "Thứ tự {{order}}",
+      "noImage": "Chưa có ảnh",
+      "chooseImage": "Chọn ảnh",
+      "locationHint": "Tỉnh thành dùng để lên kế hoạch, ví dụ: Lâm Đồng.",
+      "fields": {
+        "title": "Tiêu đề",
+        "location": "Tỉnh thành",
+        "order": "Thứ tự hiển thị (nhỏ hiện trước)"
+      },
+      "empty": {
+        "banner": "Chưa có ảnh trượt",
+        "suggestion": "Chưa có gợi ý điểm đến"
+      },
+      "emptyHint": "Người dùng sẽ thấy dòng thông báo \"chưa có dữ liệu\" cho đến khi bạn thêm.",
+      "errors": {
+        "imageRequired": "Vui lòng chọn ảnh.",
+        "order": "Thứ tự là số nguyên từ 0 đến 9999."
+      }
+    }
   }
 }

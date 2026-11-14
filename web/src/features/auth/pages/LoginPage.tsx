@@ -10,7 +10,7 @@ import {apiMessage, apiStatus, connectionErrorKey} from '@/lib/apiClient';
 import {authApi} from '../api/authApi';
 import AuthShell, {AuthLink} from '../components/AuthShell';
 import PasswordInput from '../components/PasswordInput';
-import {saveSession} from '../store/session';
+import {homeRouteFor, saveSession} from '../store/session';
 import {loginSchema} from '../validation';
 import type {LoginInput} from '../types';
 
@@ -27,7 +27,8 @@ export default function LoginPage() {
       queryClient.invalidateQueries({queryKey: ['profile']});
       Toast.show({type: 'success', text1: t('common.success'), text2: t('auth.login.success')});
       const from = (location.state as {from?: {pathname: string}})?.from?.pathname;
-      navigate(from && from !== routes.Login ? from : routes.Home, {replace: true});
+      // back to the page the user wanted, else the admin panel / home page
+      navigate(from && from !== routes.Login ? from : homeRouteFor(session.data), {replace: true});
     },
     onError: error => {
       const status = apiStatus(error);

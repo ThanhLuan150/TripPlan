@@ -31,6 +31,7 @@ vi.mock("../../src/repositories/challengeProgressRepository.js", () => ({
 vi.mock("../../src/repositories/imageRepository.js", () => ({
     default: { save: vi.fn(), findById: vi.fn(), openDownloadStream: vi.fn() },
 }));
+vi.mock("../../src/services/activityLogService.js", () => ({ default: { record: vi.fn() } }));
 vi.mock("../../src/utils/mailer.js", () => ({ sendVerificationCodeEmail: vi.fn() }));
 
 const { default: app } = await import("../../src/app.js");

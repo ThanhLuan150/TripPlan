@@ -110,13 +110,13 @@ describe("userRepository", () => {
         expect(User.findByIdAndUpdate).toHaveBeenCalledWith("u1", { $inc: { experience: 30 } }, { new: true });
     });
 
-    it("ranks non-deleted users by experience", () => {
+    it("ranks active, non-admin users by experience", () => {
         userRepository.topByExperience(10);
         userRepository.topByExperience();
 
         const [pipeline] = User.aggregate.mock.calls[0];
         expect(pipeline).toEqual([
-            { $match: { isActive: { $ne: "delete" } } },
+            { $match: { isActive: "active", role: { $ne: "admin" } } },
             { $sort: { experience: -1 } },
             { $limit: 10 },
             { $project: { _id: "$_id", fullname: "$fullname", experience: "$experience", image: "$image" } },

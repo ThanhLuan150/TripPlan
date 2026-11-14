@@ -38,8 +38,15 @@ const UserSchema = mongoose.Schema({
     code: String,
     // set when the reset code is verified; the new password must be sent before it
     resetPasswordExpires: Date,
-    // "notActive" until the email is confirmed, "active", or "delete"
+    // "notActive" until the email is confirmed, "active", "suspended" (blocked by
+    // an admin, can be restored) or "delete"
     isActive: { type: String, default: "notActive" },
+    suspendReason: String,
+    suspendedAt: Date,
+    // last successful sign-in
+    lastLoginAt: Date,
+    // last authenticated request (updated at most every few minutes)
+    lastActiveAt: Date,
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     role: { type: String, enum: ROLES, default: "user" },

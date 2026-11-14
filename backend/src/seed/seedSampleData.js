@@ -5,6 +5,7 @@ import TripPlan from "../models/TripPlan.js";
 import TripDay from "../models/TripDay.js";
 import Challenge from "../models/Challenge.js";
 import UserChallengeProgress from "../models/UserChallengeProgress.js";
+import seedContent from "./seedContent.js";
 import { getDayOfWeek } from "../utils/date.js";
 
 // Demo data for local testing: a "demouser" account with one saved trip, and a few
@@ -70,6 +71,8 @@ export default async function seedSampleData() {
     // username: 5-12 characters, the rule of the sign-in form
     const demo = await upsertUser({ username: "demouser", fullname: "Tài khoản Demo", experience: 30, password });
     console.log(`[seed:sample] users ready (password: ${process.env.SEED_DEMO_PASSWORD ? "SEED_DEMO_PASSWORD" : demoPassword})`);
+
+    await seedContent();
 
     if (await TripPlan.exists({ userId: demo._id, nameTrip: sampleTrip.nameTrip, status: { $ne: "delete" } })) {
         console.log("[seed:sample] sample trip already exists");

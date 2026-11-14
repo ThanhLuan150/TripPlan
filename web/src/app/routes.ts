@@ -26,6 +26,25 @@ export const routes = {
   Benefit: '/benefit',
 } as const;
 
+// Admin panel (web only, role "admin"): features/admin, loaded on demand.
+export const adminRoutes = {
+  root: '/admin',
+  dashboard: '/admin/dashboard',
+  users: '/admin/users',
+  user: (id: string) => `/admin/users/${id}`,
+  trips: '/admin/trips',
+  challenges: '/admin/challenges',
+  ai: '/admin/ai',
+  videos: '/admin/videos',
+  home: '/admin/home',
+  notifications: '/admin/notifications',
+  reports: '/admin/reports',
+  settings: '/admin/settings',
+  activityLogs: '/admin/activity-logs',
+  moderation: '/admin/moderation',
+  roles: '/admin/roles',
+} as const;
+
 // React Router v7 behaviour, opted into now (also silences its console
 // warnings): navigations run in React.startTransition, and relative paths
 // inside splat ("*") routes resolve like in v7. Used by every router.

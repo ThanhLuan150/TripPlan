@@ -17,6 +17,7 @@ vi.mock("../../../src/repositories/userRepository.js", () => ({
         updateById: vi.fn(),
     },
 }));
+vi.mock("../../../src/services/activityLogService.js", () => ({ default: { record: vi.fn() } }));
 vi.mock("../../../src/utils/mailer.js", () => ({ sendVerificationCodeEmail: vi.fn() }));
 
 const USER_ID = "64b000000000000000000001";
@@ -135,6 +136,7 @@ describe("login", () => {
     it.each([
         [null, 404, "The account is not registered"],
         [{ isActive: "delete" }, 400, "The account has been deleted"],
+        [{ isActive: "suspended" }, 403, "The account has been suspended"],
         [{ isActive: "notActive" }, 404, "Unverified account"],
     ])("rejects account state %j", async (state, status, message) => {
         userRepository.findByUsername.mockResolvedValue(state && user(state));
@@ -160,7 +162,7 @@ describe("login", () => {
 
         expect(verifyAccessToken(result.accessToken)).toMatchObject({ userId: USER_ID, exp: false });
         const [, update] = userRepository.updateById.mock.calls[0];
-        expect(update).toEqual({ refreshToken: expect.any(String), fcmToken: "device-1" });
+        expect(update).toEqual({ refreshToken: expect.any(String), lastLoginAt: expect.any(Date), lastActiveAt: expect.any(Date), fcmToken: "device-1" });
         expect(result.data).toEqual({ username: "traveler", email: "traveler@example.com", role: "user", experience: 40, fcmToken: "device-1" });
     });
 

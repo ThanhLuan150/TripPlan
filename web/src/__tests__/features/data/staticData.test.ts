@@ -4,7 +4,6 @@ import en from '@/locales/en.json';
 import {areaTypes} from '@/features/trips/data/areaTypes';
 import {images} from '@/features/trips/data/provinceImages';
 import {provices} from '@/features/trips/data/provinces';
-import {allVideos, homeVideos} from '@/features/videos/data/videos';
 
 const lookup = (dict: object, key: string) =>
   key.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], dict);
@@ -36,14 +35,3 @@ describe('area types', () => {
   });
 });
 
-describe('videos', () => {
-  it('have unique ids, a source and a YouTube link', () => {
-    for (const list of [homeVideos, allVideos]) {
-      expect(new Set(list.map(v => v.id)).size).toBe(list.length);
-      for (const video of list) {
-        expect(video.src).toBeTruthy();
-        expect(video.youtubeLink).toMatch(/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//);
-      }
-    }
-  });
-});
