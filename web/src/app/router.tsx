@@ -1,5 +1,5 @@
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
-import {routes} from './routes';
+import {routerFuture, routes} from './routes';
 import RequireAuth from './RequireAuth';
 import MainLayout from '@/components/layout/MainLayout';
 import AssistantLayout from '@/components/layout/AssistantLayout';
@@ -26,7 +26,7 @@ import BenefitPage from '@/features/about/pages/BenefitPage';
 
 export default function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={routerFuture}>
       <Routes>
         {/* public */}
         <Route path={routes.LandingPage} element={<LandingPage />} />

@@ -105,7 +105,7 @@ export default async function seedSampleData() {
             foodCost: day.foodCost,
             otherCost: day.otherCost,
         });
-        for (const [i, data] of day.challenges.entries()) {
+        for (const data of day.challenges) {
             const challenge = await Challenge.create({ ...data, tripDayId: tripDay._id });
             // one challenge is already done, to show both states
             const done = Boolean(data.imageUrl);

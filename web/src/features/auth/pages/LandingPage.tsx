@@ -1,27 +1,17 @@
-import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {IoArrowForward} from 'react-icons/io5';
 import {routes} from '@/app/routes';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
-import {storage, StorageKeys} from '@/lib/storage';
 import {getUser} from '../store/session';
 import logo from '@/assets/images/Icon.png';
 import cover from '@/assets/images/hagiangImage1.jpg';
 
+// Entry screen of the site, shown on every visit and after logging out.
+// "Start" opens the home page when signed in, the sign-in page otherwise.
 export default function LandingPage() {
   const {t} = useTranslation();
   const navigate = useNavigate();
-  // read once, so the check is stable across re-renders / StrictMode effects
-  const [firstVisit] = useState(() => !storage.getItem(StorageKeys.welcomeShown));
-
-  useEffect(() => {
-    if (firstVisit) {
-      storage.setItem(StorageKeys.welcomeShown, 'true');
-    } else {
-      navigate(getUser() ? routes.Home : routes.Login, {replace: true});
-    }
-  }, [firstVisit, navigate]);
 
   const handleGetStart = () => navigate(getUser() ? routes.Home : routes.Login);
 

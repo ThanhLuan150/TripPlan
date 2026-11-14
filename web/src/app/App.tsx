@@ -7,10 +7,6 @@ import {saveUserLocation} from '@/lib/location';
 const queryClient = new QueryClient();
 
 export default function App() {
-  // Refresh the user's county ('userLocation', used when generating trips) if
-  // location is already allowed. We do not prompt on page load: the browser
-  // asks when a feature needs it (challenge photo, "my location" on the map),
-  // with an explanation first. (FCM push notifications are mobile-only.)
   useEffect(() => {
     saveUserLocation().catch(err =>
       console.warn('Không lấy được vị trí người dùng:', err),

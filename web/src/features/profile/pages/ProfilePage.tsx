@@ -50,7 +50,7 @@ export default function ProfilePage() {
     clearSession();
     resetChatCache();
     queryClient.clear();
-    navigate(routes.Login, {replace: true});
+    navigate(routes.LandingPage, {replace: true});
   };
 
   return (

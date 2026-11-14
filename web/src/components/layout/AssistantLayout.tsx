@@ -11,8 +11,6 @@ const tabClass = ({isActive}: {isActive: boolean}) =>
       : 'text-slate-500 hover:text-slate-800'
   }`;
 
-// 'Trợ lý' tab: "Chat" and "Kế hoạch" (react-native-tab-view on mobile).
-// The chat stays mounted while browsing plans, like the TabView did.
 export default function AssistantLayout() {
   const {t} = useTranslation();
   const {pathname} = useLocation();

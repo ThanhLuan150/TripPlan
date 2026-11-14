@@ -1,0 +1,43 @@
+name: Dependency review
+
+# Fails a PR that adds or upgrades to a dependency with a known high /
+# critical vulnerability (backend yarn.lock and web package-lock.json).
+#
+# Needs the repository's Dependency graph (Settings > Advanced Security >
+# Dependency graph). While it is disabled the review is skipped with a warning
+# instead of failing every PR.
+on:
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # summary comment on failure
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Is the dependency graph enabled?
+        id: graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/dependency-graph/sbom" --silent; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Dependency review skipped::The Dependency graph is disabled for this repository. Enable it in Settings > Advanced Security > Dependency graph to check new dependencies for vulnerabilities."
+          fi
+
+      - if: steps.graph.outputs.enabled == 'true'
+        uses: actions/dependency-review-action@v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure

@@ -23,7 +23,6 @@ export const StorageKeys = {
   user: 'user',
   accessToken: 'AccessToken',
   userLocation: 'userLocation',
-  welcomeShown: 'hasShownWelcomeScreen',
   registeredEmail: 'registeredEmail',
   resetEmail: 'emailResetPassword',
 } as const;

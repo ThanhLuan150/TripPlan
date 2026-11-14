@@ -15,7 +15,9 @@ app.use(cors({
     // lets the web app read the refreshed access token (see middleware/auth.js)
     exposedHeaders: ["Authorization"],
 }));
-app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
+if (env.nodeEnv !== "test") {
+    app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
+}
 
 app.get("/health", (req, res) => {
     const db = isDatabaseConnected() ? "connected" : "disconnected";

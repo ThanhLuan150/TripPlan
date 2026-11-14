@@ -1,4 +1,5 @@
 /node_modules
+/coverage
 
 package-lock.json
 
@@ -14,5 +15,6 @@ serverviceAccountKey.json
 # Yarn: keep the offline cache out of git, only yarn.lock + .yarnrc.yml
 .yarn/*
 !.yarn/releases
+!.yarn/plugins
 .yarn/install-state.gz
 .pnp.*
