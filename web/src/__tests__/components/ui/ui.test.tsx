@@ -1,6 +1,7 @@
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {MemoryRouter} from 'react-router-dom';
+import {routerFuture} from '@/app/routes';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import i18n from '@/lib/i18n';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -12,7 +13,7 @@ import Toast, {ToastHost} from '@/components/ui/Toast';
 describe('SectionHeader', () => {
   it('shows the title and a "see more" link', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFuture}>
         <SectionHeader title="Video du lịch" to="/videos" icon={<span>🎬</span>} />
       </MemoryRouter>,
     );
@@ -23,14 +24,14 @@ describe('SectionHeader', () => {
 
   it('uses a custom link text, or no link without destination', () => {
     const {rerender} = render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFuture}>
         <SectionHeader title="Xếp hạng" to="/ranking" linkText="Tất cả" />
       </MemoryRouter>,
     );
     expect(screen.getByRole('link', {name: 'Tất cả'})).toBeInTheDocument();
 
     rerender(
-      <MemoryRouter>
+      <MemoryRouter future={routerFuture}>
         <SectionHeader title="Xếp hạng" />
       </MemoryRouter>,
     );

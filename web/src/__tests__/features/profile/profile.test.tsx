@@ -63,7 +63,7 @@ describe('ProfilePage', () => {
     expect(screen.getByText('A')).toBeInTheDocument();
   });
 
-  it('logs out: clears the session and the open chat', async () => {
+  it('logs out to the landing page: clears the session and the open chat', async () => {
     saveSession({accessToken: 't', data: user});
     chatCache.idChat = 'c1';
     const u = userEvent.setup();
@@ -71,7 +71,7 @@ describe('ProfilePage', () => {
 
     await u.click(screen.getByRole('button', {name: t('profile.logout')}));
 
-    expect(await currentPath()).toBe('/login');
+    expect(await currentPath()).toBe('/');
     expect(getSession()).toBeNull();
     expect(chatCache.idChat).toBeNull();
     expect(chatCache.messages).toBe(initialMessages);

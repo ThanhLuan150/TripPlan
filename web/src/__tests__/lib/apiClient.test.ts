@@ -129,14 +129,14 @@ describe('api instance', () => {
     expect(getSession()?.accessToken).toBe('fresh-token');
   });
 
-  it('signs out and goes to /login on a 401 of an authenticated call', async () => {
+  it('signs out and goes to the landing page on a 401 of an authenticated call', async () => {
     saveSession(session);
     reply = reject401;
 
     await expect(api.get('/trip-plan/get-trip')).rejects.toBeInstanceOf(AxiosError);
 
     expect(getSession()).toBeNull();
-    expect(assign).toHaveBeenCalledWith('/login');
+    expect(assign).toHaveBeenCalledWith('/');
   });
 
   it('does not sign out on a 401 of the auth routes (wrong password)', async () => {
@@ -149,9 +149,9 @@ describe('api instance', () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it('does not redirect again when already on /login', async () => {
+  it('does not reload when already on the landing page', async () => {
     saveSession(session);
-    vi.stubGlobal('location', {...window.location, pathname: '/login', assign});
+    vi.stubGlobal('location', {...window.location, pathname: '/', assign});
     reply = reject401;
 
     await expect(api.get('/chat')).rejects.toBeInstanceOf(AxiosError);

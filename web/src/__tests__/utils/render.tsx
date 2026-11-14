@@ -4,6 +4,7 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {render, screen} from '@testing-library/react';
 import type {ReactElement} from 'react';
 import {MemoryRouter, Route, Routes, useLocation} from 'react-router-dom';
+import {routerFuture} from '@/app/routes';
 import {ToastHost} from '@/components/ui/Toast';
 import i18n from '@/lib/i18n';
 
@@ -43,7 +44,7 @@ export function renderWithProviders(
   const entries = [...history, {pathname: route, state}];
   const result = render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1}>
+      <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1} future={routerFuture}>
         <Routes>
           <Route path={path ?? route} element={ui} />
           <Route path="*" element={<LocationProbe />} />

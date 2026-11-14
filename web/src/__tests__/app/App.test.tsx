@@ -63,6 +63,14 @@ describe('public routes', () => {
     expect(await screen.findByText(page)).toBeInTheDocument();
   });
 
+  it('the site opens on the landing page, even when signed in', async () => {
+    signIn();
+    open('/');
+
+    expect(await screen.findByText('LandingPage')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
+  });
+
   it('unknown URLs go to the landing page', async () => {
     open('/no/such/page');
 

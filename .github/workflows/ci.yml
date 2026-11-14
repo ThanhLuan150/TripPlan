@@ -134,12 +134,11 @@ jobs:
     name: Web · npm audit (production deps)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Report only: known vulnerabilities are shown here and fixed through
-    # Dependabot PRs, without blocking unrelated changes.
-    # (The backend's yarn.lock is covered by Dependabot alerts and the
-    # dependency-review job: Yarn 3's `yarn npm audit` calls an npm endpoint
-    # that no longer exists.)
-    continue-on-error: true
+    # Report only: a newly published advisory shows up as a warning and in the
+    # job summary (and gets a Dependabot PR) without turning unrelated PRs red.
+    # PRs that *add* a vulnerable dependency are blocked by dependency-review.yml.
+    # (The backend's yarn.lock is covered by Dependabot alerts and dependency
+    # review: Yarn 3's `yarn npm audit` calls an npm endpoint that no longer exists.)
     defaults:
       run:
         working-directory: web
@@ -152,7 +151,19 @@ jobs:
           package-manager-cache: false
 
       - name: npm audit
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          if npm audit --omit=dev --audit-level=high > audit.txt; then
+            echo "No high / critical vulnerability in the production dependencies." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=npm audit::High / critical vulnerabilities in web production dependencies (see the job summary)"
+            {
+              echo "### npm audit (web, production dependencies)"
+              echo '```'
+              cat audit.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          cat audit.txt
 
   docker:
     name: Docker · ${{ matrix.service }}

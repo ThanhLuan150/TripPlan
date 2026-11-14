@@ -29,14 +29,13 @@ beforeEach(() => {
 const session = {message: 'Login successfully', accessToken: 'token', data: {username: 'lan', email: 'lan@x.vn'}};
 
 describe('LandingPage', () => {
-  it('first visit: shows the welcome screen once', async () => {
+  it('"start" opens the sign-in page for a visitor', async () => {
     const user = userEvent.setup();
     renderWithProviders(<LandingPage />);
 
     expect(screen.getByText(t('auth.landing.description'))).toBeInTheDocument();
-    expect(storage.getItem(StorageKeys.welcomeShown)).toBe('true');
-
     await user.click(screen.getByRole('button', {name: t('auth.landing.start')}));
+
     expect(await currentPath()).toBe('/login');
   });
 
@@ -49,16 +48,17 @@ describe('LandingPage', () => {
     expect(await currentPath()).toBe('/home');
   });
 
-  it('later visits skip it: to the sign-in page, or home when signed in', async () => {
-    storage.setItem(StorageKeys.welcomeShown, 'true');
+  it('is shown on every visit, signed in or not (no automatic redirect)', async () => {
     const {unmount} = renderWithProviders(<LandingPage />);
-    expect(await currentPath()).toBe('/login');
     unmount();
 
-    storage.setItem(StorageKeys.welcomeShown, 'true');
+    // second visit, now signed in
     saveSession(session);
     renderWithProviders(<LandingPage />);
-    expect(await currentPath()).toBe('/home');
+
+    expect(screen.getByRole('button', {name: t('auth.landing.start')})).toBeInTheDocument();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(screen.queryByTestId('location')).toBeNull();
   });
 });
 

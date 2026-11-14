@@ -225,6 +225,7 @@ lib/          apiClient (axios + token + tự lưu token mới), i18n, firebase,
 locales/      vi.json, en.json
 ```
 
+- Mở web luôn vào trang giới thiệu (landing, `/`), kể cả khi đã đăng nhập; nút "Bắt đầu" vào trang chủ nếu đã đăng nhập, ngược lại vào trang đăng nhập. Đăng xuất, hoặc phiên đăng nhập hết hạn (backend trả 401), cũng quay về landing.
 - Dữ liệu từ API dùng React Query, không dùng Redux. Phiên đăng nhập lưu trong localStorage (`features/auth/store/session.ts`).
 - Import dùng alias `@/` (ví dụ `@/features/trips/hooks/useTrips`).
 - **Ngôn ngữ:** mặc định tiếng Việt. Người dùng đổi VI/EN ở header (desktop), trang Tài khoản, trang đăng nhập; lựa chọn được lưu lại.

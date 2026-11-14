@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {routes} from '@/app/routes';
 import {API_URL} from './config';
 import {
   clearSession,
@@ -28,14 +29,15 @@ api.interceptors.response.use(
     return response;
   },
   error => {
-    // session expired / account gone: back to the sign-in page
+    // session expired / account gone: signed out, back to the landing page
+    // (same place as a manual logout)
     const status = error?.response?.status;
     const url: string = error?.config?.url ?? '';
     const sentToken = !!error?.config?.headers?.Authorization;
     if (status === 401 && sentToken && !url.startsWith('/auth/')) {
       clearSession();
-      if (window.location.pathname !== '/login') {
-        window.location.assign('/login');
+      if (window.location.pathname !== routes.LandingPage) {
+        window.location.assign(routes.LandingPage);
       }
     }
     return Promise.reject(error);

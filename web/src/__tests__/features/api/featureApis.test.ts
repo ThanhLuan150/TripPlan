@@ -124,7 +124,7 @@ describe('profileApi', () => {
     const axiosGet = vi.spyOn(axios, 'get').mockResolvedValue({data: [{id: 1, name: 'n', description: 'd'}]});
 
     await expect(profileApi.notifications()).resolves.toEqual([{id: 1, name: 'n', description: 'd'}]);
-    expect(axiosGet.mock.calls[0][0]).toMatch(/^https:\/\/.*mockapi\.io\//);
+    expect(axiosGet.mock.calls[0][0]).toMatch(/^https:\/\/(?:[a-zA-Z0-9-]+\.)*mockapi\.io(?:\/|$)/);
     expect(get).not.toHaveBeenCalled();
   });
 });
