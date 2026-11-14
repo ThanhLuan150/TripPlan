@@ -19,7 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@google/genai": "1.52.0",
-    "axios": "^1.6.7",
+    "axios": "^1.21.1",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
@@ -30,7 +30,7 @@
     "mailtrap": "^3.2.0",
     "mongoose": "^8.1.0",
     "morgan": "^1.10.0",
-    "multer": "2.1.1",
+    "multer": "2.5.0",
     "natural": "^6.10.4",
     "node-geocoder": "^4.3.0",
     "node-nlp": "^4.27.0",
