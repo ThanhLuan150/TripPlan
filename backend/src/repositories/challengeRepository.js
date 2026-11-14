@@ -11,4 +11,6 @@ const findFirstByTripDayId = (tripDayId) => Challenge.findOne({ tripDayId });
 const setImage = (id, imageUrl) =>
     Challenge.findByIdAndUpdate(id, { imageUrl }, { new: true, projection: { _id: 1, points: 1 } });
 
-export default { create, findById, findByTripDayId, findFirstByTripDayId, setImage };
+const setCoordinates = (id, latitude, longitude) => Challenge.findByIdAndUpdate(id, { latitude, longitude });
+
+export default { create, setCoordinates, findById, findByTripDayId, findFirstByTripDayId, setImage };

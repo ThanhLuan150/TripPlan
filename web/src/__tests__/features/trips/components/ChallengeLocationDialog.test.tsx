@@ -1,7 +1,9 @@
 import {act, fireEvent, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type {ReactNode} from 'react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {challengeApi} from '@/features/trips/api/tripsApi';
+import {routeApi} from '@/features/trips/route';
 import ChallengeLocationDialog from '@/features/trips/components/ChallengeLocationDialog';
 import LocationSteps from '@/features/trips/components/LocationSteps';
 import type {Challenge} from '@/features/trips/types';
@@ -16,7 +18,24 @@ import {
 } from '@/lib/location';
 import {httpError, networkError, pending, renderWithProviders, t} from '../../../utils/render';
 
+// Leaflet needs a real layout: the map is replaced by plain elements
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({children}: {children?: ReactNode}) => <div data-testid="map">{children}</div>,
+  TileLayer: () => null,
+  Circle: () => null,
+  Polyline: ({positions}: {positions: number[][]}) => <div data-testid="route-line" data-points={positions.length} />,
+  Marker: ({children, position}: {children?: ReactNode; position: number[]}) => (
+    <div data-testid="place" data-position={position.join(',')}>{children}</div>
+  ),
+  CircleMarker: ({center}: {center: number[]}) => <div data-testid="me" data-center={center.join(',')} />,
+  Popup: ({children}: {children?: ReactNode}) => <span>{children}</span>,
+  useMap: () => ({setView: vi.fn(), fitBounds: vi.fn(), invalidateSize: vi.fn()}),
+}));
 vi.mock('@/features/trips/api/tripsApi');
+vi.mock('@/features/trips/route', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/features/trips/route')>()),
+  routeApi: {get: vi.fn()},
+}));
 vi.mock('@/lib/location', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/location')>()),
   getCurrentPosition: vi.fn(),
@@ -101,7 +120,8 @@ describe('ChallengeLocationDialog', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('too far: tells the distance, gives directions and checks again', async () => {
+  it('too far: tells the distance, shows the place on a map in the app and checks again', async () => {
+    vi.mocked(routeApi.get).mockRejectedValue(new Error('no route'));
     vi.mocked(challengeApi.checkProgress).mockResolvedValue({distance: 1500, message: 'far'});
     vi.mocked(getCurrentPosition).mockResolvedValue({...here, accuracy: 180});
     const user = userEvent.setup();
@@ -110,22 +130,63 @@ describe('ChallengeLocationDialog', () => {
     expect(await screen.findByRole('heading', {name: t('location.farTitle')})).toBeInTheDocument();
     expect(screen.getByText(t('location.farText', {distance: '1,5 km', max: 250}))).toBeInTheDocument();
     expect(screen.getByText(t('location.lowAccuracy', {accuracy: 180}))).toBeInTheDocument();
-    expect(screen.getByRole('link', {name: t('location.directions')})).toHaveAttribute(
-      'href',
-      'https://www.google.com/maps/dir/?api=1&destination=21.0288,105.8525',
-    );
+    // the map is inside the dialog: the challenge and the user, no link to another site
+    expect(await screen.findByTestId('place')).toHaveAttribute('data-position', '21.0288,105.8525');
+    expect(screen.getByTestId('me')).toHaveAttribute('data-center', '21.029,105.8526');
+    expect(screen.getByRole('region', {name: t('location.mapLabel')})).toBeInTheDocument();
+    expect(screen.queryByRole('link')).toBeNull();
 
     vi.mocked(challengeApi.checkProgress).mockResolvedValue({distance: 100, message: 'ok'});
     await user.click(screen.getByRole('button', {name: t('location.checkAgain')}));
     expect(await screen.findByRole('heading', {name: t('location.nearTitle')})).toBeInTheDocument();
   });
 
-  it('no directions for a challenge without coordinates', async () => {
+  it('too far: draws the way on the map and writes it step by step', async () => {
+    vi.mocked(challengeApi.checkProgress).mockResolvedValue({distance: 9700, message: 'far'});
+    vi.mocked(routeApi.get).mockResolvedValue({
+      distance: 9712,
+      duration: 1480,
+      path: [[21.029, 105.8526], [21.0288, 105.8525], [21.0288, 105.8525]],
+      steps: [
+        {type: 'depart', modifier: 'right', name: 'Hẻm 69', distance: 41},
+        {type: 'turn', modifier: 'left', name: 'Nguyễn Huệ', distance: 3200},
+        {type: 'arrive', modifier: '', name: '', distance: 0},
+      ],
+    });
+    render();
+
+    expect(await screen.findByTestId('route-line')).toHaveAttribute('data-points', '3');
+    expect(routeApi.get).toHaveBeenCalledWith(expect.objectContaining({latitude: 21.029}), {latitude: 21.0288, longitude: 105.8525});
+    expect(screen.getByText(t('route.summary', {distance: '9,7 km', time: t('route.minutes', {count: 25})}))).toBeInTheDocument();
+    expect(screen.getByText(t('route.steps', {count: 3}))).toBeInTheDocument();
+    expect(screen.getByText(`${t('route.left')} ${t('route.onto', {name: 'Nguyễn Huệ'})}`)).toBeInTheDocument();
+    expect(screen.getByText(t('route.arrive'))).toBeInTheDocument();
+  });
+
+  it('near enough: the map shows the place only, no route is asked for', async () => {
+    vi.mocked(challengeApi.checkProgress).mockResolvedValue({distance: 100, message: 'ok'});
+    render();
+
+    expect(await screen.findByTestId('place')).toBeInTheDocument();
+    expect(routeApi.get).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('route-line')).toBeNull();
+  });
+
+  it('says so when no route is found, the map stays', async () => {
+    vi.mocked(challengeApi.checkProgress).mockResolvedValue({distance: 9700, message: 'far'});
+    vi.mocked(routeApi.get).mockRejectedValue(httpError(404, {message: 'No route found'}));
+    render();
+
+    expect(await screen.findByText(t('route.failed'))).toBeInTheDocument();
+    expect(screen.getByTestId('place')).toBeInTheDocument();
+  });
+
+  it('no map for a challenge without coordinates', async () => {
     vi.mocked(challengeApi.checkProgress).mockResolvedValue({distance: 900, message: 'far'});
     render({challenge: {...challenge, latitude: undefined, longitude: undefined}});
 
     await screen.findByRole('heading', {name: t('location.farTitle')});
-    expect(screen.queryByRole('link', {name: t('location.directions')})).toBeNull();
+    expect(screen.queryByTestId('map')).toBeNull();
     expect(screen.queryByText(t('location.lowAccuracy', {accuracy: 20}))).toBeNull();
   });
 

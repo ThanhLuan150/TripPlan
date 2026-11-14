@@ -18,6 +18,8 @@ const findOverlapping = (userId, startDate, endDate) =>
 const existsActiveWithName = (userId, nameTrip) =>
     TripPlan.exists({ userId, nameTrip, ...ACTIVE });
 
+const findById = (id) => TripPlan.findById(id);
+
 const create = (data) => TripPlan.create(data);
 
 const updateById = (id, update) => TripPlan.findByIdAndUpdate(id, update, { new: true });
@@ -25,6 +27,7 @@ const updateById = (id, update) => TripPlan.findByIdAndUpdate(id, update, { new:
 const softDelete = (id) => TripPlan.findByIdAndUpdate(id, { $set: { status: "delete" } }, { new: true });
 
 export default {
+    findById,
     findActiveByUser,
     findOwnedById,
     findOverlapping,

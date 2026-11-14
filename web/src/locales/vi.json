@@ -416,7 +416,8 @@
       "Bấm biểu tượng ổ khóa bên trái thanh địa chỉ.",
       "Bấm ✕ cạnh \"Truy cập vị trí: Đã chặn\" để bỏ chặn.",
       "Bấm Thử lại, rồi chọn Cho phép khi Firefox hỏi."
-    ]
+    ],
+    "mapLabel": "Bản đồ vị trí thử thách"
   },
   "admin": {
     "title": "Aloca Admin",
@@ -1078,5 +1079,29 @@
         "order": "Thứ tự là số nguyên từ 0 đến 9999."
       }
     }
+  },
+  "route": {
+    "loading": "Đang tìm đường đi…",
+    "failed": "Không tìm được đường đi. Hãy dựa vào bản đồ ở trên.",
+    "summary": "{{distance}} · khoảng {{time}} đi xe",
+    "steps": "Các bước chỉ đường ({{count}})",
+    "minutes": "{{count}} phút",
+    "hours": "{{hours}} giờ {{minutes}} phút",
+    "depart": "Xuất phát",
+    "departOn": "Xuất phát trên {{name}}",
+    "arrive": "Đến nơi",
+    "continue": "Tiếp tục",
+    "straight": "Đi thẳng",
+    "left": "Rẽ trái",
+    "right": "Rẽ phải",
+    "slightLeft": "Chếch sang trái",
+    "slightRight": "Chếch sang phải",
+    "sharpLeft": "Rẽ gắt sang trái",
+    "sharpRight": "Rẽ gắt sang phải",
+    "uturn": "Quay đầu",
+    "onto": "vào {{name}}",
+    "along": "trên {{name}}",
+    "roundabout": "Vào vòng xuyến",
+    "roundaboutOnto": "Vào vòng xuyến, ra {{name}}"
   }
 }

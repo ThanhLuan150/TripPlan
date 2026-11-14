@@ -418,7 +418,8 @@
       "Click the lock icon on the left of the address bar.",
       "Click ✕ next to \"Access your location: Blocked\" to clear it.",
       "Press Try again and choose Allow when Firefox asks."
-    ]
+    ],
+    "mapLabel": "Challenge location map"
   },
   "admin": {
     "title": "Aloca Admin",
@@ -1096,5 +1097,29 @@
         "order": "The order is a whole number from 0 to 9999."
       }
     }
+  },
+  "route": {
+    "loading": "Finding the way…",
+    "failed": "The way could not be found. Use the map above.",
+    "summary": "{{distance}} · about {{time}} by car",
+    "steps": "Directions ({{count}} steps)",
+    "minutes": "{{count}} min",
+    "hours": "{{hours}} h {{minutes}} min",
+    "depart": "Start",
+    "departOn": "Start on {{name}}",
+    "arrive": "You have arrived",
+    "continue": "Continue",
+    "straight": "Go straight",
+    "left": "Turn left",
+    "right": "Turn right",
+    "slightLeft": "Bear left",
+    "slightRight": "Bear right",
+    "sharpLeft": "Turn sharp left",
+    "sharpRight": "Turn sharp right",
+    "uturn": "Make a U-turn",
+    "onto": "onto {{name}}",
+    "along": "on {{name}}",
+    "roundabout": "Enter the roundabout",
+    "roundaboutOnto": "Take the roundabout, exit onto {{name}}"
   }
 }

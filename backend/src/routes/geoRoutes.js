@@ -8,5 +8,6 @@ const router = Router();
 router.use(apiLimiter);
 
 router.get("/reverse", geoController.reverse); // public — ?lat=&lng= -> { province }
+router.get("/route", geoController.route); // public — ?fromLat=&fromLng=&toLat=&toLng= -> { distance, duration, path, steps }
 
 export default router;

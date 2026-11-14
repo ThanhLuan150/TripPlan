@@ -2,10 +2,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap, ZoomControl} from 'react-leaflet';
-import L, {LatLngExpression} from 'leaflet';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import type {LatLngExpression} from 'leaflet';
 import {IoArrowBack, IoClose, IoLocate, IoRefresh, IoWarning} from 'react-icons/io5';
 import {routes} from '@/app/routes';
 import Spinner from '@/components/ui/Spinner';
@@ -20,18 +17,7 @@ import {
 } from '@/lib/location';
 import LocationSteps from '../components/LocationSteps';
 import {useTripDetail} from '../hooks/useTrips';
-
-// Leaflet's default icon guesses its image path from CSS, which breaks under
-// Vite, so markers use an explicit icon built from the bundled images.
-const markerIconDefault = L.icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+import {markerIconDefault} from '../mapIcon';
 
 // Center of Vietnam, same default as the mobile MapView
 const DEFAULT_CENTER: LatLngExpression = [16.0583, 105.7772];

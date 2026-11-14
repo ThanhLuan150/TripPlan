@@ -159,7 +159,7 @@ Page được test như người dùng thật (Testing Library): gõ, bấm, xem
 ### Ngưỡng coverage
 
 CI fail nếu coverage thấp hơn **95%** (statements, branches, functions, lines), tính trên **toàn bộ** mã nguồn.
-Lần chạy gần nhất: backend 487 test, 99,7% statements / 96,7% branches / 100% functions; web 736 test, 99,2% statements / 96,5% branches / 97,7% functions.
+Lần chạy gần nhất: backend 537 test, 99,7% statements / 96,7% branches / 100% functions; web 736 test, 99,2% statements / 96,5% branches / 97,7% functions.
 
 ## CI/CD (GitHub Actions)
 

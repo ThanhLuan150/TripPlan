@@ -1,4 +1,4 @@
-import {ChangeEvent, ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {ChangeEvent, lazy, ReactNode, Suspense, useCallback, useEffect, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {
   IoCamera,
@@ -6,7 +6,6 @@ import {
   IoClose,
   IoLocate,
   IoLocationOutline,
-  IoNavigate,
   IoRefresh,
   IoWarning,
 } from 'react-icons/io5';
@@ -25,6 +24,9 @@ import {
 import {challengeApi} from '../api/tripsApi';
 import type {Challenge} from '../types';
 import LocationSteps from './LocationSteps';
+
+// the map (Leaflet) loads only when a dialog needs it
+const ChallengeMap = lazy(() => import('./ChallengeMap'));
 
 const MAX_DISTANCE = 250; // meters, same rule as the backend
 
@@ -129,10 +131,24 @@ export default function ChallengeLocationDialog({
   const distanceText = (m: number) => formatDistance(m, i18n.resolvedLanguage);
   const lat = parseFloat(challenge.latitude ?? '');
   const lng = parseFloat(challenge.longitude ?? '');
-  const directionsUrl =
-    !isNaN(lat) && !isNaN(lng)
-      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-      : null;
+  const hasPlace = !isNaN(lat) && !isNaN(lng);
+
+  // where the challenge is, on a map in the app (never leaves for another site)
+  const map =
+    hasPlace && (state.kind === 'near' || state.kind === 'far') ? (
+      <div className="mt-4">
+        <Suspense fallback={<div className="grid h-52 place-items-center rounded-2xl bg-slate-100"><Spinner size={24} /></div>}>
+          <ChallengeMap
+            name={challenge.location ?? challenge.challengeSummary}
+            latitude={lat}
+            longitude={lng}
+            radius={MAX_DISTANCE}
+            user={state.coords}
+            withRoute={state.kind === 'far'}
+          />
+        </Suspense>
+      </div>
+    ) : null;
 
   let icon: ReactNode = <IoLocate size={28} />;
   let tone = 'bg-brand-50 text-brand-600';
@@ -217,20 +233,10 @@ export default function ChallengeLocationDialog({
         </>
       );
       actions = (
-        <div className="grid w-full grid-cols-2 gap-3">
-          {directionsUrl ? (
-            <a href={directionsUrl} target="_blank" rel="noreferrer" className="btn btn-outline h-11">
-              <IoNavigate size={17} />
-              {t('location.directions')}
-            </a>
-          ) : (
-            <span />
-          )}
-          <button type="button" className="btn btn-primary h-11" onClick={locate}>
-            <IoRefresh size={17} />
-            {t('location.checkAgain')}
-          </button>
-        </div>
+        <button type="button" className="btn btn-primary h-11 w-full" onClick={locate}>
+          <IoRefresh size={17} />
+          {t('location.checkAgain')}
+        </button>
       );
       break;
   }
@@ -238,7 +244,7 @@ export default function ChallengeLocationDialog({
   return (
     <div className="fixed inset-0 z-[900] grid place-items-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 animate-fade-in bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm animate-pop-in rounded-3xl bg-white p-6 text-center shadow-2xl">
+      <div className="relative max-h-[94dvh] w-full max-w-sm animate-pop-in overflow-y-auto rounded-3xl bg-white p-6 text-center shadow-2xl">
         <button
           type="button"
           aria-label={t('common.close')}
@@ -250,6 +256,7 @@ export default function ChallengeLocationDialog({
         <h2 className="mt-4 text-lg font-semibold text-slate-900">{title}</h2>
         <p className="mt-1 text-sm font-medium text-brand-700">{challenge.challengeSummary}</p>
         <div className="mt-3 text-sm leading-relaxed text-slate-600">{body}</div>
+        {map}
         {actions && <div className="mt-5">{actions}</div>}
         <input
           ref={fileInput}

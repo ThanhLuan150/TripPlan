@@ -3,8 +3,14 @@ import challengeService, { MAX_DISTANCE_METERS } from "../../../src/services/cha
 import challengeRepository from "../../../src/repositories/challengeRepository.js";
 import challengeProgressRepository from "../../../src/repositories/challengeProgressRepository.js";
 import userRepository from "../../../src/repositories/userRepository.js";
+import tripDayRepository from "../../../src/repositories/tripDayRepository.js";
+import tripPlanRepository from "../../../src/repositories/tripPlanRepository.js";
+import { getLocationFromNameLocation } from "../../../src/utils/geocode.js";
 
-vi.mock("../../../src/repositories/challengeRepository.js", () => ({ default: { findById: vi.fn(), setImage: vi.fn() } }));
+vi.mock("../../../src/repositories/challengeRepository.js", () => ({ default: { findById: vi.fn(), setImage: vi.fn(), setCoordinates: vi.fn() } }));
+vi.mock("../../../src/repositories/tripDayRepository.js", () => ({ default: { findById: vi.fn() } }));
+vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({ default: { findById: vi.fn() } }));
+vi.mock("../../../src/utils/geocode.js", () => ({ getLocationFromNameLocation: vi.fn() }));
 vi.mock("../../../src/repositories/challengeProgressRepository.js", () => ({ default: { markCompleted: vi.fn() } }));
 vi.mock("../../../src/repositories/userRepository.js", () => ({ default: { incrementExperience: vi.fn() } }));
 
@@ -21,8 +27,36 @@ describe("checkProgress", () => {
         await expect(challengeService.checkProgress(progress(), { lat: 1, lng: 1 })).rejects.toMatchObject({ status: 404 });
     });
 
+    const unlocated = { ...challenge, latitude: undefined, longitude: undefined, nameLocation: "Hồ Xuân Hương", location: "Hồ Xuân Hương, Lâm Đồng", tripDayId: "day1" };
+
+    it("looks the place up when the challenge has no coordinates, keeps them and checks the distance", async () => {
+        challengeRepository.findById.mockResolvedValue(unlocated);
+        tripDayRepository.findById.mockResolvedValue({ tripId: "trip1" });
+        tripPlanRepository.findById.mockResolvedValue({ location: "Lâm Đồng" });
+        getLocationFromNameLocation.mockResolvedValue({ latitude: 11.94, longitude: 108.44 });
+
+        const result = await challengeService.checkProgress(progress(), { lat: 11.9401, lng: 108.44 });
+
+        expect(getLocationFromNameLocation).toHaveBeenCalledWith("Hồ Xuân Hương", "Lâm Đồng");
+        expect(challengeRepository.setCoordinates).toHaveBeenCalledWith("cha1", 11.94, 108.44);
+        expect(result.message).toBe("Complete the challenge");
+    });
+
+    it("then tries the saved address alone, and works without the trip", async () => {
+        challengeRepository.findById.mockResolvedValue(unlocated);
+        tripDayRepository.findById.mockResolvedValue(null);
+        getLocationFromNameLocation.mockResolvedValueOnce(undefined).mockResolvedValueOnce({ latitude: 11.94, longitude: 108.44 });
+
+        await challengeService.checkProgress(progress(), { lat: 11.94, lng: 108.44 });
+
+        expect(getLocationFromNameLocation).toHaveBeenNthCalledWith(1, "Hồ Xuân Hương", "");
+        expect(getLocationFromNameLocation).toHaveBeenNthCalledWith(2, "Hồ Xuân Hương, Lâm Đồng", "");
+    });
+
     it("answers 400 when the challenge has no coordinates", async () => {
-        challengeRepository.findById.mockResolvedValue({ ...challenge, latitude: undefined });
+        challengeRepository.findById.mockResolvedValue({ ...unlocated, location: undefined });
+        tripDayRepository.findById.mockResolvedValue(null);
+        getLocationFromNameLocation.mockResolvedValue(undefined);
         await expect(challengeService.checkProgress(progress(), { lat: 1, lng: 1 })).rejects.toMatchObject({
             status: 400,
             message: "This challenge has no location",
