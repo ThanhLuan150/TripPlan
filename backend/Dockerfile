@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- deps: runtime dependencies only (no vitest / eslint / supertest) ----
-FROM node:22-bookworm-slim AS deps
+FROM node:25-bookworm-slim AS deps
 WORKDIR /app
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 # toolchain in case bcrypt has no prebuilt binary for this platform
@@ -14,7 +14,7 @@ COPY .yarn/plugins ./.yarn/plugins
 RUN yarn workspaces focus --production
 
 # ---- runtime ----
-FROM node:22-bookworm-slim AS runtime
+FROM node:25-bookworm-slim AS runtime
 ENV NODE_ENV=production \
     PORT=8080
 WORKDIR /app
