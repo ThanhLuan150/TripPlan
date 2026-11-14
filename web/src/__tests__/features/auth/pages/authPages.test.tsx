@@ -48,6 +48,15 @@ describe('LandingPage', () => {
     expect(await currentPath()).toBe('/home');
   });
 
+  it('"start" opens the admin panel for an admin', async () => {
+    saveSession({...session, data: {...session.data, role: 'admin'}});
+    const user = userEvent.setup();
+    renderWithProviders(<LandingPage />);
+
+    await user.click(screen.getByRole('button', {name: t('auth.landing.start')}));
+    expect(await currentPath()).toBe('/admin/dashboard');
+  });
+
   it('is shown on every visit, signed in or not (no automatic redirect)', async () => {
     const {unmount} = renderWithProviders(<LandingPage />);
     unmount();
@@ -91,6 +100,35 @@ describe('LoginPage', () => {
     expect(authApi.login).toHaveBeenCalledWith({username: 'traveler', password: 'secret1'});
     expect(getSession()).toEqual(session);
     expect(screen.getByText(t('auth.login.success'))).toBeInTheDocument();
+  });
+
+  it('sends an admin to the admin panel', async () => {
+    const adminSession = {...session, data: {...session.data, role: 'admin' as const}};
+    vi.mocked(authApi.login).mockResolvedValue(adminSession);
+    renderWithProviders(<LoginPage />, {route: '/login'});
+
+    await fill();
+
+    expect(await currentPath()).toBe('/admin/dashboard');
+    expect(getSession()).toEqual(adminSession);
+  });
+
+  it('sends a user whose role is "user" home', async () => {
+    vi.mocked(authApi.login).mockResolvedValue({...session, data: {...session.data, role: 'user'}});
+    renderWithProviders(<LoginPage />, {route: '/login'});
+
+    await fill();
+
+    expect(await currentPath()).toBe('/home');
+  });
+
+  it('sends an admin back to the page they wanted, not to the panel', async () => {
+    vi.mocked(authApi.login).mockResolvedValue({...session, data: {...session.data, role: 'admin'}});
+    renderWithProviders(<LoginPage />, {route: '/login', state: {from: {pathname: '/admin/users'}}});
+
+    await fill();
+
+    expect(await currentPath()).toBe('/admin/users');
   });
 
   it('returns to the page the user wanted', async () => {

@@ -7,6 +7,9 @@ const models = vi.hoisted(() => ({
     TripDay: { create: vi.fn() },
     Challenge: { create: vi.fn() },
     UserChallengeProgress: { create: vi.fn() },
+    Video: { countDocuments: vi.fn(), insertMany: vi.fn(), deleteMany: vi.fn() },
+    Showcase: { countDocuments: vi.fn(), insertMany: vi.fn(), deleteMany: vi.fn() },
+    Announcement: { countDocuments: vi.fn(), insertMany: vi.fn(), deleteMany: vi.fn() },
 }));
 
 vi.mock("../../../src/models/User.js", () => ({ default: models.User }));
@@ -14,6 +17,9 @@ vi.mock("../../../src/models/TripPlan.js", () => ({ default: models.TripPlan }))
 vi.mock("../../../src/models/TripDay.js", () => ({ default: models.TripDay }));
 vi.mock("../../../src/models/Challenge.js", () => ({ default: models.Challenge }));
 vi.mock("../../../src/models/UserChallengeProgress.js", () => ({ default: models.UserChallengeProgress }));
+vi.mock("../../../src/models/Video.js", () => ({ default: models.Video }));
+vi.mock("../../../src/models/Showcase.js", () => ({ default: models.Showcase }));
+vi.mock("../../../src/models/Announcement.js", () => ({ default: models.Announcement }));
 
 // env.js is read on import: each test loads the seed with its own settings
 const loadWithEnv = async (env, file) => {
@@ -62,9 +68,69 @@ describe("seedAdmin", () => {
     });
 });
 
+describe("seedContent", () => {
+    beforeEach(() => {
+        for (const model of [models.Video, models.Showcase, models.Announcement]) {
+            model.countDocuments.mockResolvedValue(0);
+        }
+    });
+
+    it("fills the empty collections: videos, home page pictures and published announcements", async () => {
+        const seed = await loadWithEnv({ nodeEnv: "production" }, "seedContent.js");
+
+        await seed();
+
+        const [announcements] = models.Announcement.insertMany.mock.calls[0];
+        expect(announcements.every((item) => item.status === "published" && item.publishAt <= new Date())).toBe(true);
+        expect(models.Video.insertMany.mock.calls[0][0].some((video) => video.showOnHome)).toBe(true);
+        expect(new Set(models.Showcase.insertMany.mock.calls[0][0].map((item) => item.kind))).toEqual(new Set(["banner", "suggestion"]));
+    });
+
+    it("is made of real YouTube videos and Commons photos, each used with its own details", async () => {
+        const seed = await loadWithEnv({ nodeEnv: "production" }, "seedContent.js");
+
+        await seed();
+
+        const videos = models.Video.insertMany.mock.calls[0][0];
+        expect(new Set(videos.map((video) => video.youtubeLink)).size).toBe(videos.length);
+        expect(videos.every((video) => /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$/.test(video.youtubeLink) && video.durationSec > 0 && video.location)).toBe(true);
+        const pictures = models.Showcase.insertMany.mock.calls[0][0];
+        expect(pictures.every((item) => item.imageUrl.startsWith("https://upload.wikimedia.org/wikipedia/commons/thumb/"))).toBe(true);
+        expect(pictures.filter((item) => item.kind === "suggestion").every((item) => item.location && item.title)).toBe(true);
+    });
+
+    it("with reset, empties the collections first and replaces them", async () => {
+        models.Video.countDocuments.mockResolvedValue(5);
+        const seed = await loadWithEnv({ nodeEnv: "production" }, "seedContent.js");
+
+        await seed({ reset: true });
+
+        for (const model of [models.Video, models.Showcase, models.Announcement]) {
+            expect(model.deleteMany).toHaveBeenCalledWith({});
+            expect(model.insertMany).toHaveBeenCalledOnce();
+        }
+    });
+
+    it("never touches a collection that already has content", async () => {
+        models.Video.countDocuments.mockResolvedValue(1);
+        models.Showcase.countDocuments.mockResolvedValue(1);
+        models.Announcement.countDocuments.mockResolvedValue(1);
+        const seed = await loadWithEnv({ nodeEnv: "production" }, "seedContent.js");
+
+        await seed();
+
+        expect(models.Video.insertMany).not.toHaveBeenCalled();
+        expect(models.Showcase.insertMany).not.toHaveBeenCalled();
+        expect(models.Announcement.insertMany).not.toHaveBeenCalled();
+    });
+});
+
 describe("seedSampleData", () => {
     beforeEach(() => {
         models.User.findOneAndUpdate.mockImplementation(async (filter) => ({ _id: `id-${filter.username}`, ...filter }));
+        models.Video.countDocuments.mockResolvedValue(0);
+        models.Showcase.countDocuments.mockResolvedValue(0);
+        models.Announcement.countDocuments.mockResolvedValue(0);
         models.TripPlan.exists.mockResolvedValue(null);
         models.TripPlan.create.mockResolvedValue({ _id: "trip1" });
         models.TripDay.create.mockImplementation(async (d) => ({ _id: `day${d.day}` }));
@@ -95,6 +161,33 @@ describe("seedSampleData", () => {
         expect(await bcrypt.compare("demo123", demoUpdate.$setOnInsert.password)).toBe(true);
         expect(options).toEqual({ upsert: true, new: true });
         expect(console.log).toHaveBeenCalledWith(expect.stringContaining("password: demo123"));
+    });
+
+    it("adds the sample videos only when there is none", async () => {
+        vi.stubEnv("SEED_DEMO_PASSWORD", "");
+        const seed = await loadWithEnv({ nodeEnv: "development" }, "seedSampleData.js");
+
+        await seed();
+        expect(models.Video.insertMany).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ showOnHome: true })]));
+
+        models.Video.insertMany.mockClear();
+        models.Video.countDocuments.mockResolvedValue(3);
+        await seed();
+        expect(models.Video.insertMany).not.toHaveBeenCalled();
+    });
+
+    it("adds the home page pictures only when there is none", async () => {
+        vi.stubEnv("SEED_DEMO_PASSWORD", "");
+        const seed = await loadWithEnv({ nodeEnv: "development" }, "seedSampleData.js");
+
+        await seed();
+        const [items] = models.Showcase.insertMany.mock.calls[0];
+        expect(new Set(items.map((item) => item.kind))).toEqual(new Set(["banner", "suggestion"]));
+
+        models.Showcase.insertMany.mockClear();
+        models.Showcase.countDocuments.mockResolvedValue(2);
+        await seed();
+        expect(models.Showcase.insertMany).not.toHaveBeenCalled();
     });
 
     it("uses SEED_DEMO_PASSWORD without printing it", async () => {

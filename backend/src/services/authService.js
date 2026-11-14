@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import userRepository from "../repositories/userRepository.js";
+import activityLogService from "./activityLogService.js";
 import HttpError from "../utils/HttpError.js";
 import { sendVerificationCodeEmail } from "../utils/mailer.js";
 import { generateVerificationCode } from "../utils/verificationCode.js";
@@ -15,7 +16,7 @@ const RESET_WINDOW_MS = 15 * 60 * 1000;
 // Fields never sent to the client
 const toPublicUser = (user) => {
     const data = user.toObject();
-    for (const key of ["refreshToken", "_id", "password", "code", "resetPasswordExpires", "isActive", "createdAt", "updatedAt", "__v"]) {
+    for (const key of ["refreshToken", "_id", "password", "code", "resetPasswordExpires", "isActive", "suspendReason", "suspendedAt", "lastLoginAt", "lastActiveAt", "createdAt", "updatedAt", "__v"]) {
         delete data[key];
     }
     return data;
@@ -61,6 +62,7 @@ const confirmAccount = async ({ email, code }) => {
         throw new HttpError(401, "Your code is not correct");
     }
     await userRepository.updateById(user._id, { isActive: "active", code: "" });
+    activityLogService.record({ actor: user, action: "register" });
     return { message: "Verification successful. Your account is now active" };
 };
 
@@ -83,6 +85,9 @@ const login = async ({ username, password, fcmToken }) => {
     if (user.isActive === "delete") {
         throw new HttpError(400, "The account has been deleted");
     }
+    if (user.isActive === "suspended") {
+        throw new HttpError(403, "The account has been suspended", { reason: user.suspendReason || "" });
+    }
     if (user.isActive === "notActive") {
         throw new HttpError(404, "Unverified account");
     }
@@ -95,11 +100,13 @@ const login = async ({ username, password, fcmToken }) => {
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-    const update = { refreshToken };
+    const now = new Date();
+    const update = { refreshToken, lastLoginAt: now, lastActiveAt: now };
     if (fcmToken !== undefined && fcmToken !== null) {
         update.fcmToken = fcmToken;
     }
     const saved = await userRepository.updateById(user._id, update);
+    activityLogService.record({ actor: user, action: "login" });
 
     return { message: "Login successfully", accessToken, data: toPublicUser(saved) };
 };
@@ -114,6 +121,9 @@ const forgotPassword = async ({ email }) => {
     }
     if (user.isActive === "delete") {
         throw new HttpError(401, "Your account not exist");
+    }
+    if (user.isActive === "suspended") {
+        throw new HttpError(403, "The account has been suspended");
     }
     const code = generateVerificationCode();
     await userRepository.updateById(user._id, { code, resetPasswordExpires: null });

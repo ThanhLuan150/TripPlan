@@ -1,7 +1,11 @@
 import { Router } from "express";
 import authController from "../controllers/authController.js";
+import { authLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
+
+// rate limited before anything else (sign-in checks, database access)
+router.use(authLimiter);
 
 // All routes here are public (no token).
 router.post("/register", authController.register);                         // public — create account, emails a 6-digit code

@@ -148,7 +148,12 @@
     "videos": "Featured videos",
     "suggestions": "You might like",
     "rankingTitle": "'Travel King' leaderboard",
-    "rankingEmpty": "Nobody is on the leaderboard yet. Be the first!"
+    "rankingEmpty": "Nobody is on the leaderboard yet. Be the first!",
+    "videosEmpty": "No featured videos yet.",
+    "unread": "{{count}} unread notifications",
+    "bannersEmpty": "No featured pictures yet.",
+    "suggestionsEmpty": "No destination suggestions yet.",
+    "planFor": "Plan a trip to {{place}}"
   },
   "assistant": {
     "welcome1": "Hi, I'm Aloca, your travel assistant. I can help you plan a trip, suggest destinations and hotels, or answer any travel question.",
@@ -274,7 +279,8 @@
       "perPerson": "/person · estimate",
       "earned": "You earned {{points}} points",
       "updateFailed": "Could not update the challenge",
-      "loadFailed": "Could not load this plan."
+      "loadFailed": "Could not load this plan.",
+      "challengeNoLocation": "This place has no coordinates yet, so your position cannot be checked. Try another challenge or come back later."
     },
     "map": {
       "back": "Back to the plan",
@@ -302,6 +308,7 @@
     "edit": "Edit",
     "notifications": "Notifications",
     "plans": "Plans",
+    "adminPanel": "Admin panel",
     "about": "About Aloca",
     "whatIs": "What is Aloca?",
     "genzTitle": "Aloca for GenZ",
@@ -332,10 +339,14 @@
     "missingInfo": "Please fill in all the fields",
     "invalidPhone": "Invalid phone number",
     "notificationsTitle": "Your notifications",
-    "noNotifications": "You have no notifications yet."
+    "noNotifications": "You have no notifications yet.",
+    "notificationsFailed": "Could not load the notifications. Please try again."
   },
   "videos": {
-    "title": "Travel videos"
+    "title": "Travel videos",
+    "empty": "No videos yet.",
+    "play": "Play video {{title}}",
+    "unavailable": "This video has no source to play."
   },
   "about": {
     "whatTitle": "What is Aloca",
@@ -408,5 +419,682 @@
       "Click ✕ next to \"Access your location: Blocked\" to clear it.",
       "Press Try again and choose Allow when Firefox asks."
     ]
+  },
+  "admin": {
+    "title": "Aloca Admin",
+    "panel": "Admin panel",
+    "nav": {
+      "label": "Admin navigation",
+      "groups": {
+        "overview": "Overview",
+        "management": "Management",
+        "system": "System"
+      },
+      "dashboard": "Dashboard",
+      "reports": "Reports",
+      "users": "Users",
+      "trips": "Trips",
+      "challenges": "Challenges",
+      "ai": "AI assistant",
+      "videos": "Videos",
+      "notifications": "Notifications",
+      "moderation": "Moderation",
+      "activityLogs": "Activity logs",
+      "roles": "Roles & permissions",
+      "settings": "Settings",
+      "home": "App home page"
+    },
+    "layout": {
+      "home": "Admin",
+      "breadcrumb": "Breadcrumb",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "skipToContent": "Skip to main content",
+      "notifications": "Notifications",
+      "notificationsLabel": "Notifications ({{count}} unread)",
+      "markAllRead": "Mark all as read",
+      "alerts": {
+        "newUsers_one": "{{count}} new user signed up today",
+        "newUsers_other": "{{count}} new users signed up today",
+        "pendingModeration_one": "{{count}} item waiting for moderation",
+        "pendingModeration_other": "{{count}} items waiting for moderation",
+        "aiErrors_one": "{{count}} AI assistant error in the last hour",
+        "aiErrors_other": "{{count}} AI assistant errors in the last hour",
+        "reportReady": "The weekly report is ready"
+      },
+      "account": "Account",
+      "userApp": "Back to the user app",
+      "logout": "Sign out"
+    },
+    "common": {
+      "actions": "Actions",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "refresh": "Refresh",
+      "export": "Export",
+      "delete": "Delete",
+      "viewItem": "View {{name}}",
+      "editItem": "Edit {{name}}",
+      "deleteItem": "Delete {{name}}",
+      "viewAll": "View all",
+      "clearSearch": "Clear search",
+      "noResults": "No results",
+      "noResultsHint": "Try another keyword or filter.",
+      "resetFilters": "Clear filters",
+      "loading": "Loading data",
+      "showTable": "Show as table",
+      "increase": "Up",
+      "decrease": "Down",
+      "noChange": "No change",
+      "vsLastMonth": "vs last month",
+      "vsPreviousPeriod": "vs previous period",
+      "demoTitle": "UI preview",
+      "demoText": "This action is not connected to the server yet.",
+      "actionFailed": "The action failed",
+      "tryAgain": "Please try again."
+    },
+    "pagination": {
+      "label": "Pagination",
+      "summary": "Showing {{from}}–{{to}} of {{total}}",
+      "previous": "Previous page",
+      "next": "Next page",
+      "page": "Page {{page}}",
+      "pageOf": "Page {{page}} of {{pages}}"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "user": "User"
+    },
+    "status": {
+      "active": "Active",
+      "notActive": "Unverified",
+      "deleted": "Deleted",
+      "ok": "Normal",
+      "aiError": "AI error",
+      "published": "Published",
+      "hidden": "Hidden",
+      "processing": "Processing",
+      "sent": "Sent",
+      "scheduled": "Scheduled",
+      "draft": "Draft",
+      "info": "Info",
+      "warning": "Warning",
+      "error": "Error",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Suspended"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "How Aloca is doing over the last 30 days.",
+      "stats": {
+        "users": "Users",
+        "trips": "Trip plans",
+        "challengesCompleted": "Challenges completed",
+        "aiChats": "AI conversations"
+      },
+      "newUsers": "New users",
+      "newUsersHint": "Sign-ups per month, last 12 months",
+      "topDestinations": "Top destinations",
+      "topDestinationsHint": "By trip plans created",
+      "tripsCount_one": "{{value}} trip",
+      "tripsCount_other": "{{value}} trips",
+      "recentActivity": "Recent activity",
+      "pendingModeration": "Waiting for moderation",
+      "pendingCount_one": "{{count}} item waiting",
+      "pendingCount_other": "{{count}} items waiting"
+    },
+    "users": {
+      "title": "User Management",
+      "description": "Manage Aloca user accounts and activity.",
+      "exportUsers": "Export users",
+      "search": "Search by name or email",
+      "allRoles": "All roles",
+      "registrationDate": "Registration date",
+      "sortBy": "Sort by",
+      "never": "Never signed in",
+      "notProvided": "Not provided",
+      "pageSize": "Rows per page",
+      "selectPage": "Select all users on this page",
+      "selectUser": "Select {{name}}",
+      "moreActions": "Actions for {{name}}",
+      "viewDetails": "View details",
+      "editUser": "Edit user",
+      "changeRole": "Change role",
+      "suspendAccount": "Suspend account",
+      "reactivateAccount": "Reactivate account",
+      "deleteAccount": "Delete account",
+      "backToUsers": "Back to users",
+      "joinedOn": "Joined {{date}}",
+      "suspendedBanner": "This account is suspended.",
+      "noReason": "No reason given.",
+      "notFound": "User not found",
+      "notFoundHint": "The account does not exist or was removed from the system.",
+      "statistics": "User statistics",
+      "basicInfo": "Basic information",
+      "recentActivity": "Recent activity",
+      "stats": {
+        "total": "Total users",
+        "active": "Active users",
+        "new": "New users (30 days)",
+        "suspended": "Suspended users",
+        "totalTrips": "Total trips",
+        "completedTrips": "Completed trips",
+        "challengesJoined": "Challenges joined",
+        "points": "Total points",
+        "aiConversations": "AI conversations"
+      },
+      "columns": {
+        "user": "User",
+        "email": "Email",
+        "role": "Role",
+        "status": "Status",
+        "joined": "Joined",
+        "lastActive": "Last active",
+        "trips": "Trips"
+      },
+      "fields": {
+        "fullname": "Full name",
+        "username": "Username",
+        "email": "Email",
+        "phone": "Phone number",
+        "city": "City",
+        "password": "Password"
+      },
+      "registered": {
+        "all": "Any time",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days",
+        "year": "Last 12 months"
+      },
+      "lastActiveFilter": {
+        "all": "Any activity",
+        "24h": "Within 24 hours",
+        "7d": "Within 7 days",
+        "30d": "Within 30 days",
+        "inactive": "Inactive > 30 days",
+        "never": "Never signed in"
+      },
+      "sort": {
+        "newest": "Newest first",
+        "oldest": "Oldest first",
+        "nameAsc": "Name A → Z",
+        "nameDesc": "Name Z → A",
+        "mostTrips": "Most trips",
+        "recentlyActive": "Recently active",
+        "points": "Highest points"
+      },
+      "points_one": "{{value}} point",
+      "points_other": "{{value}} points",
+      "bulk": {
+        "label": "Bulk actions",
+        "selected_one": "{{count}} user selected",
+        "selected_other": "{{count}} users selected",
+        "export": "Export selected",
+        "suspend": "Suspend selected",
+        "reactivate": "Reactivate selected",
+        "clear": "Clear selection"
+      },
+      "tabs": {
+        "label": "User details",
+        "overview": "Overview",
+        "trips": "Trip plans",
+        "challenges": "Challenges & achievements",
+        "activity": "Activity history"
+      },
+      "trips": {
+        "name": "Trip",
+        "destination": "Destination",
+        "days": "Days",
+        "start": "Departure",
+        "view": "View",
+        "empty": "No trips yet",
+        "emptyHint": "This user has not created any trip plan.",
+        "created": "Created",
+        "details": "Trip details",
+        "phaseLabel": "Phase",
+        "phase": {
+          "upcoming": "Upcoming",
+          "ongoing": "Ongoing",
+          "completed": "Completed"
+        },
+        "total": "Total cost",
+        "challengesCount": "Challenges",
+        "dayN": "Day {{day}}",
+        "noDays": "The plan has no day-by-day schedule."
+      },
+      "challenges": {
+        "joined": "Joined",
+        "completed": "Completed",
+        "points": "Reward points earned",
+        "unknown": "Deleted challenge",
+        "completedOn": "Completed {{date}}",
+        "inProgress": "In progress",
+        "statusDone": "Completed",
+        "statusActive": "In progress",
+        "empty": "No challenges joined",
+        "emptyHint": "This user has not joined any challenge."
+      },
+      "activity": {
+        "signup": "Created the account",
+        "hint": "Activity recorded in the system log, newest first."
+      },
+      "dialogs": {
+        "editText": "Update the profile and the role. The password cannot be changed here.",
+        "saveChanges": "Save changes",
+        "saving": "Saving…",
+        "deleting": "Deleting…",
+        "roleText": "The role decides whether the user can open the admin area.",
+        "currentRole": "Current role",
+        "newRole": "New role",
+        "confirmRole": "Change role",
+        "roleImpact": {
+          "user": "Uses the Aloca app: plans trips, chats with the AI, joins challenges. No access to the admin area.",
+          "admin": "Full administration: manages users, content, moderation and system settings."
+        },
+        "suspendText": "The user is signed out and cannot sign in until the account is reactivated.",
+        "suspendMany": "Suspend {{count}} accounts",
+        "reason": "Reason for suspension",
+        "reasonPlaceholder": "E.g. community guideline violation, spam…",
+        "confirmSuspension": "Confirm suspension",
+        "reactivateText": "The user will be able to sign in and use Aloca again.",
+        "reactivateMany": "Reactivate {{count}} accounts",
+        "confirmReactivation": "Confirm reactivation",
+        "deleteText": "The account is deactivated and the user can no longer sign in to Aloca.",
+        "deleteWarning": "This cannot be undone from the admin panel.",
+        "deleteMany": "Delete {{count}} accounts",
+        "selectedCount_one": "{{count}} user selected",
+        "selectedCount_other": "{{count}} users selected",
+        "andMore": "and {{count}} more",
+        "changePhoto": "Change photo",
+        "uploading": "Uploading…",
+        "createText": "Creates an account that is already active. The user can change the password with \"Forgot password\".",
+        "createAccount": "Create account",
+        "passwordHint": "At least 8 characters."
+      },
+      "errors": {
+        "generic": "The action could not be completed. Please try again.",
+        "loadFailed": "Could not load the users",
+        "loadFailedHint": "Check the connection to the server and try again.",
+        "fullnameRequired": "Please enter the full name.",
+        "fullnameLong": "The full name is limited to 100 characters.",
+        "emailRequired": "Please enter the email.",
+        "emailInvalid": "The email is not valid.",
+        "phoneInvalid": "The phone number is not valid.",
+        "reasonRequired": "Please enter a reason (at least 3 characters).",
+        "usernameInvalid": "Username: 3–30 letters, digits, dots or underscores.",
+        "passwordShort": "The password needs at least 8 characters.",
+        "usernameTaken": "This username is already in use.",
+        "emailTaken": "This email is already in use.",
+        "uploadFailed": "The photo could not be uploaded. Please try again."
+      },
+      "toasts": {
+        "updated": "User updated",
+        "roleChanged": "Role changed",
+        "suspended_one": "{{count}} account suspended",
+        "suspended_other": "{{count}} accounts suspended",
+        "reactivated_one": "{{count}} account reactivated",
+        "reactivated_other": "{{count}} accounts reactivated",
+        "deleted_one": "{{count}} account deleted",
+        "deleted_other": "{{count}} accounts deleted",
+        "skipped_one": "{{count}} account could not change (yourself, an administrator or already in that state).",
+        "skipped_other": "{{count}} accounts could not change (yourself, administrators or already in that state).",
+        "exported_one": "{{count}} user exported",
+        "exported_other": "{{count}} users exported",
+        "created": "Account created"
+      },
+      "add": "Add user"
+    },
+    "trips": {
+      "title": "Trips",
+      "description": "Trip plans saved by users.",
+      "search": "Search by trip, destination, creator",
+      "destination": "Destination",
+      "allDestinations": "All destinations",
+      "columns": {
+        "trip": "Trip",
+        "owner": "Created by",
+        "dates": "Departure",
+        "challenges": "Challenges",
+        "cost": "Total cost",
+        "status": "Status"
+      },
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "deleteTitle": "Delete this trip?",
+      "deleteText": "The plan \"{{name}}\" will be hidden from the user's list.",
+      "deleted": "Trip \"{{name}}\" deleted"
+    },
+    "challenges": {
+      "title": "Challenges",
+      "description": "Challenge locations, reward points and completion rates.",
+      "add": "Add challenge",
+      "search": "Search by location",
+      "allProvinces": "All provinces",
+      "stats": {
+        "total": "Challenge locations",
+        "participants": "Participations",
+        "completed": "Completions",
+        "avgPoints": "Average reward"
+      },
+      "columns": {
+        "place": "Location",
+        "province": "Province",
+        "points": "Points",
+        "participants": "Participants",
+        "completion": "Completion rate"
+      },
+      "deleteTitle": "Delete this challenge?",
+      "deleteText": "The challenge at {{name}} will no longer appear in new plans.",
+      "deleted": "Challenge \"{{name}}\" deleted",
+      "updated": "Challenge updated",
+      "edit": "Edit challenge",
+      "fields": {
+        "summary": "Description"
+      },
+      "errors": {
+        "nameRequired": "Please enter the place name.",
+        "points": "Points are a whole number from 0 to {{max}}."
+      }
+    },
+    "ai": {
+      "title": "AI assistant",
+      "description": "Usage and answer quality of the AI travel assistant.",
+      "stats": {
+        "conversations": "Conversations",
+        "messages": "Messages",
+        "avgResponse": "Avg. response time",
+        "errorRate": "Error rate",
+        "activeUsers": "Users who chatted",
+        "avgMessages": "Messages per conversation"
+      },
+      "seconds": "{{value}} s",
+      "dailyMessages": "Messages per day",
+      "dailyMessagesHint": "Last 14 days",
+      "conversations": "Recent conversations",
+      "search": "Search by topic, user",
+      "columns": {
+        "title": "Topic",
+        "user": "User",
+        "messages": "Messages",
+        "response": "Avg. response",
+        "updated": "Updated",
+        "status": "Status"
+      }
+    },
+    "videos": {
+      "title": "Videos",
+      "description": "Travel videos shown on the home and videos pages.",
+      "upload": "Upload video",
+      "search": "Search by title, location",
+      "views_one": "{{value}} view",
+      "views_other": "{{value}} views",
+      "deleteTitle": "Delete this video?",
+      "deleteText": "The video \"{{name}}\" will be removed from the app.",
+      "add": "Add video",
+      "edit": "Edit video",
+      "created": "Video added",
+      "updated": "Video updated",
+      "deleted": "Video \"{{name}}\" deleted",
+      "onHome": "Home",
+      "fields": {
+        "title": "Title",
+        "location": "Place",
+        "youtubeLink": "YouTube link",
+        "duration": "Duration (seconds)",
+        "showOnHome": "Show on the home page of the app"
+      },
+      "errors": {
+        "titleRequired": "Please enter the title.",
+        "linkInvalid": "The link must start with http:// or https://.",
+        "duration": "The duration is a whole number, 0 or more."
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Notifications sent to the app users.",
+      "create": "New notification",
+      "search": "Search by title",
+      "channelLabel": "Channel",
+      "allChannels": "All channels",
+      "columns": {
+        "title": "Title",
+        "audience": "Audience",
+        "recipients": "Recipients",
+        "time": "Send time",
+        "status": "Status"
+      },
+      "audience": {
+        "all": "All users",
+        "active": "Active users",
+        "inactive": "Users who have not come back",
+        "admins": "Administrators"
+      },
+      "channel": {
+        "push": "Push",
+        "email": "Email",
+        "inApp": "In-app"
+      },
+      "deleteTitle": "Delete this notification?",
+      "deleteText": "The notification \"{{name}}\" will be deleted.",
+      "edit": "Edit notification",
+      "created": "Notification created",
+      "updated": "Notification updated",
+      "deleted": "Notification \"{{name}}\" deleted",
+      "formText": "A published notification shows to every user in the app from the chosen time.",
+      "publish": "Publish",
+      "fields": {
+        "message": "Message"
+      },
+      "errors": {
+        "titleRequired": "Please enter the title.",
+        "dateInvalid": "The time is not valid."
+      }
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Growth and travel figures over time.",
+      "period": "Period",
+      "periods": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      },
+      "stats": {
+        "newUsers": "New users",
+        "tripsCreated": "Trip plans created",
+        "completionRate": "Challenge completion rate",
+        "avgTripCost": "Avg. cost per trip"
+      },
+      "tripsCreated": "Trip plans created",
+      "byProvince": "By province",
+      "columns": {
+        "province": "Province",
+        "trips": "Plans",
+        "completed": "Challenges completed",
+        "avgCost": "Avg. cost"
+      }
+    },
+    "moderation": {
+      "title": "Moderation",
+      "description": "Reported content and challenge photos to review.",
+      "search": "Search by content, author",
+      "type": "Content type",
+      "allTypes": "All content types",
+      "types": {
+        "challengePhoto": "Challenge photo",
+        "chatMessage": "Message",
+        "profile": "Profile",
+        "video": "Video"
+      },
+      "reasons": {
+        "spam": "Spam",
+        "inappropriate": "Inappropriate",
+        "wrongLocation": "Wrong location",
+        "copyright": "Copyright"
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveItem": "Approve: {{name}}",
+      "rejectItem": "Reject: {{name}}",
+      "approveTitle": "Approve this content?",
+      "approveText": "The content stays visible and the report is closed.",
+      "rejectTitle": "Reject this content?",
+      "rejectText": "The content will be hidden and its author notified.",
+      "emptyTitle": "Nothing waiting for moderation",
+      "approved": "Content approved",
+      "rejected": "Content rejected"
+    },
+    "activityLogs": {
+      "title": "Activity logs",
+      "description": "What users and administrators did in the system.",
+      "search": "Search by actor, target, IP",
+      "allActions": "All actions",
+      "allLevels": "All levels",
+      "columns": {
+        "time": "Time",
+        "actor": "Actor",
+        "action": "Action",
+        "target": "Target",
+        "ip": "IP address",
+        "level": "Level"
+      },
+      "actions": {
+        "login": "Signed in",
+        "createTrip": "Created a plan",
+        "deleteTrip": "Deleted a plan",
+        "completeChallenge": "Completed a challenge",
+        "updateProfile": "Updated profile",
+        "deleteUser": "Deleted a user",
+        "changeRole": "Changed a role",
+        "updateSettings": "Changed settings",
+        "aiError": "AI assistant error",
+        "restoreUser": "Restored a user",
+        "suspendUser": "Suspended a user",
+        "updateUser": "Edited a user",
+        "register": "Activated the account",
+        "useAi": "Used the AI assistant",
+        "createUser": "Created a user",
+        "updateChallenge": "Edited a challenge",
+        "manageVideo": "Managed a video",
+        "manageAnnouncement": "Managed a notification",
+        "moderate": "Moderated content",
+        "manageShowcase": "Managed a home page picture"
+      }
+    },
+    "rolesPage": {
+      "title": "Roles & permissions",
+      "description": "Account roles and what each role is allowed to do.",
+      "readOnly": "Roles are defined on the server (user and administrator). This page is read-only; editing permissions will come once the server supports it.",
+      "adminDescription": "Full access to the admin panel and every account.",
+      "userDescription": "Plans trips, chats with the AI assistant and takes challenges.",
+      "members": "Members",
+      "permissionCount": "Permissions",
+      "matrix": "Permission matrix",
+      "matrixHint": "Permissions of each role",
+      "permission": "Permission",
+      "allowed": "Allowed",
+      "notAllowed": "Not allowed",
+      "permissions": {
+        "planTrips": "Plan trips",
+        "chatAi": "Chat with the AI assistant",
+        "completeChallenges": "Take challenges",
+        "viewRanking": "View the ranking",
+        "deleteOwnAccount": "Delete own account",
+        "deleteAnyAccount": "Delete any account",
+        "manageContent": "Manage content (challenges, videos, notifications)",
+        "moderate": "Moderate content",
+        "viewReports": "View reports and logs",
+        "manageSettings": "Change system settings"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "General configuration of the Aloca app.",
+      "sections": {
+        "general": "General",
+        "generalHint": "Shown to users in the app",
+        "locale": "Language & region",
+        "localeHint": "Applies to new users",
+        "notifications": "Administrator notifications",
+        "notificationsHint": "When you get notified",
+        "security": "Security",
+        "securityHint": "Sign-in and sessions"
+      },
+      "fields": {
+        "appName": "App name",
+        "supportEmail": "Support email",
+        "hotline": "Hotline",
+        "defaultLanguage": "Default language",
+        "timezone": "Time zone",
+        "emailOnReport": "Email on new reports",
+        "dailySummary": "Daily summary",
+        "aiErrorAlert": "AI assistant error alert",
+        "requireEmailVerification": "Require email verification",
+        "sessionTimeout": "Sign out after"
+      },
+      "hints": {
+        "emailOnReport": "Email me when a user reports content",
+        "dailySummary": "Yesterday's figures, sent at 8:00",
+        "aiErrorAlert": "When the AI error rate goes above 5% in an hour",
+        "requireEmailVerification": "New accounts must enter a code sent by email"
+      },
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "unsaved": "You have unsaved changes.",
+      "saved": "All changes saved.",
+      "reset": "Undo",
+      "save": "Save changes",
+      "savedToast": "Settings saved",
+      "errors": {
+        "appName": "Please enter the app name.",
+        "email": "The email is not valid.",
+        "hotline": "The hotline is not valid."
+      }
+    },
+    "showcase": {
+      "title": "App home page",
+      "description": "Pictures shown on the home page of the app: the slider and the destination suggestions.",
+      "kinds": {
+        "banner": "slide",
+        "suggestion": "suggestion"
+      },
+      "sections": {
+        "banner": "Top slider",
+        "bannerHint": "The pictures that play automatically at the top of the home page.",
+        "suggestion": "You may like",
+        "suggestionHint": "Tapping a suggestion opens the trip planner for its province."
+      },
+      "add": "Add {{kind}}",
+      "edit": "Edit {{kind}}",
+      "created": "Picture added",
+      "updated": "Picture updated",
+      "deleted": "Picture deleted",
+      "deleteTitle": "Delete this picture?",
+      "deleteText": "It will no longer appear on the home page of the app.",
+      "untitled": "No title",
+      "orderValue": "Order {{order}}",
+      "noImage": "No picture",
+      "chooseImage": "Choose a picture",
+      "locationHint": "The province used to plan a trip, e.g. Lâm Đồng.",
+      "fields": {
+        "title": "Title",
+        "location": "Province",
+        "order": "Display order (smaller first)"
+      },
+      "empty": {
+        "banner": "No slides yet",
+        "suggestion": "No suggestions yet"
+      },
+      "emptyHint": "Users see a \"no data yet\" message until you add some.",
+      "errors": {
+        "imageRequired": "Please choose a picture.",
+        "order": "The order is a whole number from 0 to 9999."
+      }
+    }
   }
 }

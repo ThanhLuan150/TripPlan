@@ -9,6 +9,10 @@ import { notFound, errorHandler } from "./middleware/errorHandler.js";
 // Express app without listen(), so it can be reused by scripts and tests.
 const app = express();
 
+if (env.trustProxy) {
+    app.set("trust proxy", env.trustProxy);
+}
+
 app.use(express.json({ limit: "2mb" }));
 app.use(cors({
     origin: env.corsOrigin === "*" ? "*" : env.corsOrigin.split(",").map((o) => o.trim()),

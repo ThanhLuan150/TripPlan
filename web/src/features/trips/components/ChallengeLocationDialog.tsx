@@ -11,7 +11,7 @@ import {
   IoWarning,
 } from 'react-icons/io5';
 import Spinner from '@/components/ui/Spinner';
-import {connectionErrorKey} from '@/lib/apiClient';
+import {apiMessage, connectionErrorKey} from '@/lib/apiClient';
 import {
   Coords,
   formatDistance,
@@ -68,7 +68,12 @@ export default function ChallengeLocationDialog({
         const dismissed = error.reason === 'denied' && (await getLocationPermission()) === 'prompt';
         setState(dismissed ? {kind: 'explain'} : {kind: 'problem', reason: error.reason});
       } else {
-        setState({kind: 'apiError', messageKey: connectionErrorKey(error) ?? 'trips.detail.updateFailed'});
+        // the backend has no coordinates for this place
+        const noLocation = apiMessage(error) === 'This challenge has no location';
+        setState({
+          kind: 'apiError',
+          messageKey: connectionErrorKey(error) ?? (noLocation ? 'trips.detail.challengeNoLocation' : 'trips.detail.updateFailed'),
+        });
       }
     }
   }, [challenge._id]);

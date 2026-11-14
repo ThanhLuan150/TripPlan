@@ -5,7 +5,6 @@ import {
   IoAirplane,
   IoChatbubbles,
   IoNotificationsOutline,
-  IoPlay,
   IoSearch,
   IoTrophy,
 } from 'react-icons/io5';
@@ -13,26 +12,13 @@ import {routes} from '@/app/routes';
 import SectionHeader from '@/components/ui/SectionHeader';
 import {useProfile} from '@/hooks/useProfile';
 import {useRanking} from '@/features/ranking/hooks/useRanking';
-import {homeVideos} from '@/features/videos/data/videos';
+import {useNotifications} from '@/features/profile/useNotifications';
+import {useVideos} from '@/features/videos/useVideos';
+import VideoCard from '@/features/videos/VideoCard';
+import {useHomeContent} from '../useHomeContent';
 import HeroSlider from '../components/HeroSlider';
-import imagehomepage from '@/assets/images/imagehomepage.png';
-import hagiangImage from '@/assets/images/hagiangImage.jpg';
-import hagiangImage1 from '@/assets/images/hagiangImage1.jpg';
-import hagiangImage2 from '@/assets/images/hagiangImage2.jpg';
-
-const suggestionImages = [
-  imagehomepage,
-  hagiangImage,
-  hagiangImage1,
-  hagiangImage2,
-  imagehomepage,
-  imagehomepage,
-  imagehomepage,
-];
-
-// Notification badge: the mobile app showed a fixed demo count of 12 -> "9+".
-const notificationCount = 12;
-const badge = notificationCount >= 10 ? '9+' : notificationCount.toString();
+// Notification badge: unread notifications, "9+" from ten
+const badgeText = (count: number) => (count >= 10 ? '9+' : String(count));
 
 const quickActions = [
   {to: routes.Chat, labelKey: 'home.quickChat', icon: IoChatbubbles, tone: 'bg-sky-50 text-sky-600'},
@@ -48,6 +34,10 @@ export default function HomePage() {
   const [query, setQuery] = useState('');
   const {user, name} = useProfile();
   const {data: ranks = [], isLoading: rankingLoading} = useRanking('highest');
+  const {data: videos, isLoading: videosLoading} = useVideos(true);
+  const {unread} = useNotifications();
+  const {data: content, isLoading: contentLoading} = useHomeContent();
+  const suggestions = content?.suggestions ?? [];
 
   // the search box starts a new plan for that destination
   const handleSearch = (e: FormEvent) => {
@@ -70,9 +60,13 @@ export default function HomePage() {
           aria-label={t('home.notifications')}
           className="relative grid size-11 place-items-center rounded-full bg-white text-slate-700 shadow-soft ring-1 ring-slate-100 transition hover:text-brand-600">
           <IoNotificationsOutline size={22} />
-          <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ring-2 ring-slate-50">
-            {badge}
-          </span>
+          {unread > 0 && (
+            <span
+              aria-label={t('home.unread', {count: unread})}
+              className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ring-2 ring-slate-50">
+              {badgeText(unread)}
+            </span>
+          )}
         </Link>
         {user?.image && (
           <Link to={routes.Profile} aria-label={t('nav.account')} className="md:hidden">
@@ -100,7 +94,7 @@ export default function HomePage() {
         />
       </form>
 
-      <HeroSlider />
+      <HeroSlider banners={content?.banners ?? []} loading={contentLoading} />
 
       {/* quick actions */}
       <div className="grid grid-cols-3 gap-3">
@@ -120,45 +114,49 @@ export default function HomePage() {
       <section>
         <SectionHeader title={t('home.videos')} to={routes.VideoTravel} />
         <div className="no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-          {homeVideos.map(item => (
-            <a
-              key={item.id}
-              href={item.youtubeLink}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={t('common.watchOnYoutube')}
-              className="group relative aspect-[9/16] w-32 shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-900 shadow-soft md:w-40">
-              <video
-                src={item.src}
-                muted
-                autoPlay
-                loop
-                playsInline
-                className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-105"
-              />
-              <span className="absolute bottom-2 left-2 grid size-8 place-items-center rounded-full bg-white/90 text-slate-900">
-                <IoPlay size={14} className="ml-0.5" />
-              </span>
-            </a>
+          {videosLoading &&
+            [0, 1, 2, 3].map(i => <div key={i} className="aspect-[9/16] w-32 shrink-0 animate-pulse rounded-2xl bg-slate-200 md:w-40" />)}
+          {videos?.map(item => (
+            <VideoCard key={item.id} video={item} compact />
           ))}
         </div>
+        {!videosLoading && !videos?.length && (
+          <p className="card p-6 text-center text-sm text-slate-500">{t('home.videosEmpty')}</p>
+        )}
       </section>
 
       <section>
         <SectionHeader title={t('home.suggestions')} />
         <div className="no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-          {suggestionImages.map((item, index) => (
-            <div
-              key={index}
-              className="aspect-[4/3] w-56 shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-200 shadow-soft md:w-64">
+          {contentLoading &&
+            [0, 1, 2].map(i => (
+              <div key={i} className="aspect-[4/3] w-56 shrink-0 animate-pulse rounded-2xl bg-slate-200 md:w-64" />
+            ))}
+          {suggestions.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              disabled={!item.location}
+              onClick={() => navigate(routes.TripPlanChoose, {state: {location: item.location}})}
+              aria-label={item.location ? t('home.planFor', {place: item.title || item.location}) : item.title}
+              className="group relative aspect-[4/3] w-56 shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-200 text-left shadow-soft md:w-64">
               <img
-                src={item}
+                src={item.imageUrl}
                 alt=""
-                className="size-full object-cover transition duration-500 hover:scale-105"
+                loading="lazy"
+                className="size-full object-cover transition duration-500 group-hover:scale-105"
               />
-            </div>
+              {item.title && (
+                <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent p-3 pt-8 text-sm font-semibold text-white">
+                  {item.title}
+                </span>
+              )}
+            </button>
           ))}
         </div>
+        {!contentLoading && suggestions.length === 0 && (
+          <p className="card p-6 text-center text-sm text-slate-500">{t('home.suggestionsEmpty')}</p>
+        )}
       </section>
 
       <section>

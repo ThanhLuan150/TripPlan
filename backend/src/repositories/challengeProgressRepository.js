@@ -18,6 +18,8 @@ const rankingByPeriod = ($expr) =>
         { $unwind: "$challenge" },
         { $lookup: { from: "users", localField: "userId", foreignField: "_id", as: "user" } },
         { $unwind: "$user" },
+        // the ranking is for travellers: no administrators, no blocked or deleted accounts
+        { $match: { "user.role": { $ne: "admin" }, "user.isActive": "active" } },
         {
             $group: {
                 _id: "$userId",

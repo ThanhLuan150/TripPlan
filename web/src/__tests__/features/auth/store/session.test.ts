@@ -5,6 +5,7 @@ import {
   getAccessToken,
   getSession,
   getUser,
+  homeRouteFor,
   saveSession,
   updateAccessToken,
   updateUser,
@@ -78,5 +79,13 @@ describe('session store', () => {
     expect(getSession()).toBeNull();
     expect(getAccessToken()).toBeNull();
     expect(storage.getItem(StorageKeys.userLocation)).toBe('Quận 1');
+  });
+
+  it('homeRouteFor: the admin panel for an admin, the home page for everyone else', () => {
+    expect(homeRouteFor({role: 'admin'})).toBe('/admin/dashboard');
+    expect(homeRouteFor({role: 'user'})).toBe('/home');
+    expect(homeRouteFor({username: 'no role'})).toBe('/home');
+    expect(homeRouteFor(null)).toBe('/home');
+    expect(homeRouteFor(undefined)).toBe('/home');
   });
 });

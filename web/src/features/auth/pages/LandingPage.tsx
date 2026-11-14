@@ -3,17 +3,21 @@ import {useTranslation} from 'react-i18next';
 import {IoArrowForward} from 'react-icons/io5';
 import {routes} from '@/app/routes';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
-import {getUser} from '../store/session';
+import {getUser, homeRouteFor} from '../store/session';
 import logo from '@/assets/images/Icon.png';
 import cover from '@/assets/images/hagiangImage1.jpg';
 
 // Entry screen of the site, shown on every visit and after logging out.
-// "Start" opens the home page when signed in, the sign-in page otherwise.
+// "Start" opens the home page (the admin panel for an admin) when signed in,
+// the sign-in page otherwise.
 export default function LandingPage() {
   const {t} = useTranslation();
   const navigate = useNavigate();
 
-  const handleGetStart = () => navigate(getUser() ? routes.Home : routes.Login);
+  const handleGetStart = () => {
+    const user = getUser();
+    navigate(user ? homeRouteFor(user) : routes.Login);
+  };
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-brand-800">

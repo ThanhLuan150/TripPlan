@@ -1,6 +1,8 @@
+import {lazy, Suspense} from 'react';
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
-import {routerFuture, routes} from './routes';
+import {adminRoutes, routerFuture, routes} from './routes';
 import RequireAuth from './RequireAuth';
+import Spinner from '@/components/ui/Spinner';
 import MainLayout from '@/components/layout/MainLayout';
 import AssistantLayout from '@/components/layout/AssistantLayout';
 import LandingPage from '@/features/auth/pages/LandingPage';
@@ -23,6 +25,9 @@ import NotificationsPage from '@/features/profile/pages/NotificationsPage';
 import VideosPage from '@/features/videos/pages/VideosPage';
 import WhatAlocaPage from '@/features/about/pages/WhatAlocaPage';
 import BenefitPage from '@/features/about/pages/BenefitPage';
+
+// Admin panel: its own chunk, downloaded only when an admin opens /admin.
+const AdminRoutes = lazy(() => import('@/features/admin/AdminRoutes'));
 
 export default function AppRouter() {
   return (
@@ -59,6 +64,23 @@ export default function AppRouter() {
           <Route path={routes.VideoTravel} element={<VideosPage />} />
           <Route path={routes.WhatAloca} element={<WhatAlocaPage />} />
           <Route path={routes.Benefit} element={<BenefitPage />} />
+        </Route>
+
+        {/* admin panel (role "admin"; other users are sent home) */}
+        <Route element={<RequireAuth roles={['admin']} />}>
+          <Route
+            path={`${adminRoutes.root}/*`}
+            element={
+              <Suspense
+                fallback={
+                  <div className="grid min-h-dvh place-items-center">
+                    <Spinner size={32} />
+                  </div>
+                }>
+                <AdminRoutes />
+              </Suspense>
+            }
+          />
         </Route>
 
         <Route path="*" element={<Navigate to={routes.LandingPage} replace />} />

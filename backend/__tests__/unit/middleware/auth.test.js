@@ -5,7 +5,7 @@ import userRepository from "../../../src/repositories/userRepository.js";
 import { generateAccessToken, generateRefreshToken, verifyAccessToken } from "../../../src/utils/jwt.js";
 import { mockReq, mockRes, runMiddleware } from "../../helpers/http.js";
 
-vi.mock("../../../src/repositories/userRepository.js", () => ({ default: { findById: vi.fn() } }));
+vi.mock("../../../src/repositories/userRepository.js", () => ({ default: { findById: vi.fn(), updateById: vi.fn() } }));
 
 const userId = "64b000000000000000000001";
 const activeUser = (extra = {}) => ({

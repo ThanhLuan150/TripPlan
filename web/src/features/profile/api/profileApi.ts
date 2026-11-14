@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {api} from '@/lib/apiClient';
 
 export interface ProfileUpdate {
@@ -13,13 +12,19 @@ export interface NotificationItem {
   id: string | number;
   name: string;
   description: string;
+  // when it was published (ISO)
+  publishAt?: string;
 }
 
 export const profileApi = {
   update: async (data: ProfileUpdate) => (await api.post('/user/profile', data)).data,
 
-  // Same demo data source as the mobile app (not the Aloca backend).
-  notifications: async () =>
-    (await axios.get<NotificationItem[]>('https://645e542e8d08100293fcd90e.mockapi.io/sinhvien'))
-      .data,
+  // Notifications the admin published (GET /announcements)
+  notifications: async (): Promise<NotificationItem[]> =>
+    (await api.get<{id: string; title: string; message: string; publishAt?: string}[]>('/announcements')).data.map(item => ({
+      id: item.id,
+      name: item.title,
+      description: item.message,
+      publishAt: item.publishAt,
+    })),
 };

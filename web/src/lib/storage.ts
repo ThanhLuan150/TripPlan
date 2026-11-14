@@ -25,4 +25,6 @@ export const StorageKeys = {
   userLocation: 'userLocation',
   registeredEmail: 'registeredEmail',
   resetEmail: 'emailResetPassword',
+  // ids of the notifications the user has opened
+  seenNotifications: 'seenNotifications',
 } as const;
