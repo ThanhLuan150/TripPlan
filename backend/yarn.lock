@@ -1769,7 +1769,7 @@ __metadata:
     eslint: ^9.39.5
     express: ^4.18.2
     express-rate-limit: ^7.5.0
-    geolib: ^3.3.4
+    geolib: ^4.0.2
     globals: ^16.5.0
     jsonwebtoken: ^9.0.2
     mailtrap: ^3.2.0
@@ -3180,10 +3180,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"geolib@npm:^3.3.4":
-  version: 3.3.14
-  resolution: "geolib@npm:3.3.14"
-  checksum: e22b497cbcb11915e61f0183011ebf6c028492c9dcee44239d3196410816318d1322a687a6280d0d91ddf0966c46e0ae7149babbe2eb14324204eacbcb6644ab
+"geolib@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "geolib@npm:4.0.2"
+  checksum: b2525621b504104edc4ef17639b1040a00e7f4da7f38878d9170fe483590f8791771de62a1d7cedf6e40f42a3accffa26a6a2e424bed213f879aae03ac7066b8
   languageName: node
   linkType: hard
 
