@@ -9,6 +9,10 @@ updates:
     open-pull-requests-limit: 5
     target-branch: dev
     groups:
+      # vitest and its coverage plugin must always have the same version: one PR for both
+      # (listed first, so they land here even for a major version)
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
       backend-minor-patch:
         update-types: [minor, patch]
 
