@@ -106,3 +106,22 @@
     display: none;
   }
 }
+
+/* An invalid control gets a red border and a red focus ring, in every form:
+   the ones that set aria-invalid, and the .field inputs inside a <Field> with an error. */
+input[aria-invalid='true'],
+textarea[aria-invalid='true'],
+select[aria-invalid='true'],
+.field[data-invalid='true'],
+[data-invalid='true'] .field {
+  border-color: #fb7185;
+}
+
+input[aria-invalid='true']:focus,
+textarea[aria-invalid='true']:focus,
+select[aria-invalid='true']:focus,
+.field[data-invalid='true']:focus,
+[data-invalid='true'] .field:focus {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 4px #ffe4e6;
+}

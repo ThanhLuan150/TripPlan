@@ -130,6 +130,53 @@ jobs:
           path: web/dist/
           retention-days: 7
 
+  e2e:
+    name: Automation · web end-to-end (Cypress)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: automation/web
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            automation/web/package-lock.json
+
+      # the app that gets tested, and the tests
+      - name: Install dependencies (web app)
+        run: npm ci --no-audit --no-fund
+        working-directory: web
+
+      - name: Install dependencies (automation)
+        run: npm ci --no-audit --no-fund
+
+      # keeps the Cypress runner between runs (it is ~250 MB)
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('automation/web/package-lock.json') }}
+
+      # builds the app against a mocked API (same origin) and drives it in a browser
+      - name: End-to-end tests (desktop)
+        run: npm run cypress:run
+
+      - name: End-to-end tests (phone-sized screen)
+        run: npm run cypress:mobile
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: web-e2e-screenshots
+          path: automation/web/cypress/screenshots/
+          retention-days: 7
+          if-no-files-found: ignore
+
   audit:
     name: Web · npm audit (production deps)
     runs-on: ubuntu-latest
