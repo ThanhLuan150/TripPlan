@@ -11,6 +11,3 @@ coverage
 
 
 dist-e2e*
-
-# the dev server of the end-to-end tests (npm run dev:e2e)
-!.env.e2e

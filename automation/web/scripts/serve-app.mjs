@@ -14,7 +14,8 @@ import {fileURLToPath} from 'node:url';
 const PORT = '5174';
 const PREFIX = 'aloca-e2e-';
 const API_URL = `http://localhost:${PORT}/api-e2e`;
-const web = resolve(dirname(fileURLToPath(import.meta.url)), '../../../web');
+// (E2E_WEB_DIR: build another copy of the app, e.g. a fresh install, instead of ../../web)
+const web = process.env.E2E_WEB_DIR ?? resolve(dirname(fileURLToPath(import.meta.url)), '../../../web');
 const vite = join(web, 'node_modules', 'vite', 'bin', 'vite.js');
 
 // Builds left by runs that were killed. Only the OLD ones (a day or more): a server of

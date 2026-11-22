@@ -43,8 +43,8 @@ npm run cypress:dev
 
 It starts the web dev server with the mocked API address (`scripts/serve-dev.mjs`, i.e. what
 `$env:VITE_API_URL = "http://localhost:5173/api-e2e"` would do by hand) and opens Cypress on it.
-To start only that dev server: `npm run app:dev`, or, from `web`, `npm run dev:e2e` (it reads `web/.env.e2e`, which holds
-the line `VITE_API_URL=http://localhost:5173/api-e2e`: nothing to type by hand).
+To start only that dev server: `npm run app:dev`, or, from `web`, `npm run dev:e2e`: it reads `web/.env.e2e.local`, a **local file that git ignores** (create it with
+the single line `VITE_API_URL=http://localhost:5173/api-e2e`). `npm run cypress:dev` needs no such file.
 
 When you are done, close it (`Ctrl+C`) and start your normal dev server again (real API).
 

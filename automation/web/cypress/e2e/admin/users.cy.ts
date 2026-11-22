@@ -1,12 +1,12 @@
 import {mockUsers} from '@/__tests__/fixtures/admin/data';
-import {bodyRows, openAdmin} from '../../support/admin';
+import {bodyRows, openAdmin, openUserMenu} from '../../support/admin';
 import {callsTo, expectCall, expectNoCall, RED_BORDER, reply, stubDownloads, t} from '../../support/helpers';
 
 // by position in the (newest first) list: 0 and 9 are admins, 4 is suspended, 8 is deleted
 const [admin, , second, third, suspended, , , , deleted] = mockUsers;
 const first = mockUsers[0];
 
-const menuOf = (name: string) => cy.findByRole('button', {name: t('admin.users.moreActions', {name})}).click();
+const menuOf = (name: string) => openUserMenu(name);
 const select = (name: string) => cy.findByRole('checkbox', {name: t('admin.users.selectUser', {name})});
 const menuItem = (key: string) => cy.findByRole('menuitem', {name: t(key)});
 
@@ -167,14 +167,8 @@ describe('admin: selecting users', () => {
 
 describe('admin: one account', () => {
   it('cannot select, edit or delete the signed-in admin', () => {
-    openAdmin('/admin/users');
-    // the signed-in user of the tests has the username of the first admin
-    cy.window().then(win => {
-      const session = JSON.parse(win.localStorage.getItem('user') ?? '{}');
-      session.data.username = admin.username;
-      win.localStorage.setItem('user', JSON.stringify(session));
-    });
-    cy.reload();
+    // the signed-in user is the first admin of the list
+    openAdmin('/admin/users', {}, {username: admin.username, fullname: admin.fullname});
     bodyRows().should('have.length', 10);
 
     select(admin.fullname).should('be.disabled');
@@ -290,6 +284,9 @@ describe('admin: add user', () => {
   const openDialog = (overrides: Record<string, unknown> = {}) => {
     const calls = openAdmin('/admin/users', overrides);
     cy.findByRole('button', {name: t('admin.users.add')}).click();
+    // the dialog puts the focus on its first field once it is open: type only after that, or the
+    // first letters can go to the wrong place on a slow machine
+    field('fullname').should('have.focus');
     return calls;
   };
   const dialog = () => cy.findByRole('dialog');
@@ -330,10 +327,10 @@ describe('admin: add user', () => {
       'GET /admin/users/new1': {user: created, aiConversations: 0, trips: [], challenges: [], activity: []},
     });
 
-    field('fullname').type('Người Mới');
-    field('username').type('nguoimoi');
-    field('email').type('moi@example.com');
-    field('password').type('matkhau123');
+    field('fullname').type('Người Mới').should('have.value', 'Người Mới');
+    field('username').type('nguoimoi').should('have.value', 'nguoimoi');
+    field('email').type('moi@example.com').should('have.value', 'moi@example.com');
+    field('password').type('matkhau123').should('have.value', 'matkhau123');
     create().click();
 
     cy.location('pathname').should('eq', '/admin/users/new1');
@@ -350,10 +347,10 @@ describe('admin: add user', () => {
   it('shows a taken username next to its field', () => {
     openDialog({'POST /admin/users': reply(409, {message: 'Username already in use', field: 'username'})});
 
-    field('fullname').type('Người Mới');
-    field('username').type('nguoimoi');
-    field('email').type('moi@example.com');
-    field('password').type('matkhau123');
+    field('fullname').type('Người Mới').should('have.value', 'Người Mới');
+    field('username').type('nguoimoi').should('have.value', 'nguoimoi');
+    field('email').type('moi@example.com').should('have.value', 'moi@example.com');
+    field('password').type('matkhau123').should('have.value', 'matkhau123');
     create().click();
 
     dialog().findByText(t('admin.users.errors.usernameTaken')).should('be.visible');

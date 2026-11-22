@@ -1,5 +1,5 @@
 import {mockTrips, mockUsers} from '@/__tests__/fixtures/admin/data';
-import {openAdmin} from '../../support/admin';
+import {openAdmin, openUserMenu} from '../../support/admin';
 import {callsTo, reply, t} from '../../support/helpers';
 
 const [, , second, , suspended] = mockUsers;
@@ -18,13 +18,19 @@ const detail = (extra: Record<string, unknown> = {}, who = second) => ({
 });
 
 const heading = (who = second) => cy.findByRole('heading', {level: 1, name: who.fullname});
+// The page is settled once the details below the header have loaded: they push the page down when they
+// appear, and a scroll closes the row menu, so wait for them before opening it.
+const loaded = (who = second) => {
+  heading(who).should('be.visible');
+  cy.findByText(t('admin.users.basicInfo')).should('be.visible');
+};
 const tab = (key: string) => cy.findByRole('tab', {name: t(`admin.users.tabs.${key}`)});
 
 describe('admin: user profile', () => {
   it('shows the profile header and the statistics', () => {
     openAdmin(`/admin/users/${second.id}`, {[`GET /admin/users/${second.id}`]: detail()});
 
-    heading().should('be.visible');
+    loaded();
     cy.findByRole('link', {name: t('admin.users.backToUsers')}).should('have.attr', 'href', '/admin/users');
     cy.findByRole('region', {name: t('admin.users.statistics')}).within(() => {
       cy.findByText(t('admin.users.stats.totalTrips')).should('be.visible');
@@ -34,7 +40,7 @@ describe('admin: user profile', () => {
 
   it('switches between the four tabs, also with the arrow keys', () => {
     openAdmin(`/admin/users/${second.id}`, {[`GET /admin/users/${second.id}`]: detail()});
-    heading().should('be.visible');
+    loaded();
 
     tab('overview').should('have.attr', 'aria-selected', 'true');
     cy.findByText(t('admin.users.basicInfo')).should('be.visible');
@@ -54,7 +60,7 @@ describe('admin: user profile', () => {
 
   it('shows empty states for a user without trips or challenges', () => {
     openAdmin(`/admin/users/${second.id}`, {[`GET /admin/users/${second.id}`]: detail({trips: [], challenges: []})});
-    heading().should('be.visible');
+    loaded();
 
     tab('trips').click();
     cy.findByText(t('admin.users.trips.empty')).should('be.visible');
@@ -81,9 +87,9 @@ describe('admin: user profile', () => {
       [`GET /admin/users/${second.id}`]: detail(),
       [`PATCH /admin/users/${second.id}`]: {...second, status: 'delete'},
     });
-    heading().should('be.visible');
+    loaded();
 
-    cy.findByRole('button', {name: t('admin.users.moreActions', {name: second.fullname})}).click();
+    openUserMenu(second.fullname);
     cy.findByRole('menuitem', {name: t('admin.users.deleteAccount')}).click();
     cy.findByRole('alertdialog').findByRole('button', {name: t('admin.users.deleteAccount')}).click();
 

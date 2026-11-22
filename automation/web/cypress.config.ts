@@ -14,6 +14,9 @@ export default defineConfig({
     supportFile: 'cypress/support/e2e.ts',
     video: false,
     screenshotOnRunFailure: true,
+    // Scroll an element into view only when it is not visible, like a person does. (The default puts every
+    // element at the top before a click: the scroll that follows closes the row menus.)
+    scrollBehavior: 'nearest',
     viewportWidth: 1280,
     viewportHeight: 720,
     defaultCommandTimeout: 10_000,
