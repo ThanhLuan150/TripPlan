@@ -79,7 +79,7 @@ describe('home page', () => {
     cy.findByRole('dialog', {name: 'Fansipan'})
       .findByTitle('Fansipan')
       .should('have.attr', 'src')
-      .and('match', /youtube-nocookie\.com\/embed\/aaaaaaaaaaa/);
+      .and('match', /^https:\/\/youtube-nocookie\.com\/embed\/aaaaaaaaaaa(?:[?#].*)?$/);
     cy.get('body').type('{esc}');
     cy.findByRole('dialog').should('not.exist');
     cy.location('pathname').should('eq', '/home');
