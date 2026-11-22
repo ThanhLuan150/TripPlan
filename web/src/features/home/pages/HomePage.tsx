@@ -28,6 +28,22 @@ const quickActions = [
 
 const rankRing = ['ring-amber-400', 'ring-slate-300', 'ring-orange-300'];
 
+// Photo of a ranked traveller; falls back to the first letter when it is missing or fails to load.
+function RankAvatar({name, src, ring}: {name?: string; src?: string; ring: string}) {
+  const [failed, setFailed] = useState(false);
+  const box = `size-14 rounded-full ring-2 ${ring}`;
+  // The backend's stock avatar (white silhouette touching the edges) is clipped by the round mask.
+  const isStockAvatar = !!src && src.includes('avatar-trang-67');
+  if (!src || failed || isStockAvatar) {
+    return (
+      <span className={`${box} grid place-items-center bg-brand-50 text-lg font-semibold text-brand-800`}>
+        {(name ?? '').charAt(0).toUpperCase() || '?'}
+      </span>
+    );
+  }
+  return <img src={src} alt="" onError={() => setFailed(true)} className={`${box} bg-slate-100 object-cover object-top`} />;
+}
+
 export default function HomePage() {
   const {t} = useTranslation();
   const navigate = useNavigate();
@@ -175,24 +191,24 @@ export default function HomePage() {
           {!rankingLoading && ranks.length === 0 && (
             <p className="py-4 text-center text-sm text-slate-500">{t('home.rankingEmpty')}</p>
           )}
-          <div className="no-scrollbar flex gap-4 overflow-x-auto">
+          <div className="no-scrollbar flex gap-4 overflow-x-auto px-1 pt-2 pb-1">
             {ranks.map((item, index) => (
               <div
                 key={item._id ?? index}
-                className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center">
+                className="flex w-24 shrink-0 flex-col items-center gap-1.5 text-center ">
                 <div className="relative">
-                  <img
+                  <RankAvatar
+                    name={item.fullname}
                     src={item.image}
-                    alt=""
-                    className={`size-14 rounded-full bg-slate-100 object-cover ring-2 ${
-                      rankRing[index] ?? 'ring-slate-100'
-                    }`}
+                    ring={rankRing[index] ?? 'ring-slate-100'}
                   />
                   <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-slate-900 text-[10px] font-bold text-white ring-2 ring-white">
                     {index + 1}
                   </span>
                 </div>
-                <span className="w-full truncate text-xs font-medium text-slate-700">
+                <span
+                  title={item.fullname}
+                  className="w-full truncate text-xs font-medium text-slate-700">
                   {item.fullname}
                 </span>
               </div>
