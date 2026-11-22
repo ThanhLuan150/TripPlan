@@ -97,6 +97,8 @@ describe('EditProfilePage', () => {
   });
 
   afterEach(() => {
+    Reflect.deleteProperty(URL, 'createObjectURL');
+    Reflect.deleteProperty(URL, 'revokeObjectURL');
     vi.unstubAllGlobals();
   });
 
@@ -200,7 +202,8 @@ describe('EditProfilePage', () => {
   });
 
   it('uploads a newly chosen photo first', async () => {
-    vi.stubGlobal('URL', {...URL, createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn()});
+    // only the two blob functions are added to the real URL: the router builds URLs with it (new URL(...))
+    Object.assign(URL, {createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn()});
     vi.mocked(uploadImage).mockResolvedValue('http://api/files/new');
     vi.mocked(profileApi.update).mockResolvedValue({message: 'ok'});
     const {container} = renderWithProviders(<EditProfilePage />, {route: '/profile/edit'});

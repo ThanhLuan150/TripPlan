@@ -5,7 +5,6 @@ import {act, render, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {MemoryRouter, Route, Routes} from 'react-router-dom';
-import {routerFuture} from '@/app/routes';
 import AdminLayout, {SIDEBAR_COLLAPSED_KEY} from '@/features/admin/components/layout/AdminLayout';
 import {getUser, saveSession} from '@/features/auth/store/session';
 import i18n from '@/lib/i18n';
@@ -20,7 +19,7 @@ const signInAsAdmin = () =>
 const renderLayout = (path = '/admin/users') =>
   render(
     <QueryClientProvider client={createTestQueryClient()}>
-      <MemoryRouter initialEntries={[path]} future={routerFuture}>
+      <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route element={<AdminLayout />}>
             <Route path="/admin/users" element={<p>trang người dùng</p>} />

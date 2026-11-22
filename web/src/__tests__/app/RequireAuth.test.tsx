@@ -4,7 +4,7 @@ import {describe, expect, it} from 'vitest';
 import {saveSession} from '@/features/auth/store/session';
 import type {Role} from '@/features/auth/types';
 import RequireAuth from '@/app/RequireAuth';
-import {routerFuture, routes} from '@/app/routes';
+import {routes} from '@/app/routes';
 
 function Landing() {
   const location = useLocation();
@@ -14,7 +14,7 @@ function Landing() {
 
 const renderAt = (path: string, roles?: Role[]) =>
   render(
-    <MemoryRouter initialEntries={[path]} future={routerFuture}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path={routes.LandingPage} element={<Landing />} />
         <Route path={routes.Home} element={<p>home</p>} />

@@ -45,10 +45,3 @@ export const adminRoutes = {
   roles: '/admin/roles',
 } as const;
 
-// React Router v7 behaviour, opted into now (also silences its console
-// warnings): navigations run in React.startTransition, and relative paths
-// inside splat ("*") routes resolve like in v7. Used by every router.
-export const routerFuture = {
-  v7_startTransition: true,
-  v7_relativeSplatPath: true,
-} as const;

@@ -9,7 +9,8 @@ coverage
 .env.*
 !.env.example
 
-# the build used by the end-to-end tests (mocked API on the same origin)
-!.env.e2e
 
 dist-e2e*
+
+# the dev server of the end-to-end tests (npm run dev:e2e)
+!.env.e2e

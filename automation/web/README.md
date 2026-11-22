@@ -24,9 +24,29 @@ npm run cypress:run        # builds the app, serves it, runs every spec headless
 
 `npm run cypress:run` starts `app:serve` and, once the app answers on port 5174, runs `cy:desktop` (`cypress run`),
 tied together by `start-server-and-test`. `app:serve` (`scripts/serve-app.mjs`) builds the web app from `../../web`
-in its **test mode** (`web/.env.e2e`: the API is on the same origin, `/api-e2e`) into a **new folder in the system temp
+with `VITE_API_URL` set to the same origin (`/api-e2e`, the address the tests mock) into a **new folder in the system temp
 directory** every time, then serves it with `vite preview`. A new folder each run means a folder Windows still has
 locked from an earlier run can never make the build fail.
+
+### Against your dev server (port 5173)
+
+Useful while you change the web code: the tests re-run on the live dev server, no build. The dev server must
+use the **mocked API address**, otherwise the app calls your real backend (`localhost:8080`), gets 401 and signs
+itself out, and every test fails. `cypress:dev` does it for you:
+
+1. Stop your normal dev server (`npm run dev` in `web`): both use port 5173.
+2. Run, in `automation/web`:
+
+```powershell
+npm run cypress:dev
+```
+
+It starts the web dev server with the mocked API address (`scripts/serve-dev.mjs`, i.e. what
+`$env:VITE_API_URL = "http://localhost:5173/api-e2e"` would do by hand) and opens Cypress on it.
+To start only that dev server: `npm run app:dev`, or, from `web`, `npm run dev:e2e` (it reads `web/.env.e2e`, which holds
+the line `VITE_API_URL=http://localhost:5173/api-e2e`: nothing to type by hand).
+
+When you are done, close it (`Ctrl+C`) and start your normal dev server again (real API).
 
 To run **one spec many times** while writing it, start the server once and keep it running:
 

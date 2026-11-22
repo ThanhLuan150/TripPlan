@@ -10,6 +10,8 @@
     "cypress:run": "start-server-and-test app:serve http://localhost:5174 cy:desktop",
     "cypress:mobile": "start-server-and-test app:serve http://localhost:5174 cy:phone",
     "cypress:open": "start-server-and-test app:serve http://localhost:5174 \"cypress open --e2e\"",
+    "app:dev": "node scripts/serve-dev.mjs",
+    "cypress:dev": "start-server-and-test app:dev http://localhost:5173 \"cypress open --e2e --config baseUrl=http://localhost:5173\"",
     "typecheck": "tsc -p tsconfig.json"
   },
   "engines": {
@@ -23,7 +25,7 @@
     "cypress-vite": "1.10.2",
     "start-server-and-test": "3.0.13",
     "typescript": "5.6.2",
-    "vite": "5.4.8"
+    "vite": "^5.4.21"
   },
   "packageManager": "yarn@3.6.4+sha512.e70835d4d6d62c07be76b3c1529cb640c7443f0fe434ef4b6478a5a399218cbaf1511b396b3c56eb03bc86424cff2320f6167ad2fde273aa0df6e60b7754029f"
 }
