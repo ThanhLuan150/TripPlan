@@ -17,7 +17,10 @@ export default function ForgotPassword() {
   });
 
   return (
-    <Formik initialValues={{email: ''}} validationSchema={forgotPasswordSchema} onSubmit={values => send.mutate(values.email.trim())}>
+    <Formik
+      initialValues={{email: ''}}
+      validationSchema={forgotPasswordSchema}
+      onSubmit={values => send.mutate(values.email.trim())}>
       {({errors, touched, handleChange, handleBlur, handleSubmit, values}) => (
         <AuthScreen title={t('auth.forgot.title')}>
           <FormInput
@@ -30,8 +33,14 @@ export default function ForgotPassword() {
             error={touched.email && errors.email && t(errors.email)}
           />
           <ErrorText message={send.errorMessage} />
-          <Button title={t('common.confirm')} onPress={() => handleSubmit()} loading={send.isPending} />
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.back}>
+          <Button
+            title={t('common.confirm')}
+            onPress={() => handleSubmit()}
+            loading={send.isPending}
+          />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Login')}
+            style={styles.back}>
             <Image source={require('../assets/images/backBlue.png')} />
           </TouchableOpacity>
         </AuthScreen>

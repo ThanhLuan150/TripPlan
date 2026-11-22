@@ -1,6 +1,13 @@
 import {useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View} from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Message, useChat} from '../../hooks/useChat';
 import {extractTripHints} from '../../lib/tripHints';
@@ -34,15 +41,28 @@ export default function ChatView() {
   // opens the plan form filled from this AI answer (and the question before it): place, days, people and the answer as a note
   const planFromSuggestion = (index: number) => {
     const answer = messages[index]?.text ?? '';
-    const question = messages[index - 1]?.type === 'user' ? messages[index - 1].text : undefined;
-    navigation.navigate('CreateTrip', {...extractTripHints(answer, question), note: answer.slice(0, 1500)});
+    const question =
+      messages[index - 1]?.type === 'user'
+        ? messages[index - 1].text
+        : undefined;
+    navigation.navigate('CreateTrip', {
+      ...extractTripHints(answer, question),
+      note: answer.slice(0, 1500),
+    });
   };
 
   const last = messages.length - 1;
   return (
     // Android resizes the window by itself (adjustResize); only iOS needs the padding
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ChatToolbar title={title} canStartNew={!noUserMessage && !chat.sending} onHistory={() => setHistoryOpen(true)} onNew={chat.startNew} />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ChatToolbar
+        title={title}
+        canStartNew={!noUserMessage && !chat.sending}
+        onHistory={() => setHistoryOpen(true)}
+        onNew={chat.startNew}
+      />
       <ChatHistoryDrawer
         open={historyOpen}
         currentId={chat.idChat}
@@ -75,20 +95,35 @@ export default function ChatView() {
             <ChatBubble
               mine={item.type === 'user'}
               text={item.i18nKey ? t(item.i18nKey) : item.text ?? ''}
-              onResend={item.error && index === last && !chat.sending ? chat.resend : undefined}
+              onResend={
+                item.error && index === last && !chat.sending
+                  ? chat.resend
+                  : undefined
+              }
               // only real AI answers (not the greetings or errors) can start a plan
-              onPlan={item.type === 'bot' && !item.error && !item.i18nKey && item.text ? () => planFromSuggestion(index) : undefined}
+              onPlan={
+                item.type === 'bot' && !item.error && !item.i18nKey && item.text
+                  ? () => planFromSuggestion(index)
+                  : undefined
+              }
             />
           )}
           ListFooterComponent={
             <View>
               {chat.sending && <TypingDots />}
-              {noUserMessage && !chat.sending && <SuggestionChips onPick={send} />}
+              {noUserMessage && !chat.sending && (
+                <SuggestionChips onPick={send} />
+              )}
             </View>
           }
         />
       )}
-      <ChatComposer value={input} sending={chat.sending || chat.loading} onChangeText={setInput} onSend={() => send(input)} />
+      <ChatComposer
+        value={input}
+        sending={chat.sending || chat.loading}
+        onChangeText={setInput}
+        onSend={() => send(input)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -97,5 +132,9 @@ const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#fff'},
   loading: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   messages: {flex: 1, paddingHorizontal: 16},
-  messagesContent: {flexGrow: 1, justifyContent: 'flex-end', paddingVertical: 12},
+  messagesContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    paddingVertical: 12,
+  },
 });

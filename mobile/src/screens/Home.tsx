@@ -44,30 +44,62 @@ export default function Home() {
   // pictures from the admin; each falls back to a bundled one if it cannot be loaded
   const remoteBanners = home.data?.banners ?? [];
   const slides = remoteBanners.length
-    ? remoteBanners.map((b, i) => ({source: imageSource(b.imageUrl), fallback: localBanners[i % localBanners.length]}))
+    ? remoteBanners.map((b, i) => ({
+        source: imageSource(b.imageUrl),
+        fallback: localBanners[i % localBanners.length],
+      }))
     : localBanners.map(source => ({source, fallback: source}));
-  const suggestions = home.data?.suggestions.length ? home.data.suggestions : null;
+  const suggestions = home.data?.suggestions.length
+    ? home.data.suggestions
+    : null;
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      style={styles.container}
+      contentContainerStyle={styles.content}>
       <HomeHeader
         user={user}
         query={query}
         unread={notifications.data?.length ?? 0}
         onQuery={setQuery}
-        onSearch={() => navigation.navigate('CreateTrip', {location: query.trim()})}
+        onSearch={() =>
+          navigation.navigate('CreateTrip', {location: query.trim()})
+        }
         onBell={() => navigation.navigate('Notifications')}
         onProfile={() => navigation.navigate('Profile')}
       />
       <HomeSlider slides={slides} />
       <QuickActions
         actions={[
-          {label: t('home.quickChat'), icon: 'chatbubbles', color: '#0284C7', background: '#E0F2FE', onPress: () => navigation.navigate('Assistant')},
-          {label: t('home.quickPlan'), icon: 'airplane', color: colors.primaryDark, background: colors.tint, onPress: () => navigation.navigate('CreateTrip')},
-          {label: t('home.quickRanking'), icon: 'trophy', color: '#D97706', background: '#FEF3C7', onPress: () => navigation.navigate('Ranking')},
+          {
+            label: t('home.quickChat'),
+            icon: 'chatbubbles',
+            color: '#0284C7',
+            background: '#E0F2FE',
+            onPress: () => navigation.navigate('Assistant'),
+          },
+          {
+            label: t('home.quickPlan'),
+            icon: 'airplane',
+            color: colors.primaryDark,
+            background: colors.tint,
+            onPress: () => navigation.navigate('CreateTrip'),
+          },
+          {
+            label: t('home.quickRanking'),
+            icon: 'trophy',
+            color: '#D97706',
+            background: '#FEF3C7',
+            onPress: () => navigation.navigate('Ranking'),
+          },
         ]}
       />
-      <SectionHeader title={t('home.videos')} moreText={t('common.seeMore')} onMore={() => navigation.navigate('Videos')} />
+      <SectionHeader
+        title={t('home.videos')}
+        moreText={t('common.seeMore')}
+        onMore={() => navigation.navigate('Videos')}
+      />
       <View style={styles.videos}>
         <VideoRail />
       </View>
@@ -76,13 +108,25 @@ export default function Home() {
         <ImageRail
           images={
             suggestions
-              ? suggestions.map((s, i) => ({source: imageSource(s.imageUrl), fallback: localSuggestions[i % localSuggestions.length]}))
+              ? suggestions.map((s, i) => ({
+                  source: imageSource(s.imageUrl),
+                  fallback: localSuggestions[i % localSuggestions.length],
+                }))
               : localSuggestions.map(source => ({source, fallback: source}))
           }
-          onPick={i => suggestions?.[i]?.location && navigation.navigate('CreateTrip', {location: suggestions[i].location})}
+          onPick={i =>
+            suggestions?.[i]?.location &&
+            navigation.navigate('CreateTrip', {
+              location: suggestions[i].location,
+            })
+          }
         />
       </View>
-      <SectionHeader title={t('home.rankingTitle')} moreText={t('common.seeMore')} onMore={() => navigation.navigate('Ranking')} />
+      <SectionHeader
+        title={t('home.rankingTitle')}
+        moreText={t('common.seeMore')}
+        onMore={() => navigation.navigate('Ranking')}
+      />
       <View style={styles.ranking}>
         <RankingPreview ranks={ranks.data ?? []} />
       </View>

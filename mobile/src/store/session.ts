@@ -25,8 +25,11 @@ export const getAccessToken = () => token;
 
 export async function loadSession(): Promise<StoredSession | null> {
   try {
-    const [t, u] = await Promise.all([AsyncStorage.getItem(TOKEN), AsyncStorage.getItem(USER)]);
-    if (!t || !u) return null;
+    const [t, u] = await Promise.all([
+      AsyncStorage.getItem(TOKEN),
+      AsyncStorage.getItem(USER),
+    ]);
+    if (!t || !u) {return null;}
     token = t;
     return {accessToken: t, data: JSON.parse(u)};
   } catch {
@@ -47,7 +50,10 @@ export async function updateAccessToken(t: string) {
 
 export async function clearSession() {
   token = null;
-  await Promise.all([AsyncStorage.removeItem(TOKEN), AsyncStorage.removeItem(USER)]);
+  await Promise.all([
+    AsyncStorage.removeItem(TOKEN),
+    AsyncStorage.removeItem(USER),
+  ]);
 }
 
 export interface AuthContextValue {

@@ -29,9 +29,20 @@ export default function SectionHeader({title, moreText, onMore}: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, marginBottom: 12},
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    marginBottom: 12,
+  },
   titleBox: {flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1},
-  accent: {width: 4, height: 20, borderRadius: 2, backgroundColor: colors.primary},
+  accent: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+  },
   title: {color: colors.text, fontSize: 18, fontWeight: '800', flexShrink: 1},
   more: {flexDirection: 'row', alignItems: 'center'},
   moreText: {color: colors.primary, fontSize: 14, fontWeight: '600'},

@@ -32,7 +32,10 @@ export default function Assistant() {
           activeColor={colors.primaryDark}
           inactiveColor={colors.muted}
           pressColor={colors.tabBar}
-          options={{chat: {labelStyle: styles.label}, plans: {labelStyle: styles.label}}}
+          options={{
+            chat: {labelStyle: styles.label},
+            plans: {labelStyle: styles.label},
+          }}
         />
       )}
     />
@@ -41,6 +44,11 @@ export default function Assistant() {
 
 const styles = StyleSheet.create({
   indicator: {backgroundColor: colors.primary, height: 3, borderRadius: 2},
-  bar: {backgroundColor: colors.tint, paddingTop: 30, elevation: 0, shadowOpacity: 0},
+  bar: {
+    backgroundColor: colors.tint,
+    paddingTop: 30,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   label: {fontSize: 16, fontWeight: '700', textTransform: 'none'},
 });

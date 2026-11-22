@@ -7,5 +7,7 @@ it('shows a connection message when the server does not answer', () => {
 });
 
 it('shows the backend message when there is one', () => {
-  expect(errorText({response: {data: {message: 'Sai mật khẩu'}}})).toBe('Sai mật khẩu');
+  expect(errorText({response: {data: {message: 'Sai mật khẩu'}}})).toBe(
+    'Sai mật khẩu',
+  );
 });

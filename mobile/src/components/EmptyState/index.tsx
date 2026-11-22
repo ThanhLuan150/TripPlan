@@ -21,6 +21,19 @@ export default function EmptyState({icon, text}: Props) {
 
 const styles = StyleSheet.create({
   box: {alignItems: 'center', paddingVertical: 36, paddingHorizontal: 24},
-  circle: {width: 76, height: 76, borderRadius: 38, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', marginBottom: 14},
-  text: {color: colors.muted, fontSize: 14, textAlign: 'center', lineHeight: 21},
+  circle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: colors.tint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  text: {
+    color: colors.muted,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 21,
+  },
 });

@@ -11,7 +11,9 @@ function Page({title, children}: {title: string; children: React.ReactNode}) {
   return (
     <View style={styles.container}>
       <BackHeader title={title} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}>
         {children}
       </ScrollView>
     </View>
@@ -29,7 +31,10 @@ export function WhatAloca() {
   return (
     <Page title={t('about.whatTitle')}>
       <View style={[styles.card, shadow]}>
-        <Image source={require('../assets/images/hagiangImage.jpg')} style={styles.cover} />
+        <Image
+          source={require('../assets/images/hagiangImage.jpg')}
+          style={styles.cover}
+        />
         <View style={styles.cardBody}>
           <Text style={styles.heading}>{t('about.whatHeading')}</Text>
           <Text style={styles.paragraph}>{t('about.whatText')}</Text>
@@ -63,8 +68,12 @@ export function Benefit() {
             <Ionicons name={i.icon} size={24} color={colors.primaryDark} />
           </View>
           <View style={styles.benefitTexts}>
-            <Text style={styles.benefitTitle}>{t(`about.benefit${i.n}Title`)}</Text>
-            <Text style={styles.benefitText}>{t(`about.benefit${i.n}Text`)}</Text>
+            <Text style={styles.benefitTitle}>
+              {t(`about.benefit${i.n}Title`)}
+            </Text>
+            <Text style={styles.benefitText}>
+              {t(`about.benefit${i.n}Text`)}
+            </Text>
           </View>
         </View>
       ))}
@@ -75,16 +84,45 @@ export function Benefit() {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.surface},
   body: {padding: 16, paddingBottom: 40, gap: 12},
-  card: {backgroundColor: '#fff', borderRadius: radius.lg + 4, overflow: 'hidden'},
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: radius.lg + 4,
+    overflow: 'hidden',
+  },
   cover: {width: '100%', height: 170},
   cardBody: {padding: 18, gap: 12},
   heading: {color: colors.text, fontSize: 24, fontWeight: '800'},
   subtitle: {color: colors.muted, fontSize: 14, marginBottom: 4},
   paragraph: {color: colors.body, fontSize: 15, lineHeight: 24},
-  highlight: {flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.tint, borderRadius: radius.md, padding: 12},
-  highlightText: {flex: 1, color: colors.primaryDeep, fontWeight: '600', fontSize: 14},
-  benefit: {flexDirection: 'row', gap: 14, backgroundColor: '#fff', borderRadius: radius.lg, padding: 16},
-  benefitIcon: {width: 48, height: 48, borderRadius: 16, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center'},
+  highlight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.tint,
+    borderRadius: radius.md,
+    padding: 12,
+  },
+  highlightText: {
+    flex: 1,
+    color: colors.primaryDeep,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  benefit: {
+    flexDirection: 'row',
+    gap: 14,
+    backgroundColor: '#fff',
+    borderRadius: radius.lg,
+    padding: 16,
+  },
+  benefitIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: colors.tint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   benefitTexts: {flex: 1},
   benefitTitle: {color: colors.text, fontWeight: '700', fontSize: 16},
   benefitText: {color: colors.body, fontSize: 14, lineHeight: 21, marginTop: 4},

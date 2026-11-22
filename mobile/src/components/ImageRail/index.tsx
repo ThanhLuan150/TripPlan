@@ -1,4 +1,10 @@
-import {FlatList, ImageSourcePropType, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {
+  FlatList,
+  ImageSourcePropType,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {colors, shadow} from '../../lib/theme';
 import SafeImage from '../SafeImage';
 
@@ -22,8 +28,16 @@ export default function ImageRail({images, onPick}: Props) {
       keyExtractor={(_, i) => String(i)}
       ItemSeparatorComponent={() => <View style={styles.gap} />}
       renderItem={({item, index}) => (
-        <TouchableOpacity activeOpacity={0.9} disabled={!onPick} onPress={() => onPick?.(index)} style={[styles.card, shadow]}>
-          <SafeImage source={item.source} fallback={item.fallback} style={styles.image} />
+        <TouchableOpacity
+          activeOpacity={0.9}
+          disabled={!onPick}
+          onPress={() => onPick?.(index)}
+          style={[styles.card, shadow]}>
+          <SafeImage
+            source={item.source}
+            fallback={item.fallback}
+            style={styles.image}
+          />
         </TouchableOpacity>
       )}
     />
@@ -32,6 +46,13 @@ export default function ImageRail({images, onPick}: Props) {
 
 const styles = StyleSheet.create({
   gap: {width: 12},
-  card: {width: 210, height: 150, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.tabBar, marginBottom: 6},
+  card: {
+    width: 210,
+    height: 150,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.tabBar,
+    marginBottom: 6,
+  },
   image: {width: '100%', height: '100%'},
 });

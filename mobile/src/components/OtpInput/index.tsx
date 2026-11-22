@@ -18,11 +18,15 @@ export default function OtpInput({value, onChange}: Props) {
     const next = [...value];
     next[index] = text;
     onChange(next);
-    if (text && index < LENGTH - 1) refs.current[index + 1]?.focus();
+    if (text && index < LENGTH - 1) {
+      refs.current[index + 1]?.focus();
+    }
   };
 
   const backspace = (index: number) => {
-    if (index === 0) return;
+    if (index === 0) {
+      return;
+    }
     const next = [...value];
     next[index - 1] = '';
     onChange(next);
@@ -38,13 +42,19 @@ export default function OtpInput({value, onChange}: Props) {
             refs.current[i] = el;
           }}
           value={value[i] ?? ''}
-          style={[styles.input, !!value[i] && styles.filled, active === i && styles.active]}
+          style={[
+            styles.input,
+            !!value[i] && styles.filled,
+            active === i && styles.active,
+          ]}
           maxLength={1}
           keyboardType="number-pad"
           onFocus={() => setActive(i)}
           onBlur={() => setActive(-1)}
           onChangeText={text => type(i, text)}
-          onKeyPress={({nativeEvent}) => nativeEvent.key === 'Backspace' && !value[i] && backspace(i)}
+          onKeyPress={({nativeEvent}) =>
+            nativeEvent.key === 'Backspace' && !value[i] && backspace(i)
+          }
         />
       ))}
     </View>
@@ -53,7 +63,18 @@ export default function OtpInput({value, onChange}: Props) {
 
 const styles = StyleSheet.create({
   row: {flexDirection: 'row', marginTop: 20, gap: 8},
-  input: {width: 44, height: 54, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, textAlign: 'center', backgroundColor: colors.surface, color: colors.text, fontSize: 20, fontWeight: '700'},
+  input: {
+    width: 44,
+    height: 54,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    textAlign: 'center',
+    backgroundColor: colors.surface,
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+  },
   filled: {borderColor: colors.primaryLight, backgroundColor: colors.tint},
   active: {borderColor: colors.primary, backgroundColor: '#fff'},
 });

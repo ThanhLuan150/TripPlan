@@ -5,19 +5,30 @@ import {colors} from '../../lib/theme';
 
 interface Props {
   selected: string[];
+  // red border of the buttons while nothing is chosen (the message is shown by the form)
+  invalid?: boolean;
   onToggle: (value: string) => void;
 }
 
 // Two-column grid of outlined buttons; a chosen one is filled teal.
-export default function AreaTypeGrid({selected, onToggle}: Props) {
+export default function AreaTypeGrid({selected, invalid, onToggle}: Props) {
   const {t} = useTranslation();
   return (
     <View style={styles.grid}>
       {areaTypes.map(a => {
         const on = selected.includes(a.value);
         return (
-          <TouchableOpacity key={a.value} style={[styles.item, on && styles.itemOn]} onPress={() => onToggle(a.value)}>
-            <Text style={[styles.text, on && styles.textOn]}>{t(a.labelKey)}</Text>
+          <TouchableOpacity
+            key={a.value}
+            style={[
+              styles.item,
+              invalid && styles.itemInvalid,
+              on && styles.itemOn,
+            ]}
+            onPress={() => onToggle(a.value)}>
+            <Text style={[styles.text, on && styles.textOn]}>
+              {t(a.labelKey)}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -26,9 +37,29 @@ export default function AreaTypeGrid({selected, onToggle}: Props) {
 }
 
 const styles = StyleSheet.create({
-  grid: {flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'},
-  item: {marginTop: 8, padding: 11, borderRadius: 12, backgroundColor: '#fff', borderColor: colors.border, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', width: '48.5%'},
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  item: {
+    marginTop: 8,
+    padding: 11,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderColor: colors.border,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '48.5%',
+  },
+  itemInvalid: {borderColor: colors.error},
   itemOn: {backgroundColor: colors.primary, borderColor: colors.primary},
-  text: {color: colors.text, fontSize: 13, fontWeight: '500', textAlign: 'center'},
+  text: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   textOn: {color: '#fff', fontWeight: '700'},
 });

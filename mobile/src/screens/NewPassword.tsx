@@ -14,13 +14,28 @@ export default function NewPassword() {
   const {t} = useTranslation();
   const {email} = useRoute<any>().params as {email: string};
   const navigation = useNavigation<any>();
-  const reset = useApiMutation((v: {password: string; confirmPassword: string}) => authApi.resetPassword(email, v.password, v.confirmPassword), {
-    onSuccess: () => navigation.replace('Login'),
-  });
+  const reset = useApiMutation(
+    (v: {password: string; confirmPassword: string}) =>
+      authApi.resetPassword(email, v.password, v.confirmPassword),
+    {
+      onSuccess: () => navigation.replace('Login'),
+    },
+  );
 
   return (
-    <Formik initialValues={{password: '', confirmPassword: ''}} validationSchema={newPasswordSchema} onSubmit={values => reset.mutate(values)}>
-      {({errors, touched, handleChange, handleBlur, handleSubmit, values, setFieldError}) => (
+    <Formik
+      initialValues={{password: '', confirmPassword: ''}}
+      validationSchema={newPasswordSchema}
+      onSubmit={values => reset.mutate(values)}>
+      {({
+        errors,
+        touched,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        values,
+        setFieldError,
+      }) => (
         <AuthScreen>
           <FormInput
             label={t('auth.newPassword.password').toUpperCase()}
@@ -38,14 +53,22 @@ export default function NewPassword() {
             value={values.confirmPassword}
             onChangeText={handleChange('confirmPassword')}
             onBlur={handleBlur('confirmPassword')}
-            error={touched.confirmPassword && errors.confirmPassword && t(errors.confirmPassword)}
+            error={
+              touched.confirmPassword &&
+              errors.confirmPassword &&
+              t(errors.confirmPassword)
+            }
           />
           <ErrorText message={reset.errorMessage} />
           <Button
             title={t('auth.newPassword.submit')}
             loading={reset.isPending}
             onPress={() => {
-              if (values.password !== values.confirmPassword) return setFieldError('confirmPassword', t('auth.newPassword.mismatch'));
+              if (values.password !== values.confirmPassword)
+                {return setFieldError(
+                  'confirmPassword',
+                  t('auth.newPassword.mismatch'),
+                );}
               handleSubmit();
             }}
           />
@@ -59,5 +82,10 @@ export default function NewPassword() {
 }
 
 const styles = StyleSheet.create({
-  link: {color: colors.primary, fontWeight: '700', textAlign: 'center', marginTop: 6},
+  link: {
+    color: colors.primary,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 6,
+  },
 });

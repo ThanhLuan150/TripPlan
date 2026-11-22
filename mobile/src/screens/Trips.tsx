@@ -1,5 +1,12 @@
 import {useTranslation} from 'react-i18next';
-import {ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {useNavigation} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
@@ -17,7 +24,9 @@ export default function Trips() {
   const navigation = useNavigation<any>();
   const qc = useQueryClient();
   const trips = useTrips();
-  const remove = useApiMutation(tripsApi.remove, {onSuccess: () => qc.invalidateQueries({queryKey: queryKeys.trips})});
+  const remove = useApiMutation(tripsApi.remove, {
+    onSuccess: () => qc.invalidateQueries({queryKey: queryKeys.trips}),
+  });
   const list = trips.data ?? [];
 
   const askDelete = (trip: Trip) =>
@@ -45,17 +54,27 @@ export default function Trips() {
         </View>
       )}
       {trips.isLoading ? (
-        <ActivityIndicator size={30} color={colors.primary} style={styles.loading} />
+        <ActivityIndicator
+          size={30}
+          color={colors.primary}
+          style={styles.loading}
+        />
       ) : (
         <FlatList
           style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           data={list}
-          ListEmptyComponent={<EmptyState icon="map-outline" text={t('trips.empty')} />}
+          ListEmptyComponent={
+            <EmptyState icon="map-outline" text={t('trips.empty')} />
+          }
           keyExtractor={(item, i) => item.nameTrip + i}
           renderItem={({item}) => (
-            <TripItem trip={item} onOpen={() => navigation.navigate('TripDetail', {id: item._id})} onDelete={() => askDelete(item)} />
+            <TripItem
+              trip={item}
+              onOpen={() => navigation.navigate('TripDetail', {id: item._id})}
+              onDelete={() => askDelete(item)}
+            />
           )}
         />
       )}
@@ -65,9 +84,26 @@ export default function Trips() {
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#fff'},
-  addNew: {marginTop: 16, marginHorizontal: 16, height: 104, borderRadius: 20, borderColor: colors.primaryLight, borderWidth: 1.5, borderStyle: 'dashed', backgroundColor: colors.tint, justifyContent: 'center', alignItems: 'center'},
+  addNew: {
+    marginTop: 16,
+    marginHorizontal: 16,
+    height: 104,
+    borderRadius: 20,
+    borderColor: colors.primaryLight,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    backgroundColor: colors.tint,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   addText: {color: colors.primaryDark, marginTop: 6, fontWeight: '700'},
-  created: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginTop: 18},
+  created: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    marginTop: 18,
+  },
   createdText: {color: colors.text, fontWeight: '800', fontSize: 16},
   refresh: {color: colors.primary, fontWeight: '700'},
   loading: {marginTop: 30},

@@ -10,9 +10,12 @@ export default function Verify() {
   const {email} = useRoute<any>().params as {email: string};
   const navigation = useNavigation<any>();
 
-  const confirm = useApiMutation((code: string) => authApi.confirmAccount(email, code), {
-    onSuccess: () => navigation.replace('Login'),
-  });
+  const confirm = useApiMutation(
+    (code: string) => authApi.confirmAccount(email, code),
+    {
+      onSuccess: () => navigation.replace('Login'),
+    },
+  );
   const resend = useApiMutation(() => authApi.resendCode(email));
 
   return (
