@@ -756,6 +756,18 @@ describe('add user', () => {
     await waitFor(() => expect(within(dialog).queryByText(t('admin.users.errors.phoneInvalid'))).toBeNull());
   });
 
+  it('shows the message of the backend, or a generic one, for a failure that is not a taken field', async () => {
+    postUser.mockRejectedValueOnce(httpError(400, {message: 'Weak password'})).mockRejectedValueOnce(httpError(500));
+    const {user, dialog} = await open();
+    await fill(user, dialog);
+
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.createAccount')}));
+    expect(await within(dialog).findByText('Weak password')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.createAccount')}));
+
+    expect(await within(dialog).findByText(t('admin.users.errors.generic'))).toBeInTheDocument();
+  });
+
   it('creates the account and opens its profile', async () => {
     postUser.mockResolvedValue({...second, id: 'newid'});
     const {user, dialog} = await open();
@@ -794,6 +806,33 @@ describe('edit photo and trip details', () => {
     await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
 
     await waitFor(() => expect(patchUser).toHaveBeenCalledWith(second.id, {image: 'https://cdn.example.com/new.jpg'}));
+  });
+
+  it('closes without calling the API when nothing changed', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<UsersPage />, {route: '/admin/users'});
+    await screen.findByText(mockUsers[0].fullname);
+
+    await user.click(screen.getByRole('button', {name: t('admin.users.moreActions', {name: second.fullname})}));
+    await user.click(screen.getByRole('menuitem', {name: t('admin.users.editUser')}));
+    await user.click(within(screen.getByRole('dialog', {name: t('admin.users.editUser')})).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(patchUser).not.toHaveBeenCalled();
+  });
+
+  it('says when the new photo could not be uploaded', async () => {
+    vi.mocked(uploadImage).mockRejectedValue(new Error('network'));
+    const user = userEvent.setup();
+    renderWithProviders(<UsersPage />, {route: '/admin/users'});
+    await screen.findByText(mockUsers[0].fullname);
+
+    await user.click(screen.getByRole('button', {name: t('admin.users.moreActions', {name: second.fullname})}));
+    await user.click(screen.getByRole('menuitem', {name: t('admin.users.editUser')}));
+    const dialog = screen.getByRole('dialog', {name: t('admin.users.editUser')});
+    await user.upload(within(dialog).getByLabelText(t('admin.users.dialogs.changePhoto'), {selector: 'input'}), new File(['x'], 'a.png', {type: 'image/png'}));
+
+    expect(await within(dialog).findByText(t('admin.users.errors.uploadFailed'))).toBeInTheDocument();
   });
 
   it('opens the details of a trip from the Trip plans tab', async () => {

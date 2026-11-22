@@ -209,6 +209,34 @@ describe('ChallengesPage', () => {
     expect(adminApi.fetchChallenges).toHaveBeenCalledTimes(2);
   });
 
+  it('closes without calling the API when nothing changed', async () => {
+    const user = userEvent.setup();
+    page();
+    await screen.findByRole('table');
+
+    await user.click(screen.getByRole('button', {name: t('admin.common.editItem', {name: challenge.nameLocation})}));
+    await user.click(within(screen.getByRole('dialog', {name: t('admin.challenges.edit')})).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(adminApi.patchChallenge).not.toHaveBeenCalled();
+  });
+
+  it('shows the message of the backend, or a generic one, when saving fails', async () => {
+    vi.mocked(adminApi.patchChallenge).mockRejectedValueOnce(httpError(400, {message: 'Bad points'})).mockRejectedValueOnce(httpError(500));
+    const user = userEvent.setup();
+    page();
+    await screen.findByRole('table');
+    await user.click(screen.getByRole('button', {name: t('admin.common.editItem', {name: challenge.nameLocation})}));
+    const dialog = screen.getByRole('dialog', {name: t('admin.challenges.edit')});
+    await user.type(within(dialog).getByLabelText(t('admin.challenges.fields.summary')), ' more');
+
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+    expect(await within(dialog).findByText('Bad points')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+
+    expect(await within(dialog).findByText(t('admin.common.tryAgain'))).toBeInTheDocument();
+  });
+
   it('deletes after asking', async () => {
     page();
     await screen.findByRole('table');
@@ -355,6 +383,21 @@ describe('VideosPage', () => {
     await waitFor(() => expect(adminApi.patchVideo).toHaveBeenCalledWith(video.id, expect.objectContaining({status: 'hidden', title: video.title})));
   });
 
+  it('shows the message of the backend, or a generic one, when saving fails', async () => {
+    vi.mocked(adminApi.patchVideo).mockRejectedValueOnce(httpError(400, {message: 'Bad link'})).mockRejectedValueOnce(httpError(500));
+    const user = userEvent.setup();
+    page();
+    await screen.findByRole('list');
+    await user.click(screen.getByRole('button', {name: t('admin.common.editItem', {name: video.title})}));
+    const dialog = screen.getByRole('dialog', {name: t('admin.videos.edit')});
+
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+    expect(await within(dialog).findByText('Bad link')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+
+    expect(await within(dialog).findByText(t('admin.common.tryAgain'))).toBeInTheDocument();
+  });
+
   it('deletes after asking', async () => {
     page();
     await screen.findByRole('list');
@@ -438,6 +481,21 @@ describe('NotificationsPage', () => {
     await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
 
     await waitFor(() => expect(adminApi.patchAnnouncement).toHaveBeenCalledWith(item.id, expect.objectContaining({title: 'Tiêu đề mới'})));
+  });
+
+  it('shows the message of the backend, or a generic one, when saving fails', async () => {
+    vi.mocked(adminApi.patchAnnouncement).mockRejectedValueOnce(httpError(400, {message: 'Bad date'})).mockRejectedValueOnce(httpError(500));
+    const user = userEvent.setup();
+    page();
+    await screen.findByRole('table');
+    await user.click(screen.getByRole('button', {name: t('admin.common.editItem', {name: item.title})}));
+    const dialog = screen.getByRole('dialog', {name: t('admin.notifications.edit')});
+
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+    expect(await within(dialog).findByText('Bad date')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
+
+    expect(await within(dialog).findByText(t('admin.common.tryAgain'))).toBeInTheDocument();
   });
 
   it('deletes after asking', async () => {
