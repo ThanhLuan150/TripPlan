@@ -65,7 +65,7 @@ export default function App() {
             <Loading />
           )}
         </AuthContext.Provider>
-      <Alert />
+        <Alert />
       </QueryClientProvider>
     </SafeAreaProvider>
   );

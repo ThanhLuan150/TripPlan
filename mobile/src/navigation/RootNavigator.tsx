@@ -1,7 +1,10 @@
 import React from 'react';
 import {useTranslation} from 'react-i18next';
 import {StyleSheet} from 'react-native';
-import {BottomTabBar, createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {
+  BottomTabBar,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -38,7 +41,9 @@ export type RootStackParams = {
   ResetCode: {email: string};
   NewPassword: {email: string};
   Tabs: undefined;
-  CreateTrip: {location?: string; days?: number; people?: number; note?: string} | undefined;
+  CreateTrip:
+    | {location?: string; days?: number; people?: number; note?: string}
+    | undefined;
   GenerateTrips: {params: GenerateParams};
   TripDetail: {id: string};
   TripMap: {id: string};
@@ -54,10 +59,31 @@ const Tab = createBottomTabNavigator();
 
 // Bottom tabs of the original app: light-teal bar, the active tab turns teal with white icon / text.
 const tabs = [
-  {name: 'Home', label: 'nav.home', component: Home, icon: (focused: boolean) => (focused ? 'home' : 'home-outline')},
-  {name: 'Assistant', label: 'nav.assistant', component: Assistant, icon: (focused: boolean) => (focused ? 'aliwangwang' : 'aliwangwang-o1'), ant: true},
-  {name: 'Ranking', label: 'nav.ranking', component: Ranking, icon: (focused: boolean) => (focused ? 'podium' : 'podium-outline')},
-  {name: 'Profile', label: 'nav.account', component: Profile, icon: (focused: boolean) => (focused ? 'person' : 'person-outline')},
+  {
+    name: 'Home',
+    label: 'nav.home',
+    component: Home,
+    icon: (focused: boolean) => (focused ? 'home' : 'home-outline'),
+  },
+  {
+    name: 'Assistant',
+    label: 'nav.assistant',
+    component: Assistant,
+    icon: (focused: boolean) => (focused ? 'aliwangwang' : 'aliwangwang-o1'),
+    ant: true,
+  },
+  {
+    name: 'Ranking',
+    label: 'nav.ranking',
+    component: Ranking,
+    icon: (focused: boolean) => (focused ? 'podium' : 'podium-outline'),
+  },
+  {
+    name: 'Profile',
+    label: 'nav.account',
+    component: Profile,
+    icon: (focused: boolean) => (focused ? 'person' : 'person-outline'),
+  },
 ];
 
 function Tabs() {
@@ -85,7 +111,11 @@ function Tabs() {
           options={{
             tabBarLabel: t(tab.label),
             tabBarIcon: ({focused, color, size}) =>
-              tab.ant ? <AntDesign name={tab.icon(focused)} size={size} color={color} /> : <Ionicons name={tab.icon(focused)} size={size} color={color} />,
+              tab.ant ? (
+                <AntDesign name={tab.icon(focused)} size={size} color={color} />
+              ) : (
+                <Ionicons name={tab.icon(focused)} size={size} color={color} />
+              ),
           }}
         />
       ))}
@@ -127,6 +157,21 @@ export default function RootNavigator() {
 
 const styles = StyleSheet.create({
   // floating light-teal bar with rounded corners; the active tab is a teal rounded block
-  tabBar: {position: 'absolute', left: 14, right: 14, bottom: 12, height: 64, borderRadius: 22, backgroundColor: colors.tabBar, borderTopWidth: 0, paddingHorizontal: 6, elevation: 10, shadowColor: '#0F172A', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: {width: 0, height: 4}},
+  tabBar: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 12,
+    height: 64,
+    borderRadius: 22,
+    backgroundColor: colors.tabBar,
+    borderTopWidth: 0,
+    paddingHorizontal: 6,
+    elevation: 10,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: {width: 0, height: 4},
+  },
   tabItem: {borderRadius: 18, marginVertical: 7, paddingVertical: 2},
 });

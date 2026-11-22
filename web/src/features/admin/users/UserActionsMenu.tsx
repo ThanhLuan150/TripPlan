@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {
   IoCheckmarkCircleOutline,
@@ -21,10 +21,13 @@ const item =
 interface Position {
   top: number;
   right: number;
+  // where the menu would end above the button (used when there is no room below)
+  above: number;
 }
 
 // "More actions" menu of a user (table row or profile header). The menu is
-// fixed to the viewport so the table's horizontal scroll cannot clip it.
+// fixed to the viewport so the table's horizontal scroll cannot clip it; it
+// opens upward when a row is too low for it to fit below.
 export default function UserActionsMenu({
   user,
   self,
@@ -42,8 +45,25 @@ export default function UserActionsMenu({
   const {t} = useTranslation();
   const [position, setPosition] = useState<Position | null>(null);
   const button = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setPosition(null), []);
   const ref = useClickOutside(close);
+
+  // once the menu is on screen and its height is known, keep it inside the viewport
+  useLayoutEffect(() => {
+    if (!position || !menu.current) {
+      return;
+    }
+    const height = menu.current.offsetHeight;
+    const bottomLimit = window.innerHeight - 8;
+    if (position.top + height <= bottomLimit) {
+      return;
+    }
+    const top = position.above - height >= 8 ? position.above - height : Math.max(8, bottomLimit - height);
+    if (top !== position.top) {
+      setPosition({...position, top});
+    }
+  }, [position]);
 
   useEffect(() => {
     if (!position) {
@@ -71,7 +91,7 @@ export default function UserActionsMenu({
       return;
     }
     const rect = button.current!.getBoundingClientRect();
-    setPosition({top: rect.bottom + 6, right: Math.max(8, window.innerWidth - rect.right)});
+    setPosition({top: rect.bottom + 6, above: rect.top - 6, right: Math.max(8, window.innerWidth - rect.right)});
   };
 
   const choose = (action: () => void) => () => {
@@ -95,6 +115,7 @@ export default function UserActionsMenu({
       </button>
       {position && (
         <div
+          ref={menu}
           role="menu"
           aria-label={t('admin.users.moreActions', {name})}
           style={{top: position.top, right: position.right}}

@@ -13,6 +13,18 @@ export default function Loading() {
 }
 
 const s = StyleSheet.create({
-  center: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24},
-  card: {width: 72, height: 72, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center'},
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  card: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

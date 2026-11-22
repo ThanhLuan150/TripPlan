@@ -1,5 +1,12 @@
 import {useQuery} from '@tanstack/react-query';
-import {GenerateParams, chatApi, contentApi, profileApi, rankingApi, tripsApi} from '../api';
+import {
+  GenerateParams,
+  chatApi,
+  contentApi,
+  profileApi,
+  rankingApi,
+  tripsApi,
+} from '../api';
 
 export type RankingPeriod = 'weekly' | 'monthly' | 'highest';
 
@@ -15,20 +22,29 @@ export const queryKeys = {
   generate: (params: GenerateParams) => ['generate', params] as const,
 };
 
-export const useHome = () => useQuery({queryKey: queryKeys.home, queryFn: contentApi.home});
+export const useHome = () =>
+  useQuery({queryKey: queryKeys.home, queryFn: contentApi.home});
 
-export const useVideos = () => useQuery({queryKey: queryKeys.videos, queryFn: contentApi.videos});
+export const useVideos = () =>
+  useQuery({queryKey: queryKeys.videos, queryFn: contentApi.videos});
 
 export const useRanking = (period: RankingPeriod) =>
-  useQuery({queryKey: queryKeys.ranking(period), queryFn: () => rankingApi.get(period)});
+  useQuery({
+    queryKey: queryKeys.ranking(period),
+    queryFn: () => rankingApi.get(period),
+  });
 
-export const useTrips = () => useQuery({queryKey: queryKeys.trips, queryFn: tripsApi.list});
+export const useTrips = () =>
+  useQuery({queryKey: queryKeys.trips, queryFn: tripsApi.list});
 
 export const useTrip = (id: string) =>
   useQuery({queryKey: queryKeys.trip(id), queryFn: () => tripsApi.get(id)});
 
 export const useNotifications = () =>
-  useQuery({queryKey: queryKeys.notifications, queryFn: profileApi.notifications});
+  useQuery({
+    queryKey: queryKeys.notifications,
+    queryFn: profileApi.notifications,
+  });
 
 // AI suggestions: asked once per set of answers, never refetched by itself.
 export const useGeneratedPlans = (params: GenerateParams) =>
@@ -39,6 +55,6 @@ export const useGeneratedPlans = (params: GenerateParams) =>
     retry: false,
   });
 
-
 // Saved conversations (loaded when the history drawer opens).
-export const useChats = (enabled: boolean) => useQuery({queryKey: queryKeys.chats, queryFn: chatApi.list, enabled});
+export const useChats = (enabled: boolean) =>
+  useQuery({queryKey: queryKeys.chats, queryFn: chatApi.list, enabled});

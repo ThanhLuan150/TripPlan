@@ -3,7 +3,6 @@ import {act, render, screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {MemoryRouter, Route, Routes} from 'react-router-dom';
-import {routerFuture} from '@/app/routes';
 import AssistantLayout from '@/components/layout/AssistantLayout';
 import BackHeader from '@/components/layout/BackHeader';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
@@ -50,7 +49,7 @@ describe('BackHeader / Page', () => {
 
     rerender(
       <QueryClientProvider client={createTestQueryClient()}>
-        <MemoryRouter future={routerFuture}>
+        <MemoryRouter>
           <Page title="Video" wide>
             x
           </Page>
@@ -88,7 +87,7 @@ describe('LanguageSwitcher', () => {
 const renderLayout = (path: string) =>
   render(
     <QueryClientProvider client={createTestQueryClient()}>
-      <MemoryRouter initialEntries={[path]} future={routerFuture}>
+      <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/home" element={<p>home content</p>} />

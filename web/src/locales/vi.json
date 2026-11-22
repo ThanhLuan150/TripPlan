@@ -1,5 +1,8 @@
 {
   "common": {
+    "previousMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "clear": "Xóa",
     "success": "Thành công",
     "failed": "Thất bại",
     "notice": "Thông báo",
@@ -236,7 +239,10 @@
       "errorPickDates": "Vui lòng chọn lại ngày",
       "errorMaxDays": "Chúng tôi chỉ có thể tạo cho bạn kế hoạch tối đa 7 ngày",
       "errorProvince": "Vui lòng chọn đúng tỉnh, thành phố mà chúng tôi đã cung cấp",
-      "errorMissing": "Vui lòng điền đầy đủ thông tin!"
+      "errorMissing": "Vui lòng điền đầy đủ thông tin!",
+      "errorPeople": "Số người phải từ 1 đến 10",
+      "errorNoteLong": "Ghi chú quá dài (tối đa 1500 ký tự)",
+      "errorInterests": "Chọn ít nhất một kiểu địa điểm"
     },
     "generate": {
       "title": "Gợi ý cho chuyến đi {{location}}",
@@ -255,6 +261,7 @@
       "namePlaceholder": "Ví dụ: {{example}}",
       "nameExample": "{{location}} {{days}} ngày",
       "nameRequired": "Vui lòng nhập tên kế hoạch",
+      "nameLong": "Tên quá dài (tối đa 35 ký tự)",
       "saveFailed": "Lưu kế hoạch không thành công",
       "duplicateName": "Bạn đã có kế hoạch trùng tên"
     },
@@ -336,6 +343,14 @@
     "saveFailed": "Cập nhật thông tin không thành công!",
     "missingInfo": "Vui lòng nhập đầy đủ thông tin",
     "invalidPhone": "Số điện thoại không hợp lệ",
+    "errors": {
+      "fullname": "Vui lòng nhập họ và tên",
+      "fullnameLong": "Họ và tên quá dài (tối đa 100 ký tự)",
+      "phone": "Vui lòng nhập số điện thoại",
+      "address": "Vui lòng nhập địa chỉ",
+      "addressLong": "Địa chỉ quá dài (tối đa 200 ký tự)",
+      "image": "Vui lòng chọn ảnh đại diện"
+    },
     "notificationsTitle": "Thông báo của bạn",
     "noNotifications": "Bạn chưa có thông báo nào.",
     "notificationsFailed": "Không tải được thông báo. Vui lòng thử lại."

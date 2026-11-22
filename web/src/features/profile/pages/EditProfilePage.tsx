@@ -1,4 +1,6 @@
-import {ChangeEvent, FormEvent, useEffect, useRef, useState} from 'react';
+import {ChangeEvent, useEffect, useRef, useState} from 'react';
+import FieldError from '@/components/ui/FieldError';
+import {useFormik} from 'formik';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
@@ -9,36 +11,68 @@ import Field from '@/components/ui/Field';
 import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
 import {connectionErrorKey} from '@/lib/apiClient';
+import {fieldError} from '@/lib/forms';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import {getUser, updateUser} from '@/features/auth/store/session';
 import {ProfileUpdate, profileApi} from '../api/profileApi';
+import {profileSchema, type ProfileFormValues} from '../validation';
+
+// the signed-in user's details, as the text of the fields
+const initialProfile = (): ProfileFormValues => {
+  const user = getUser();
+  return {
+    fullname: user?.fullname ?? '',
+    email: user?.email ?? '',
+    phone: user?.phone !== undefined && user.phone !== null ? user.phone.toString() : '',
+    address: user?.address ?? '',
+    image: user?.image ?? '',
+  };
+};
 
 export default function EditProfilePage() {
   const {t} = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
-  const [email, setEmail] = useState('');
-  const [fullname, setFullname] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  // URL shown in the avatar: the saved image or a local preview of a new file
-  const [image, setImage] = useState<string | null>(null);
+  // new photo to upload (the form holds the URL shown in the avatar: the saved
+  // image or a local preview of this file)
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const update = useMutation({mutationFn: profileApi.update});
 
-  useEffect(() => {
-    const user = getUser();
-    if (user) {
-      setEmail(user.email ?? '');
-      setFullname(user.fullname ?? '');
-      setAddress(user.address ?? '');
-      setPhone(user.phone !== undefined && user.phone !== null ? user.phone.toString() : '');
-      if (user.image) {
-        setImage(user.image);
+  const formik = useFormik<ProfileFormValues>({
+    initialValues: initialProfile(),
+    validationSchema: profileSchema,
+    onSubmit: async values => {
+      const fullname = values.fullname.trim();
+      const address = values.address.trim();
+      setSaving(true);
+      try {
+        const url = imageFile ? await uploadImage(imageFile) : values.image;
+        const data: ProfileUpdate = {fullname, email: values.email, phone: values.phone, address, image: url};
+        await update.mutateAsync(data);
+        updateUser({...data});
+        queryClient.invalidateQueries({queryKey: ['profile']});
+        Toast.show({type: 'success', text1: t('common.success'), text2: t('profile.saved')});
+        navigate(routes.Profile);
+      } catch (error) {
+        console.log(error);
+        Toast.show({
+          type: 'error',
+          text1: t('common.failed'),
+          text2: t(uploadErrorKey(error) ?? connectionErrorKey(error) ?? 'profile.saveFailed'),
+        });
+      } finally {
+        setSaving(false);
       }
-    }
-  }, []);
+    },
+  });
+  const {values} = formik;
+  const image = values.image || null;
+  const shown = (field: keyof ProfileFormValues) => {
+    const message = fieldError(formik, field);
+    return message ? t(message) : undefined;
+  };
 
   // free the local preview URL when it is replaced
   useEffect(() => {
@@ -49,51 +83,19 @@ export default function EditProfilePage() {
     };
   }, [image]);
 
-  const update = useMutation({mutationFn: profileApi.update});
-
-  const fail = (key: string) =>
-    Toast.show({type: 'error', text1: t('common.failed'), text2: t(key)});
-
-  const handleSave = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!fullname || !phone || !address || !image) {
-      fail('profile.missingInfo');
-      return;
-    }
-    if (!/^\d{10}$/.test(phone)) {
-      fail('profile.invalidPhone');
-      return;
-    }
-    setSaving(true);
-    try {
-      const url = imageFile ? await uploadImage(imageFile) : image;
-      const data: ProfileUpdate = {fullname, email, phone, address, image: url};
-      await update.mutateAsync(data);
-      updateUser({...data});
-      queryClient.invalidateQueries({queryKey: ['profile']});
-      Toast.show({type: 'success', text1: t('common.success'), text2: t('profile.saved')});
-      navigate(routes.Profile);
-    } catch (error) {
-      console.log(error);
-      fail(uploadErrorKey(error) ?? connectionErrorKey(error) ?? 'profile.saveFailed');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
       return;
     }
     setImageFile(file);
-    setImage(URL.createObjectURL(file));
+    formik.setFieldValue('image', URL.createObjectURL(file));
     e.target.value = '';
   };
 
   return (
     <Page title={t('profile.editTitle')}>
-      <form className="card space-y-5 p-5 md:p-7" onSubmit={handleSave}>
+      <form className="card space-y-5 p-5 md:p-7" onSubmit={formik.handleSubmit} noValidate>
         <div className="flex flex-col items-center gap-2 pb-2">
           <button
             type="button"
@@ -110,37 +112,46 @@ export default function EditProfilePage() {
             </span>
           </button>
           <span className="text-xs text-slate-500">{t('profile.changePhoto')}</span>
+          <FieldError role="alert" className="mt-0">
+            {shown('image')}
+          </FieldError>
           <input ref={fileInput} type="file" accept="image/*" hidden onChange={handleFile} />
         </div>
 
-        <Field label={t('profile.fullname')} htmlFor="fullname">
+        <Field label={t('profile.fullname')} htmlFor="fullname" error={shown('fullname')}>
           <input
             id="fullname"
+            name="fullname"
             className="field"
-            value={fullname}
-            onChange={e => setFullname(e.target.value)}
+            value={values.fullname}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
           />
         </Field>
         <Field label={t('profile.email')} htmlFor="email">
-          <input id="email" className="field" value={email} readOnly />
+          <input id="email" className="field" value={values.email} readOnly />
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label={t('profile.phone')} htmlFor="phone">
+          <Field label={t('profile.phone')} htmlFor="phone" error={shown('phone')}>
             <input
               id="phone"
+              name="phone"
               className="field"
-              value={phone}
+              value={values.phone}
               inputMode="numeric"
               placeholder={t('profile.phonePlaceholder')}
-              onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+              onChange={e => formik.setFieldValue('phone', e.target.value.replace(/\D/g, ''))}
+              onBlur={formik.handleBlur}
             />
           </Field>
-          <Field label={t('profile.address')} htmlFor="address">
+          <Field label={t('profile.address')} htmlFor="address" error={shown('address')}>
             <input
               id="address"
+              name="address"
               className="field"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
+              value={values.address}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
             />
           </Field>
         </div>

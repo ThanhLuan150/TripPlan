@@ -1,4 +1,5 @@
 import {Formik} from 'formik';
+import {fieldMessage} from '@/lib/forms';
 import {useMutation} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
@@ -63,12 +64,12 @@ export default function RegisterPage() {
         initialValues={{email: '', password: '', confirmPassword: '', username: ''}}
         validationSchema={registerSchema}
         onSubmit={values => handleSignUp(values)}>
-        {({errors, touched, handleChange, handleBlur, handleSubmit, values}) => (
+        {({errors, touched, handleChange, handleBlur, handleSubmit, values, initialValues, submitCount}) => (
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             <Field
               label={t('auth.register.email')}
               htmlFor="email"
-              error={touched.email && errors.email && t(errors.email)}>
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'email', t)}>
               <input
                 id="email"
                 name="email"
@@ -84,7 +85,7 @@ export default function RegisterPage() {
             <Field
               label={t('auth.login.username')}
               htmlFor="username"
-              error={touched.username && errors.username && t(errors.username)}>
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'username', t)}>
               <input
                 id="username"
                 name="username"
@@ -99,7 +100,7 @@ export default function RegisterPage() {
             <Field
               label={t('auth.login.password')}
               htmlFor="password"
-              error={touched.password && errors.password && t(errors.password)}>
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'password', t)}>
               <PasswordInput
                 id="password"
                 name="password"
@@ -114,7 +115,7 @@ export default function RegisterPage() {
               label={t('auth.register.confirmPassword')}
               htmlFor="confirmPassword"
               error={
-                touched.confirmPassword && errors.confirmPassword && t(errors.confirmPassword)
+                fieldMessage({errors, touched, values, initialValues, submitCount}, 'confirmPassword', t)
               }>
               <PasswordInput
                 id="confirmPassword"

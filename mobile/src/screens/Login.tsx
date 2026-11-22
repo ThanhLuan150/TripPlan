@@ -17,7 +17,10 @@ export default function Login() {
   const login = useApiMutation(authApi.login, {onSuccess: signIn});
 
   return (
-    <Formik initialValues={{username: '', password: ''}} validationSchema={loginSchema} onSubmit={values => login.mutate(values)}>
+    <Formik
+      initialValues={{username: '', password: ''}}
+      validationSchema={loginSchema}
+      onSubmit={values => login.mutate(values)}>
       {({errors, touched, handleChange, handleBlur, handleSubmit, values}) => (
         <AuthScreen>
           <FormInput
@@ -39,11 +42,17 @@ export default function Login() {
             onBlur={handleBlur('password')}
             error={touched.password && errors.password && t(errors.password)}
           />
-          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgot}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ForgotPassword')}
+            style={styles.forgot}>
             <Text style={styles.link}>{t('auth.login.forgot')}</Text>
           </TouchableOpacity>
           <ErrorText message={login.errorMessage} />
-          <Button title={t('auth.login.submit')} onPress={() => handleSubmit()} loading={login.isPending} />
+          <Button
+            title={t('auth.login.submit')}
+            onPress={() => handleSubmit()}
+            loading={login.isPending}
+          />
           <View style={styles.row}>
             <Text style={styles.text}>{t('auth.login.noAccount')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -57,7 +66,13 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  row: {flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 6},
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+  },
   forgot: {alignSelf: 'flex-end', marginBottom: 6},
   text: {color: colors.muted},
   link: {color: colors.primary, fontWeight: '700'},

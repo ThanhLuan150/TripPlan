@@ -1,6 +1,6 @@
 import {lazy, Suspense} from 'react';
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
-import {adminRoutes, routerFuture, routes} from './routes';
+import {adminRoutes, routes} from './routes';
 import RequireAuth from './RequireAuth';
 import Spinner from '@/components/ui/Spinner';
 import MainLayout from '@/components/layout/MainLayout';
@@ -31,7 +31,7 @@ const AdminRoutes = lazy(() => import('@/features/admin/AdminRoutes'));
 
 export default function AppRouter() {
   return (
-    <BrowserRouter future={routerFuture}>
+    <BrowserRouter>
       <Routes>
         {/* public */}
         <Route path={routes.LandingPage} element={<LandingPage />} />

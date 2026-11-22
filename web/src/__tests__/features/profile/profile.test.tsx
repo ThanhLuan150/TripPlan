@@ -97,6 +97,8 @@ describe('EditProfilePage', () => {
   });
 
   afterEach(() => {
+    Reflect.deleteProperty(URL, 'createObjectURL');
+    Reflect.deleteProperty(URL, 'revokeObjectURL');
     vi.unstubAllGlobals();
   });
 
@@ -120,15 +122,51 @@ describe('EditProfilePage', () => {
     expect(screen.getByLabelText(t('profile.phone'))).toHaveValue('');
   });
 
-  it('requires every field and a photo', async () => {
+  it('requires every field, each with its own message', async () => {
     const u = userEvent.setup();
     renderWithProviders(<EditProfilePage />, {route: '/profile/edit'});
 
+    await u.clear(screen.getByLabelText(t('profile.fullname')));
+    await u.clear(screen.getByLabelText(t('profile.phone')));
     await u.clear(screen.getByLabelText(t('profile.address')));
     save();
 
-    expect(await screen.findByText(t('profile.missingInfo'))).toBeInTheDocument();
+    expect(await screen.findByText(t('profile.errors.fullname'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.errors.phone'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.errors.address'))).toBeInTheDocument();
     expect(profileApi.update).not.toHaveBeenCalled();
+  });
+
+  it('requires a photo', async () => {
+    saveSession({accessToken: 't', data: {username: 'lan', fullname: 'Lan', email: 'lan@x.vn', phone: '0901234567', address: 'Hà Nội'}});
+    renderWithProviders(<EditProfilePage />, {route: '/profile/edit'});
+
+    save();
+
+    expect(await screen.findByText(t('profile.errors.image'))).toBeInTheDocument();
+    expect(profileApi.update).not.toHaveBeenCalled();
+  });
+
+  it('shows the error of a field when it is left, before saving', async () => {
+    const u = userEvent.setup();
+    renderWithProviders(<EditProfilePage />, {route: '/profile/edit'});
+
+    await u.clear(screen.getByLabelText(t('profile.fullname')));
+    await u.tab();
+
+    expect(await screen.findByText(t('profile.errors.fullname'))).toBeInTheDocument();
+    expect(screen.queryByText(t('profile.errors.address'))).toBeNull();
+  });
+
+  it('limits the length of the name and of the address', async () => {
+    renderWithProviders(<EditProfilePage />, {route: '/profile/edit'});
+
+    fireEvent.change(screen.getByLabelText(t('profile.fullname')), {target: {value: 'x'.repeat(101)}});
+    fireEvent.change(screen.getByLabelText(t('profile.address')), {target: {value: 'y'.repeat(201)}});
+    save();
+
+    expect(await screen.findByText(t('profile.errors.fullnameLong'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.errors.addressLong'))).toBeInTheDocument();
   });
 
   it('requires a 10-digit phone number (digits only)', async () => {
@@ -142,6 +180,7 @@ describe('EditProfilePage', () => {
     save();
 
     expect(await screen.findByText(t('profile.invalidPhone'))).toBeInTheDocument();
+    expect(profileApi.update).not.toHaveBeenCalled();
   });
 
   it('saves the profile and updates the stored user', async () => {
@@ -163,7 +202,8 @@ describe('EditProfilePage', () => {
   });
 
   it('uploads a newly chosen photo first', async () => {
-    vi.stubGlobal('URL', {...URL, createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn()});
+    // only the two blob functions are added to the real URL: the router builds URLs with it (new URL(...))
+    Object.assign(URL, {createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn()});
     vi.mocked(uploadImage).mockResolvedValue('http://api/files/new');
     vi.mocked(profileApi.update).mockResolvedValue({message: 'ok'});
     const {container} = renderWithProviders(<EditProfilePage />, {route: '/profile/edit'});

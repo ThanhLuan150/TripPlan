@@ -31,8 +31,12 @@ export default function Ranking() {
           showsVerticalScrollIndicator={false}
           keyExtractor={(item, i) => item._id ?? String(i)}
           contentContainerStyle={styles.listContent}
-          ListEmptyComponent={<Text style={styles.empty}>{t('ranking.empty')}</Text>}
-          renderItem={({item, index}) => <RankingRow item={item} index={index} />}
+          ListEmptyComponent={
+            <Text style={styles.empty}>{t('ranking.empty')}</Text>
+          }
+          renderItem={({item, index}) => (
+            <RankingRow item={item} index={index} />
+          )}
         />
       </View>
     </View>
@@ -41,7 +45,15 @@ export default function Ranking() {
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#fff', paddingTop: 36},
-  list: {flexShrink: 1, marginHorizontal: 16, marginTop: 14, marginBottom: 96, borderRadius: 20, backgroundColor: colors.dark, overflow: 'hidden'},
+  list: {
+    flexShrink: 1,
+    marginHorizontal: 16,
+    marginTop: 14,
+    marginBottom: 96,
+    borderRadius: 20,
+    backgroundColor: colors.dark,
+    overflow: 'hidden',
+  },
   listContent: {paddingVertical: 8},
   empty: {color: 'rgba(255,255,255,0.7)', textAlign: 'center', padding: 24},
 });

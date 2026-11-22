@@ -3,6 +3,7 @@ import {
   forgotPasswordSchema,
   loginSchema,
   newPasswordSchema,
+  otpSchema,
   registerSchema,
 } from '@/features/auth/validation';
 
@@ -58,6 +59,22 @@ describe('forgot / new password schemas', () => {
   it('newPasswordSchema needs both fields', () => {
     expect(firstError(newPasswordSchema, {password: 'secret1', confirmPassword: 'secret1'})).toBeNull();
     expect(firstError(newPasswordSchema, {password: 'secret1'})).toBe('validation.confirmRequired');
+  });
+});
+
+describe('otpSchema', () => {
+  it('accepts six digits', () => {
+    expect(firstError(otpSchema, {otp: ['1', '2', '3', '4', '5', '6']})).toBeNull();
+  });
+
+  it.each([
+    [['1', '2', '3', '4', '5', '']],
+    [['1', '2', '3', '4', '5']],
+    [['1', '2', '3', '4', '5', '6', '7']],
+    [['1', '2', '3', '4', '5', 'a']],
+    [['1', '2', '3', '4', '5', '66']],
+  ])('refuses %j', otp => {
+    expect(firstError(otpSchema, {otp})).toBe('auth.verify.incomplete');
   });
 });
 

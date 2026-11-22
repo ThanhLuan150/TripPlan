@@ -18,18 +18,29 @@ const families: Record<string, string> = {
 
 const withFont = (style: unknown) => {
   const flat: TextStyle = StyleSheet.flatten(style as TextStyle) ?? {};
-  const family = flat.fontFamily ?? families[String(flat.fontWeight ?? '400')] ?? families['400'];
+  const family =
+    flat.fontFamily ??
+    families[String(flat.fontWeight ?? '400')] ??
+    families['400'];
   // fontWeight must go: Android would fake a second bold on top of the bold file
   return {...flat, fontFamily: family, fontWeight: undefined};
 };
 
 // Text and TextInput are forwardRef components; wrap their render once at start-up.
 const patch = (component: unknown) => {
-  const target = component as {render: (props: {style?: unknown}, ref: unknown) => {props: {style?: unknown}}};
+  const target = component as {
+    render: (
+      props: {style?: unknown},
+      ref: unknown,
+    ) => {props: {style?: unknown}};
+  };
   const original = target.render;
   target.render = function (props, ref) {
     const element = original.call(this, props, ref);
-    return {...element, props: {...element.props, style: withFont(element.props.style)}} as never;
+    return {
+      ...element,
+      props: {...element.props, style: withFont(element.props.style)},
+    } as never;
   };
 };
 

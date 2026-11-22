@@ -8,18 +8,18 @@ const placeAliases: Record<string, string> = {
   'Sài Gòn': 'TP Hồ Chí Minh',
   'Hồ Chí Minh': 'TP Hồ Chí Minh',
   'TP.HCM': 'TP Hồ Chí Minh',
-  'TPHCM': 'TP Hồ Chí Minh',
+  TPHCM: 'TP Hồ Chí Minh',
   'Hội An': 'Quảng Nam',
   'Mỹ Sơn': 'Quảng Nam',
   'Phú Quốc': 'Kiên Giang',
   'Hà Tiên': 'Kiên Giang',
   'Sa Pa': 'Lào Cai',
-  'Sapa': 'Lào Cai',
+  Sapa: 'Lào Cai',
   'Nha Trang': 'Khánh Hòa',
   'Cam Ranh': 'Khánh Hòa',
   'Vũng Tàu': 'Bà Rịa Vũng Tàu',
   'Côn Đảo': 'Bà Rịa Vũng Tàu',
-  'Huế': 'Thừa Thiên Huế',
+  Huế: 'Thừa Thiên Huế',
   'Hạ Long': 'Quảng Ninh',
   'Vịnh Hạ Long': 'Quảng Ninh',
   'Cô Tô': 'Quảng Ninh',
@@ -30,7 +30,7 @@ const placeAliases: Record<string, string> = {
   'Mộc Châu': 'Sơn La',
   'Tam Đảo': 'Vĩnh Phúc',
   'Buôn Ma Thuột': 'Đắk Lắk',
-  'Pleiku': 'Gia Lai',
+  Pleiku: 'Gia Lai',
   'Tràng An': 'Ninh Bình',
   'Tam Cốc': 'Ninh Bình',
   'Cát Bà': 'Hải Phòng',
@@ -74,7 +74,9 @@ export interface TripHints {
 // Finds the destination (first mentioned), number of days and of people in
 // free text such as an AI chat answer. Texts are checked in order: put the
 // most relevant one (the AI answer) first.
-export const extractTripHints = (...texts: (string | undefined)[]): TripHints => {
+export const extractTripHints = (
+  ...texts: (string | undefined)[]
+): TripHints => {
   const hints: TripHints = {};
   for (const text of texts) {
     if (!text) {

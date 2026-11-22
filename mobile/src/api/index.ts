@@ -48,7 +48,12 @@ export interface VideoItem {
 }
 export interface HomeContent {
   banners: {id: string; title: string; imageUrl: string}[];
-  suggestions: {id: string; title: string; location: string; imageUrl: string}[];
+  suggestions: {
+    id: string;
+    title: string;
+    location: string;
+    imageUrl: string;
+  }[];
 }
 export interface ChatSummary {
   _id: string;
@@ -78,19 +83,35 @@ export const authApi = {
   }) => (await api.post('/auth/register', data)).data,
   confirmAccount: async (email: string, code: string) =>
     (await api.post('/auth/confirm-account', {email, code})).data,
-  resendCode: async (email: string) => (await api.post('/auth/refresh-verification', {email})).data,
+  resendCode: async (email: string) =>
+    (await api.post('/auth/refresh-verification', {email})).data,
   forgotPassword: async (email: string) =>
     (await api.post('/auth/forgot-password', {email})).data,
   verifyResetCode: async (email: string, code: string) =>
     (await api.post(`/auth/reset-password/${code}`, {email})).data,
-  resetPassword: async (email: string, password: string, confirmPassword: string) =>
-    (await api.post('/auth/reset-password/', {email, password, confirmPassword})).data,
+  resetPassword: async (
+    email: string,
+    password: string,
+    confirmPassword: string,
+  ) =>
+    (
+      await api.post('/auth/reset-password/', {
+        email,
+        password,
+        confirmPassword,
+      })
+    ).data,
 };
 
 export interface Plan {
   [day: string]: {
     title: string;
-    activities?: {challenge_summary: string; name_location?: string; province?: string; level_of_difficult?: number}[];
+    activities?: {
+      challenge_summary: string;
+      name_location?: string;
+      province?: string;
+      level_of_difficult?: number;
+    }[];
     transportCost?: number;
     foodCost?: number;
     otherCost?: number;
@@ -134,9 +155,12 @@ export const tripsApi = {
         nameTrip,
       })
     ).data,
-  list: async () => (await api.get<{dataTrip: Trip[]}>('/trip-plan/get-trip')).data.dataTrip ?? [],
+  list: async () =>
+    (await api.get<{dataTrip: Trip[]}>('/trip-plan/get-trip')).data.dataTrip ??
+    [],
   get: async (id: string) =>
-    (await api.get<{tripDatas: TripDetail}>(`/trip-plan/get-trip/${id}`)).data.tripDatas,
+    (await api.get<{tripDatas: TripDetail}>(`/trip-plan/get-trip/${id}`)).data
+      .tripDatas,
   remove: async (id: string) => (await api.delete(`/trip-plan/${id}`)).data,
 };
 
@@ -144,7 +168,9 @@ export const rankingApi = {
   get: async (period: 'weekly' | 'monthly' | 'highest') =>
     (
       await api.get<{dataRanks?: RankItem[]}>(
-        period === 'highest' ? '/rankings/rankingUserHighest' : `/rankings/${period}`,
+        period === 'highest'
+          ? '/rankings/rankingUserHighest'
+          : `/rankings/${period}`,
       )
     ).data.dataRanks ?? [],
 };
@@ -161,7 +187,8 @@ export const chatApi = {
   send: async (message: string, idChat: string | null) =>
     (await api.post<SendMessageResponse>('/chat', {message, idChat})).data,
   // the user's conversations, most recent first
-  list: async () => (await api.get<{data: ChatSummary[]}>('/chat')).data.data ?? [],
+  list: async () =>
+    (await api.get<{data: ChatSummary[]}>('/chat')).data.data ?? [],
   // messages of one conversation, oldest first
   messages: async (id: string): Promise<ChatMessageDto[]> => {
     const body = (
@@ -171,10 +198,18 @@ export const chatApi = {
         responses?: {content: string; createdAt: string}[];
       }>(`/chat/${id}`)
     ).data;
-    if (body.messages) return body.messages;
+    if (body.messages) {return body.messages;}
     return [
-      ...(body.questions ?? []).map(q => ({role: 'user' as const, text: q.content, createdAt: q.createdAt})),
-      ...(body.responses ?? []).map(r => ({role: 'model' as const, text: r.content, createdAt: r.createdAt})),
+      ...(body.questions ?? []).map(q => ({
+        role: 'user' as const,
+        text: q.content,
+        createdAt: q.createdAt,
+      })),
+      ...(body.responses ?? []).map(r => ({
+        role: 'model' as const,
+        text: r.content,
+        createdAt: r.createdAt,
+      })),
     ].sort((x, y) => +new Date(x.createdAt) - +new Date(y.createdAt));
   },
   remove: async (id: string) => (await api.delete(`/chat/${id}`)).data,
@@ -188,14 +223,25 @@ export interface Announcement {
 }
 
 export const profileApi = {
-  update: async (data: {fullname: string; email?: string; phone: string; address: string; image: string}) =>
-    (await api.post('/user/profile', data)).data,
-  notifications: async () => (await api.get<Announcement[]>('/announcements')).data ?? [],
+  update: async (data: {
+    fullname: string;
+    email?: string;
+    phone: string;
+    address: string;
+    image: string;
+  }) => (await api.post('/user/profile', data)).data,
+  notifications: async () =>
+    (await api.get<Announcement[]>('/announcements')).data ?? [],
 };
 
 export const challengeApi = {
   checkProgress: async (chaId: string, lat: number, lng: number) =>
-    (await api.post<{distance: number; message: string}>('/challenge/checkProgress', {chaId, lat, lng})).data,
+    (
+      await api.post<{distance: number; message: string}>(
+        '/challenge/checkProgress',
+        {chaId, lat, lng},
+      )
+    ).data,
   complete: async (chaId: string, imageUrl: string) =>
     (await api.post('/challenge/updateProgress', {chaId, imageUrl})).data,
 };

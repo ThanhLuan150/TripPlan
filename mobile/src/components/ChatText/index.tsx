@@ -14,7 +14,13 @@ const inline = (line: string, base: TextStyle) =>
   );
 
 // Light markdown for the AI's answers: "# title", "**bold**" and "* / - bullet" lines (stars are not shown as stars).
-export default function ChatText({text, style}: {text: string; style?: TextStyle}) {
+export default function ChatText({
+  text,
+  style,
+}: {
+  text: string;
+  style?: TextStyle;
+}) {
   const lines = text.split('\n');
   return (
     <Text style={[styles.text, style]}>

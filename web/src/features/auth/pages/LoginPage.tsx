@@ -6,6 +6,7 @@ import {routes} from '@/app/routes';
 import Field from '@/components/ui/Field';
 import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
+import {fieldMessage} from '@/lib/forms';
 import {apiMessage, apiStatus, connectionErrorKey} from '@/lib/apiClient';
 import {authApi} from '../api/authApi';
 import AuthShell, {AuthLink} from '../components/AuthShell';
@@ -58,12 +59,12 @@ export default function LoginPage() {
         initialValues={{username: '', password: ''}}
         validationSchema={loginSchema}
         onSubmit={values => login.mutate(values)}>
-        {({errors, touched, handleChange, handleBlur, handleSubmit, values}) => (
+        {({errors, touched, handleChange, handleBlur, handleSubmit, values, initialValues, submitCount}) => (
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             <Field
               label={t('auth.login.username')}
               htmlFor="username"
-              error={touched.username && errors.username && t(errors.username)}>
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'username', t)}>
               <input
                 id="username"
                 name="username"
@@ -78,7 +79,7 @@ export default function LoginPage() {
             <Field
               label={t('auth.login.password')}
               htmlFor="password"
-              error={touched.password && errors.password && t(errors.password)}
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'password', t)}
               aside={
                 <AuthLink to={routes.ForgotPassword}>{t('auth.login.forgot')}</AuthLink>
               }>

@@ -80,7 +80,9 @@
       "errorPickDates": "Please pick the dates again",
       "errorMaxDays": "Plans can be at most 7 days long",
       "errorProvince": "Please pick a province or city from the list",
-      "errorMissing": "Please fill in all the fields"
+      "errorMissing": "Please fill in all the fields",
+      "errorPeople": "Choose between 1 and 10 people",
+      "errorInterests": "Pick at least one kind of place"
     },
     "generate": {
       "title": "Suggestions for your trip to {{location}}",
@@ -99,6 +101,7 @@
       "namePlaceholder": "e.g. {{example}}",
       "nameExample": "{{location}} in {{days}} days",
       "nameRequired": "Please enter a name for the plan",
+      "nameLong": "The name is too long (35 characters at most)",
       "saveFailed": "Could not save the plan",
       "duplicateName": "You already have a plan with this name"
     },
@@ -318,6 +321,13 @@
     "saveFailed": "Could not update your information",
     "missingInfo": "Please fill in all the fields",
     "invalidPhone": "Invalid phone number",
+    "errors": {
+      "fullname": "Please enter your full name",
+      "fullnameLong": "The full name is too long (100 characters at most)",
+      "phone": "Please enter your phone number",
+      "address": "Please enter your address",
+      "addressLong": "The address is too long (200 characters at most)"
+    },
     "notificationsTitle": "Your notifications",
     "noNotifications": "You have no notifications yet.",
     "notificationsFailed": "Could not load the notifications. Please try again."

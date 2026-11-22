@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import FieldError from './FieldError';
 
 // Label + control + error message
 export default function Field({
@@ -15,7 +16,7 @@ export default function Field({
   aside?: ReactNode;
 }) {
   return (
-    <div>
+    <div data-invalid={!!error}>
       <div className="mb-1.5 flex items-center justify-between">
         <label htmlFor={htmlFor} className="text-sm font-medium text-slate-700">
           {label}
@@ -23,9 +24,7 @@ export default function Field({
         {aside}
       </div>
       {children}
-      {error && (
-        <p className="mt-1.5 text-xs font-medium text-rose-600">{error}</p>
-      )}
+      <FieldError>{error}</FieldError>
     </div>
   );
 }

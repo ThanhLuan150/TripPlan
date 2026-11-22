@@ -1,4 +1,6 @@
 import {useState} from 'react';
+import FieldError from '@/components/ui/FieldError';
+import {useFormik} from 'formik';
 import {useMutation} from '@tanstack/react-query';
 import {Navigate, useLocation, useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
@@ -8,9 +10,11 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
 import {apiMessage, connectionErrorKey, isAiError} from '@/lib/apiClient';
+import {fieldError} from '@/lib/forms';
 import {tripsApi} from '../api/tripsApi';
 import {useGeneratedPlans} from '../hooks/useTrips';
 import type {GenerateTripParams, PlanDay} from '../types';
+import {MAX_PLAN_NAME, planNameSchema} from '../validation';
 import sorry from '@/assets/images/sorry.png';
 
 const budgetLabelKey = {
@@ -23,7 +27,6 @@ export default function GenerateTripsPage() {
   const {t} = useTranslation();
   const navigate = useNavigate();
   const params = useLocation().state as GenerateTripParams | null;
-  const [planName, setPlanName] = useState('');
   const [planConfirm, setPlanConfirm] = useState<PlanDay[] | null>(null);
   const {data: result, isFetching, isError, error, refetch} = useGeneratedPlans(params);
 
@@ -42,21 +45,27 @@ export default function GenerateTripsPage() {
       }),
   });
 
+  // the name asked before the plan is saved
+  const nameForm = useFormik({
+    initialValues: {name: ''},
+    validationSchema: planNameSchema,
+    onSubmit: (values, {resetForm}) => {
+      if (planConfirm) {
+        save.mutate({name: values.name.trim(), days: planConfirm});
+      }
+      resetForm();
+      setPlanConfirm(null);
+    },
+  });
+  const closeNameDialog = () => {
+    setPlanConfirm(null);
+    nameForm.resetForm();
+  };
+  const nameError = fieldError(nameForm, 'name');
+
   if (!params) {
     return <Navigate to={routes.TripPlanChoose} replace />;
   }
-
-  const handleConfirm = () => {
-    if (planName.trim() === '') {
-      Toast.show({type: 'error', text1: t('common.failed'), text2: t('trips.generate.nameRequired')});
-      return;
-    }
-    if (planConfirm) {
-      save.mutate({name: planName.trim(), days: planConfirm});
-    }
-    setPlanName('');
-    setPlanConfirm(null);
-  };
 
   if (isFetching || save.isPending) {
     return (
@@ -172,27 +181,30 @@ export default function GenerateTripsPage() {
       <ConfirmModal
         visible={planConfirm !== null}
         title={t('trips.generate.nameTitle')}
-        onCancel={() => {
-          setPlanConfirm(null);
-          setPlanName('');
-        }}
-        onConfirm={handleConfirm}>
+        onCancel={closeNameDialog}
+        onConfirm={nameForm.submitForm}>
         <input
           className="field"
-          maxLength={35}
+          name="name"
+          maxLength={MAX_PLAN_NAME}
           autoFocus
-          value={planName}
+          value={nameForm.values.name}
+          aria-invalid={!!nameError}
           placeholder={t('trips.generate.namePlaceholder', {
             example: t('trips.generate.nameExample', {location: params.location, days: params.days}),
           })}
           aria-label={t('trips.generate.nameLabel')}
-          onChange={e => setPlanName(e.target.value)}
+          onChange={nameForm.handleChange}
+          onBlur={nameForm.handleBlur}
           onKeyDown={e => {
             if (e.key === 'Enter') {
-              handleConfirm();
+              nameForm.submitForm();
             }
           }}
         />
+        <FieldError role="alert" className="mt-2">
+          {nameError && t(nameError)}
+        </FieldError>
       </ConfirmModal>
     </div>
   );

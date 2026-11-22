@@ -34,10 +34,33 @@ export default function TripItem({trip, onOpen, onDelete}: Props) {
 }
 
 const styles = StyleSheet.create({
-  trip: {width: '100%', backgroundColor: '#fff', borderRadius: 18, padding: 16, marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#D6F5F2', shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: {width: 0, height: 3}, elevation: 3},
+  trip: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 16,
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#D6F5F2',
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: {width: 0, height: 3},
+    elevation: 3,
+  },
   name: {flex: 1, color: colors.text, fontWeight: '700', fontSize: 16},
   info: {flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '55%'},
   texts: {alignItems: 'flex-end', flexShrink: 1},
   text: {color: colors.muted, fontSize: 13},
-  trash: {width: 34, height: 34, borderRadius: 17, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center'},
+  trash: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.tint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -1,36 +1,83 @@
 import {useMemo, useState} from 'react';
+import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
-import {FlatList, Keyboard, KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
+import {
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {GenerateParams} from '../api';
 import {BackPill} from '../components';
+import FieldSection from '../components/FieldSection';
 import AreaTypeGrid from '../components/AreaTypeGrid';
 import DateRangeField from '../components/DateRangeField';
 import DropdownInput from '../components/DropdownInput';
 import QuantityInput from '../components/QuantityInput';
-import {alert} from '../lib/alert';
 import {provices} from '../lib/provinces';
 import {money, stripTones} from '../lib/text';
 import {colors} from '../lib/theme';
+import {countDays, createTripSchema} from '../lib/validation';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 const tiers = ['low', 'mid', 'high'] as const;
 
 // Step 1 of a new plan: place, dates, people, budget and the kinds of places -> AI suggestions.
 export default function CreateTrip() {
   const {t} = useTranslation();
   const navigation = useNavigation<any>();
-  const prefill = (useRoute<any>().params ?? {}) as {location?: string; days?: number; people?: number; note?: string};
+  const prefill = (useRoute<any>().params ?? {}) as {
+    location?: string;
+    days?: number;
+    people?: number;
+    note?: string;
+  };
 
-  const [location, setLocation] = useState(prefill.location ?? '');
-  const [provinceOpen, setProvinceOpen] = useState(!!prefill.location && !provices.includes(prefill.location));
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(() => new Date(Date.now() + Math.max(0, (prefill.days ?? 1) - 1) * DAY_MS));
-  const [quantity, setQuantity] = useState(prefill.people ?? 1);
-  const [budget, setBudget] = useState('');
+  const [provinceOpen, setProvinceOpen] = useState(
+    !!prefill.location && !provices.includes(prefill.location),
+  );
   const [budgetOpen, setBudgetOpen] = useState(false);
-  const [areaTypes, setAreaTypes] = useState<string[]>([]);
+
+  const formik = useFormik({
+    initialValues: {
+      location: prefill.location ?? '',
+      startDate: new Date(),
+      endDate: new Date(
+        Date.now() + Math.max(0, (prefill.days ?? 1) - 1) * DAY_MS,
+      ),
+      quantity: prefill.people ?? 1,
+      budget: '',
+      areaTypes: [] as string[],
+    },
+    validationSchema: createTripSchema,
+    onSubmit: (values, helpers) => {
+      const budgetIndex = budgets.indexOf(values.budget);
+      // the budget was chosen for another number of people
+      if (budgetIndex < 0) {
+        return helpers.setFieldError('budget', 'trips.create.errorMissing');
+      }
+      const params: GenerateParams = {
+        location: values.location,
+        quantity: values.quantity,
+        budget: budgetValues[budgetIndex],
+        budgetTier: tiers[budgetIndex],
+        areaTypes: values.areaTypes,
+        days: countDays(values.startDate, values.endDate),
+        startDate: values.startDate.toISOString(),
+        endDate: values.endDate.toISOString(),
+        note: prefill.note,
+      };
+      navigation.navigate('GenerateTrips', {params});
+    },
+  });
+  const {location, startDate, endDate, quantity, budget, areaTypes} =
+    formik.values;
+  const setField = formik.setFieldValue;
 
   const provinces = useMemo(() => {
     const q = stripTones(location);
@@ -38,8 +85,14 @@ export default function CreateTrip() {
   }, [location]);
   const budgets = [
     t('trips.create.budgetUnder', {max: money(1000000 * quantity)}),
-    t('trips.create.budgetRange', {min: money(1000000 * quantity), max: money(5000000 * quantity)}),
-    t('trips.create.budgetRange', {min: money(5000000 * quantity), max: money(15000000 * quantity)}),
+    t('trips.create.budgetRange', {
+      min: money(1000000 * quantity),
+      max: money(5000000 * quantity),
+    }),
+    t('trips.create.budgetRange', {
+      min: money(5000000 * quantity),
+      max: money(15000000 * quantity),
+    }),
   ];
   // the text sent to the AI is always Vietnamese
   const budgetValues = [
@@ -48,73 +101,113 @@ export default function CreateTrip() {
     `${money(5000000 * quantity)} VND - ${money(15000000 * quantity)} VND`,
   ];
 
-  const fail = (text: string) => alert.error(t('common.failed'), text);
-
   const reset = () => {
-    setLocation('');
-    setStartDate(new Date());
-    setEndDate(new Date());
-    setQuantity(1);
-    setBudget('');
-    setAreaTypes([]);
+    formik.resetForm({
+      values: {
+        location: '',
+        startDate: new Date(),
+        endDate: new Date(),
+        quantity: 1,
+        budget: '',
+        areaTypes: [],
+      },
+    });
   };
 
-  const next = () => {
-    const days = Math.round((dayStart(endDate) - dayStart(startDate)) / DAY_MS) + 1;
-    const budgetIndex = budgets.indexOf(budget);
-    if (days > 7) return fail(t('trips.create.errorMaxDays'));
-    if (!provices.includes(location)) return fail(t('trips.create.errorProvince'));
-    if (budgetIndex < 0) return fail(t('trips.create.errorMissing'));
-    const params: GenerateParams = {
-      location,
-      quantity,
-      budget: budgetValues[budgetIndex],
-      budgetTier: tiers[budgetIndex],
-      areaTypes,
-      days,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      note: prefill.note,
-    };
-    navigation.navigate('GenerateTrips', {params});
+  // an error shows once its field was touched, or when the form is submitted
+  const shown = (field: 'location' | 'budget' | 'quantity' | 'areaTypes') => {
+    const message = formik.touched[field] ? formik.errors[field] : undefined;
+    return message ? t(message as string) : undefined;
   };
+  // a date shows its error as soon as it is changed
+  const dateError = (field: 'startDate' | 'endDate') => {
+    const message = formik.errors[field];
+    return message ? t(message as string) : undefined;
+  };
+  const touch = (field: 'location' | 'budget') =>
+    formik.setFieldTouched(field, true);
 
   const header = (
     <>
       <Text style={styles.header}>{t('trips.create.title')}</Text>
-      <Text style={styles.subheader}>{t('trips.create.destination')}</Text>
-      <DropdownInput
-        value={location}
-        placeholder={t('trips.create.destinationPlaceholder')}
-        open={provinceOpen}
-        options={provinceOpen ? provinces.slice(0, 6) : []}
-        onChangeText={setLocation}
-        onToggle={() => setProvinceOpen(o => !o)}
-        onPick={p => {
-          setLocation(p);
-          setProvinceOpen(false);
-        }}
+      <FieldSection
+        icon="location-outline"
+        title={t('trips.create.destination')}
+        error={shown('location')}>
+        <DropdownInput
+          icon="search-outline"
+          value={location}
+          placeholder={t('trips.create.destinationPlaceholder')}
+          open={provinceOpen}
+          invalid={!!shown('location')}
+          options={provinceOpen ? provinces.slice(0, 6) : []}
+          onChangeText={text => setField('location', text)}
+          onBlur={() => touch('location')}
+          onToggle={() => setProvinceOpen(o => !o)}
+          onPick={p => {
+            setField('location', p);
+            setProvinceOpen(false);
+          }}
+        />
+      </FieldSection>
+      <FieldSection
+        icon="calendar-outline"
+        title={t('trips.create.dates')}
+        hint={t('trips.create.daysHint', {
+          count: countDays(startDate, endDate),
+        })}
+        error={dateError('startDate') ?? dateError('endDate')}>
+        <DateRangeField
+          startDate={startDate}
+          endDate={endDate}
+          startInvalid={!!dateError('startDate')}
+          endInvalid={!!dateError('endDate')}
+          onStart={date =>
+            formik.setValues({
+              ...formik.values,
+              startDate: date,
+              endDate: endDate < date ? date : endDate,
+            })
+          }
+          onEnd={date => setField('endDate', date)}
+        />
+      </FieldSection>
+      <FieldSection
+        icon="people-outline"
+        title={t('trips.create.people')}
+        hint={t('trips.create.peopleHint')}
+        error={shown('quantity')}>
+        <QuantityInput
+          value={quantity}
+          invalid={!!shown('quantity')}
+          onChange={value => setField('quantity', value)}
+        />
+      </FieldSection>
+      <FieldSection
+        icon="wallet-outline"
+        title={t('trips.create.budget')}
+        error={shown('budget')}>
+        <DropdownInput
+          icon="cash-outline"
+          value={budget}
+          placeholder={t('trips.budgetPlaceholder')}
+          editable={false}
+          open={budgetOpen}
+          invalid={!!shown('budget')}
+          options={budgets}
+          onBlur={() => touch('budget')}
+          onToggle={() => setBudgetOpen(o => !o)}
+          onPick={b => {
+            setField('budget', b);
+            setBudgetOpen(false);
+          }}
+        />
+      </FieldSection>
+      <FieldSection
+        icon="heart-outline"
+        title={t('trips.create.interests')}
+        error={shown('areaTypes')}
       />
-      <DateRangeField startDate={startDate} endDate={endDate} onStart={setStartDate} onEnd={setEndDate} />
-      <View style={styles.row}>
-        <Text style={styles.subheader}>{t('trips.create.people')} </Text>
-        <Text style={styles.hint}>{t('trips.create.peopleHint')}</Text>
-      </View>
-      <QuantityInput value={quantity} onChange={setQuantity} />
-      <Text style={styles.subheader}>{t('trips.create.budget')}</Text>
-      <DropdownInput
-        value={budget}
-        placeholder={t('trips.budgetPlaceholder')}
-        editable={false}
-        open={budgetOpen}
-        options={budgets}
-        onToggle={() => setBudgetOpen(o => !o)}
-        onPick={b => {
-          setBudget(b);
-          setBudgetOpen(false);
-        }}
-      />
-      <Text style={styles.subheader}>{t('trips.create.interests')}</Text>
     </>
   );
 
@@ -128,13 +221,33 @@ export default function CreateTrip() {
             ListHeaderComponent={header}
             data={[1]}
             keyExtractor={String}
-            renderItem={() => <AreaTypeGrid selected={areaTypes} onToggle={v => setAreaTypes(p => (p.includes(v) ? p.filter(x => x !== v) : [...p, v]))} />}
+            renderItem={() => (
+              <AreaTypeGrid
+                selected={areaTypes}
+                invalid={!!shown('areaTypes')}
+                onToggle={v => {
+                  setField(
+                    'areaTypes',
+                    areaTypes.includes(v)
+                      ? areaTypes.filter(x => x !== v)
+                      : [...areaTypes, v],
+                  );
+                  formik.setFieldTouched('areaTypes', true, false);
+                }}
+              />
+            )}
             ListFooterComponent={
               <View style={styles.footer}>
-                <TouchableOpacity style={[styles.send, styles.sendOutline]} onPress={reset}>
-                  <Text style={[styles.sendText, styles.sendOutlineText]}>{t('trips.reset')}</Text>
+                <TouchableOpacity
+                  style={[styles.send, styles.sendOutline]}
+                  onPress={reset}>
+                  <Text style={[styles.sendText, styles.sendOutlineText]}>
+                    {t('trips.reset')}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.send} onPress={next}>
+                <TouchableOpacity
+                  style={styles.send}
+                  onPress={() => formik.handleSubmit()}>
                   <Text style={styles.sendText}>{t('trips.next')}</Text>
                 </TouchableOpacity>
               </View>
@@ -148,13 +261,34 @@ export default function CreateTrip() {
 
 const styles = StyleSheet.create({
   flex: {flex: 1, backgroundColor: '#fff'},
-  container: {borderRadius: 24, borderColor: '#B8EFEA', margin: 14, marginTop: 52, borderWidth: 1.5, padding: 20, backgroundColor: '#fff'},
-  header: {fontSize: 22, fontWeight: '800', color: colors.primaryDark, alignSelf: 'center', marginBottom: 16},
-  subheader: {fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 6, marginTop: 12},
-  hint: {fontSize: 15, color: '#000', marginTop: 6},
-  row: {flexDirection: 'row'},
+  container: {
+    borderRadius: 24,
+    borderColor: '#B8EFEA',
+    margin: 14,
+    marginTop: 52,
+    borderWidth: 1.5,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primaryDark,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
   footer: {flexDirection: 'row', justifyContent: 'space-evenly'},
-  send: {backgroundColor: colors.primary, paddingVertical: 13, borderRadius: 14, width: '44%', justifyContent: 'center', alignItems: 'center', marginTop: 18, borderWidth: 1.5, borderColor: colors.primary},
+  send: {
+    backgroundColor: colors.primary,
+    paddingVertical: 13,
+    borderRadius: 14,
+    width: '44%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+  },
   sendOutline: {backgroundColor: '#fff'},
   sendText: {fontSize: 16, color: '#fff', fontWeight: '700'},
   sendOutlineText: {color: colors.primary},

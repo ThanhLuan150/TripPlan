@@ -10,9 +10,12 @@ export default function ResetCode() {
   const {email} = useRoute<any>().params as {email: string};
   const navigation = useNavigation<any>();
 
-  const check = useApiMutation((code: string) => authApi.verifyResetCode(email, code), {
-    onSuccess: () => navigation.replace('NewPassword', {email}),
-  });
+  const check = useApiMutation(
+    (code: string) => authApi.verifyResetCode(email, code),
+    {
+      onSuccess: () => navigation.replace('NewPassword', {email}),
+    },
+  );
   const resend = useApiMutation(() => authApi.forgotPassword(email));
 
   return (

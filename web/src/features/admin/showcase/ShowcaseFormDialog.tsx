@@ -1,6 +1,9 @@
-import {type FormEvent, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
+import FieldError from '@/components/ui/FieldError';
+import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
 import {apiMessage} from '@/lib/apiClient';
+import {fieldError} from '@/lib/forms';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import AdminModal from '../components/AdminModal';
 import {adminButton, adminInput} from '../components/styles';
@@ -9,6 +12,7 @@ import {useAdminToast} from '../hooks/useAdminToast';
 import FormField from '../users/FormField';
 import {invalidInput} from '../users/userForm';
 import type {AdminShowcase, ShowcaseKind, ShowcaseStatus} from '../types';
+import {showcaseSchema} from '../validation';
 
 // Add (`item` missing) or edit a picture of the home page of the app: a slide of
 // the slider or a destination suggestion. The picture is uploaded here.
@@ -27,21 +31,53 @@ export default function ShowcaseFormDialog({
   const save = useSaveShowcase();
   const fileInput = useRef<HTMLInputElement>(null);
   const current = item?.kind ?? kind;
-  const [imageUrl, setImageUrl] = useState(item?.imageUrl ?? '');
-  const [title, setTitle] = useState(item?.title ?? '');
-  const [location, setLocation] = useState(item?.location ?? '');
-  const [sortOrder, setSortOrder] = useState(String(item?.sortOrder ?? 0));
-  const [status, setStatus] = useState<ShowcaseStatus>(item?.status ?? 'published');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>();
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string>();
 
-  const order = Number(sortOrder);
-  const errors = {
-    image: imageUrl ? undefined : t('admin.showcase.errors.imageRequired'),
-    order: Number.isInteger(order) && order >= 0 && order <= 9999 ? undefined : t('admin.showcase.errors.order'),
+  const formik = useFormik({
+    initialValues: {
+      imageUrl: item?.imageUrl ?? '',
+      title: item?.title ?? '',
+      location: item?.location ?? '',
+      sortOrder: String(item?.sortOrder ?? 0),
+      status: (item?.status ?? 'published') as ShowcaseStatus,
+    },
+    validationSchema: showcaseSchema,
+    onSubmit: values => {
+      save.mutate(
+        {
+          id: item?.id,
+          item: {
+            kind: current,
+            imageUrl: values.imageUrl,
+            title: values.title.trim(),
+            location: values.location.trim(),
+            sortOrder: Number(values.sortOrder),
+            status: values.status,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.done(t(item ? 'admin.showcase.updated' : 'admin.showcase.created'));
+            onClose();
+          },
+          onError: e => setError(apiMessage(e) ?? t('admin.common.tryAgain')),
+        },
+      );
+    },
+  });
+  const {values} = formik;
+  const shown = (field: keyof typeof values) => {
+    const message = fieldError(formik, field);
+    return message ? t(message) : undefined;
   };
+  const bind = (field: Exclude<keyof typeof values, 'imageUrl'>) => ({
+    name: field,
+    value: values[field],
+    onBlur: formik.handleBlur,
+    onChange: formik.handleChange,
+  });
 
   const pick = async (file: File | undefined) => {
     if (!file) {
@@ -50,7 +86,7 @@ export default function ShowcaseFormDialog({
     setUploading(true);
     setUploadError(undefined);
     try {
-      setImageUrl(await uploadImage(file));
+      formik.setFieldValue('imageUrl', await uploadImage(file));
     } catch (e) {
       setUploadError(t(uploadErrorKey(e) ?? 'admin.users.errors.uploadFailed'));
     } finally {
@@ -59,30 +95,9 @@ export default function ShowcaseFormDialog({
     }
   };
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    if (errors.image || errors.order) {
-      return;
-    }
-    save.mutate(
-      {
-        id: item?.id,
-        item: {kind: current, imageUrl, title: title.trim(), location: location.trim(), sortOrder: order, status},
-      },
-      {
-        onSuccess: () => {
-          toast.done(t(item ? 'admin.showcase.updated' : 'admin.showcase.created'));
-          onClose();
-        },
-        onError: e => setError(apiMessage(e) ?? t('admin.common.tryAgain')),
-      },
-    );
-  };
-
   const busy = save.isPending;
   return (
-    <form onSubmit={submit} noValidate>
+    <form onSubmit={formik.handleSubmit} noValidate>
       <AdminModal
         title={t(item ? 'admin.showcase.edit' : 'admin.showcase.add', {kind: t(`admin.showcase.kinds.${current}`)})}
         onClose={onClose}
@@ -105,8 +120,8 @@ export default function ShowcaseFormDialog({
           )}
           <div>
             <div className="grid aspect-video place-items-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50">
-              {imageUrl ? (
-                <img src={imageUrl} alt="" className="size-full object-cover" />
+              {values.imageUrl ? (
+                <img src={values.imageUrl} alt="" className="size-full object-cover" />
               ) : (
                 <span className="text-sm text-slate-400">{t('admin.showcase.noImage')}</span>
               )}
@@ -128,30 +143,28 @@ export default function ShowcaseFormDialog({
                 aria-label={t('admin.showcase.chooseImage')}
                 onChange={e => pick(e.target.files?.[0])}
               />
-              {(submitted && errors.image) || uploadError ? (
-                <p role="alert" className="text-xs text-rose-600">
-                  {uploadError ?? errors.image}
-                </p>
-              ) : null}
+              <FieldError role="alert" className="mt-0">
+                {uploadError ?? shown('imageUrl')}
+              </FieldError>
             </div>
           </div>
           <FormField label={t('admin.showcase.fields.title')}>
-            {props => <input {...props} maxLength={200} className={adminInput} value={title} onChange={e => setTitle(e.target.value)} />}
+            {props => <input {...props} maxLength={200} className={adminInput} {...bind('title')} />}
           </FormField>
           {current === 'suggestion' && (
             <FormField label={t('admin.showcase.fields.location')} hint={t('admin.showcase.locationHint')}>
-              {props => <input {...props} maxLength={200} className={adminInput} value={location} onChange={e => setLocation(e.target.value)} />}
+              {props => <input {...props} maxLength={200} className={adminInput} {...bind('location')} />}
             </FormField>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label={t('admin.showcase.fields.order')} error={submitted ? errors.order : undefined}>
+            <FormField label={t('admin.showcase.fields.order')} error={shown('sortOrder')}>
               {props => (
-                <input {...props} type="number" min={0} max={9999} inputMode="numeric" className={`${adminInput} ${invalidInput(submitted ? errors.order : undefined)}`} value={sortOrder} onChange={e => setSortOrder(e.target.value)} />
+                <input {...props} type="number" min={0} max={9999} inputMode="numeric" className={`${adminInput} ${invalidInput(shown('sortOrder'))}`} {...bind('sortOrder')} />
               )}
             </FormField>
             <FormField label={t('admin.common.status')}>
               {props => (
-                <select {...props} className={adminInput} value={status} onChange={e => setStatus(e.target.value as ShowcaseStatus)}>
+                <select {...props} className={adminInput} {...bind('status')}>
                   <option value="published">{t('admin.status.published')}</option>
                   <option value="hidden">{t('admin.status.hidden')}</option>
                 </select>

@@ -161,6 +161,24 @@ Page được test như người dùng thật (Testing Library): gõ, bấm, xem
 CI fail nếu coverage thấp hơn **95%** (statements, branches, functions, lines), tính trên **toàn bộ** mã nguồn.
 Lần chạy gần nhất: backend 537 test, 99,7% statements / 96,7% branches / 100% functions; web 736 test, 99,2% statements / 96,5% branches / 97,7% functions.
 
+## Kiểm thử tự động (automation test) — `automation/`
+
+Khác unit test (nằm trong từng project), automation test chạy sản phẩm hoàn chỉnh từ bên ngoài. Mỗi thư mục con là một project riêng, có `package.json` và công cụ riêng, nên app không phải cài thêm thư viện test.
+
+| Thư mục | Kiểm thử | Công cụ | Trạng thái |
+|---|---|---|---|
+| [`automation/web`](automation/web/README.md) | web app trong trình duyệt, backend được mock | Cypress | xong: mọi màn hình, mọi feature |
+| `automation/backend` | REST API | chưa chọn | chưa làm |
+| `automation/mobile` | app React Native | chưa chọn (Maestro / Detox) | chưa làm |
+
+```powershell
+cd automation\web
+npm install        # một lần (và npm install trong web\ — app được test)
+npm run cypress:run   # build app, chạy server, chạy toàn bộ spec (không hiện cửa sổ)
+```
+
+Chi tiết lệnh, cách tổ chức và cách viết test mới: [`automation/web/README.md`](automation/web/README.md).
+
 ## CI/CD (GitHub Actions)
 
 ```
@@ -177,7 +195,6 @@ push main / tag v* ─► CD: CI ─► build & push image lên GHCR ─► depl
 | `cd.yml` | push `main`, tag `v*.*.*`, chạy tay | chạy lại CI → image `ghcr.io/<owner>/tripplan-backend` và `-web` (tag `sha-xxxxxxx`, `latest`, version) kèm SBOM/provenance → deploy |
 | `codeql.yml` | PR, push, mỗi thứ Hai | quét bảo mật mã nguồn (Security → Code scanning) |
 | `dependency-review.yml` | PR | chặn PR thêm thư viện có lỗ hổng high/critical |
-| `dependabot.yml` | hằng tuần | PR cập nhật thư viện npm, GitHub Actions, Docker base image (vào `dev`) |
 
 **Nên bật trên GitHub:** Settings → Branches → bảo vệ `main` (và `dev`): bắt buộc PR, bắt buộc các check `Backend · lint & test`, `Web · lint, typecheck, test & build`, `Docker · backend`, `Docker · web`.
 

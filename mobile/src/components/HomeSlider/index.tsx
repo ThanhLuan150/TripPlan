@@ -21,7 +21,12 @@ export default function HomeSlider({slides}: {slides: Slide[]}) {
         activeDotStyle={styles.activeDot}
         paginationStyle={styles.pagination}>
         {slides.map((slide, i) => (
-          <SafeImage key={i} source={slide.source} fallback={slide.fallback} style={styles.image} />
+          <SafeImage
+            key={i}
+            source={slide.source}
+            fallback={slide.fallback}
+            style={styles.image}
+          />
         ))}
       </Swiper>
     </View>
@@ -29,10 +34,21 @@ export default function HomeSlider({slides}: {slides: Slide[]}) {
 }
 
 const styles = StyleSheet.create({
-  container: {height: 190, marginTop: 18, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.tabBar},
+  container: {
+    height: 190,
+    marginTop: 18,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: colors.tabBar,
+  },
   wrapper: {height: 190},
   image: {height: 190, width: '100%'},
   pagination: {bottom: 10},
-  dot: {backgroundColor: 'rgba(255,255,255,0.6)', width: 7, height: 7, borderRadius: 4},
+  dot: {
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
   activeDot: {backgroundColor: '#fff', width: 20, height: 7, borderRadius: 4},
 });

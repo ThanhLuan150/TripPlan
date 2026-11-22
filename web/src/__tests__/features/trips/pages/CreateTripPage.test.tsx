@@ -1,4 +1,4 @@
-import {fireEvent, screen, within} from '@testing-library/react';
+import {fireEvent, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import CreateTripPage from '@/features/trips/pages/CreateTripPage';
@@ -23,6 +23,12 @@ const render = (state?: unknown) =>
 const province = () => screen.getByLabelText(t('trips.create.destination'));
 const startInput = () => screen.getByLabelText(t('trips.create.startDate'));
 const endInput = () => screen.getByLabelText(t('trips.create.endDate'));
+// the calendar of a date field: open it, then click a day (yyyy-mm-dd)
+const day = (iso: string) => document.querySelector<HTMLButtonElement>(`[data-date="${iso}"]`)!;
+const pickDate = (field: HTMLElement, iso: string) => {
+  fireEvent.click(field);
+  fireEvent.click(day(iso));
+};
 const quantity = () => screen.getByRole('textbox', {name: new RegExp(t('trips.create.people').replace('?', '\\?'))});
 const submit = () => fireEvent.click(screen.getByRole('button', {name: t('trips.create.submit')}));
 const options = () => within(screen.getByRole('listbox')).getAllByRole('button').map(b => b.textContent);
@@ -106,8 +112,8 @@ describe('prefill (home search, AI chat)', () => {
 
     expect(province()).toHaveValue('Lâm Đồng');
     expect(screen.queryByRole('listbox')).toBeNull();
-    expect(startInput()).toHaveValue('2026-03-02');
-    expect(endInput()).toHaveValue('2026-03-04');
+    expect(startInput()).toHaveTextContent('02/03/2026');
+    expect(endInput()).toHaveTextContent('04/03/2026');
     expect(screen.getByText(t('trips.create.daysHint', {count: 3}))).toBeInTheDocument();
     expect(quantity()).toHaveValue('4');
     expect(screen.getByLabelText(new RegExp(t('trips.create.note')))).toHaveValue('Đồi chè Cầu Đất');
@@ -128,64 +134,135 @@ describe('prefill (home search, AI chat)', () => {
 });
 
 describe('dates', () => {
-  it('refuses a start date in the past', async () => {
+  it('shows the dates as dd/mm/yyyy in a button, not the browser date input', () => {
     render();
 
-    fireEvent.change(startInput(), {target: {value: '2026-03-01'}});
+    expect(startInput().tagName).toBe('BUTTON');
+    expect(startInput()).toHaveTextContent('02/03/2026');
+    expect(document.querySelector('input[type="date"]')).toBeNull();
+  });
 
-    expect(await screen.findByText(t('trips.create.errorPastDate'))).toBeInTheDocument();
-    expect(startInput()).toHaveValue('2026-03-02');
+  it('opens a calendar of the month, today marked, and closes it with Escape', () => {
+    render();
+
+    fireEvent.click(startInput());
+
+    expect(screen.getByRole('dialog', {name: /2026/})).toBeInTheDocument();
+    expect(day('2026-03-02')).toHaveAttribute('aria-pressed', 'true');
+    expect(day('2026-03-02')).toHaveAttribute('aria-current', 'date');
+    expect(document.querySelectorAll('[data-date]')).toHaveLength(31);
+    fireEvent.keyDown(screen.getByRole('dialog'), {key: 'Escape'});
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('closes the calendar when the user clicks elsewhere', () => {
+    render();
+    fireEvent.click(startInput());
+
+    fireEvent.mouseDown(document.body);
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('goes to the next and previous month', () => {
+    render();
+    fireEvent.click(startInput());
+    const previous = screen.getByRole('button', {name: t('common.previousMonth')});
+    expect(previous).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', {name: t('common.nextMonth')}));
+
+    expect(document.querySelectorAll('[data-date]')).toHaveLength(30);
+    expect(day('2026-04-15')).toBeInTheDocument();
+    expect(previous).toBeEnabled();
+    fireEvent.click(previous);
+    expect(day('2026-03-31')).toBeInTheDocument();
+  });
+
+  it('picks a date in another month', () => {
+    render();
+    fireEvent.click(startInput());
+    fireEvent.click(screen.getByRole('button', {name: t('common.nextMonth')}));
+    fireEvent.click(day('2026-04-15'));
+
+    expect(startInput()).toHaveTextContent('15/04/2026');
+    expect(endInput()).toHaveTextContent('15/04/2026');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('does not offer days in the past', () => {
+    render();
+    fireEvent.click(startInput());
+
+    expect(day('2026-03-01')).toBeDisabled();
+    expect(day('2026-03-02')).toBeEnabled();
+    fireEvent.click(day('2026-03-01'));
+    expect(startInput()).toHaveTextContent('02/03/2026');
   });
 
   it('refuses today after 18:00', async () => {
     vi.setSystemTime(new Date(2026, 2, 2, 19, 30));
     render();
 
-    // (React only reports a change of value: go to tomorrow, then back to today)
-    fireEvent.change(startInput(), {target: {value: '2026-03-03'}});
-    fireEvent.change(startInput(), {target: {value: '2026-03-02'}});
+    // (go to tomorrow, then back to today)
+    pickDate(startInput(), '2026-03-03');
+    pickDate(startInput(), '2026-03-02');
 
     expect(await screen.findByText(t('trips.create.errorTooLate'))).toBeInTheDocument();
+    expect(startInput()).toHaveAttribute('data-invalid', 'true');
   });
 
   it('moves the end date with a later start date', () => {
     render();
 
-    fireEvent.change(startInput(), {target: {value: '2026-03-10'}});
+    pickDate(startInput(), '2026-03-10');
 
-    expect(startInput()).toHaveValue('2026-03-10');
-    expect(endInput()).toHaveValue('2026-03-10');
-    expect(endInput()).toHaveAttribute('min', '2026-03-10');
+    expect(startInput()).toHaveTextContent('10/03/2026');
+    expect(endInput()).toHaveTextContent('10/03/2026');
+    fireEvent.click(endInput());
+    expect(day('2026-03-09')).toBeDisabled();
+    expect(day('2026-03-10')).toBeEnabled();
   });
 
   it('keeps a later end date when the start moves', () => {
     render();
-    fireEvent.change(endInput(), {target: {value: '2026-03-06'}});
+    pickDate(endInput(), '2026-03-06');
 
-    fireEvent.change(startInput(), {target: {value: '2026-03-04'}});
+    pickDate(startInput(), '2026-03-04');
 
-    expect(endInput()).toHaveValue('2026-03-06');
+    expect(endInput()).toHaveTextContent('06/03/2026');
     expect(screen.getByText(t('trips.create.daysHint', {count: 3}))).toBeInTheDocument();
   });
 
-  it('refuses an end date before the start', async () => {
+  it('does not offer an end date before the start', () => {
     render();
-    fireEvent.change(startInput(), {target: {value: '2026-03-05'}});
+    pickDate(startInput(), '2026-03-05');
 
-    fireEvent.change(endInput(), {target: {value: '2026-03-03'}});
+    fireEvent.click(endInput());
+    fireEvent.click(day('2026-03-03'));
 
-    expect(await screen.findByText(t('trips.create.errorEndBeforeStart'))).toBeInTheDocument();
-    expect(endInput()).toHaveValue('2026-03-05');
+    expect(day('2026-03-03')).toBeDisabled();
+    expect(endInput()).toHaveTextContent('05/03/2026');
   });
 
-  it('ignores a cleared date field', () => {
+  it('tints the days of the trip', () => {
+    render({days: 4});
+    fireEvent.click(endInput());
+
+    expect(day('2026-03-03')).toHaveClass('bg-brand-50');
+    expect(day('2026-03-04')).toHaveClass('bg-brand-50');
+    expect(day('2026-03-05')).not.toHaveClass('bg-brand-50');
+    expect(day('2026-03-05')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('marks the end date when the trip is too long', async () => {
     render();
 
-    fireEvent.change(startInput(), {target: {value: ''}});
-    fireEvent.change(endInput(), {target: {value: ''}});
+    pickDate(endInput(), '2026-03-12');
 
-    expect(startInput()).toHaveValue('2026-03-02');
-    expect(endInput()).toHaveValue('2026-03-02');
+    expect(await screen.findByText(t('trips.create.errorMaxDays'))).toBeInTheDocument();
+    expect(endInput()).toHaveAttribute('data-invalid', 'true');
+    expect(startInput()).toHaveAttribute('data-invalid', 'false');
   });
 });
 
@@ -254,6 +331,50 @@ describe('people and budget', () => {
   });
 });
 
+describe('custom fields', () => {
+  it('marks the invalid fields for assistive technology', async () => {
+    render();
+
+    submit();
+
+    await screen.findByText(t('trips.create.errorProvince'));
+    expect(province()).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-invalid', 'true');
+    expect(province()).toHaveAttribute('aria-describedby', 'province-error');
+  });
+
+  it('clears a typed destination with the clear button', async () => {
+    const user = userEvent.setup();
+    render();
+    await user.type(province(), 'Sài');
+
+    await user.click(screen.getByRole('button', {name: t('common.clear')}));
+
+    expect(province()).toHaveValue('');
+  });
+
+  it('counts the characters of the note', async () => {
+    const user = userEvent.setup();
+    render();
+    expect(screen.getByText('0/1500')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(new RegExp(t('trips.create.note'))), 'abcde');
+
+    expect(screen.getByText('5/1500')).toBeInTheDocument();
+  });
+
+  it('shows the number of people again after a reset', async () => {
+    const user = userEvent.setup();
+    render();
+    await user.click(screen.getByRole('button', {name: t('trips.create.increase')}));
+    expect(quantity()).toHaveValue('2');
+
+    await user.click(screen.getByRole('button', {name: t('trips.create.reset')}));
+
+    expect(quantity()).toHaveValue('1');
+  });
+});
+
 describe('submit', () => {
   it('needs a province from the list', async () => {
     const user = userEvent.setup();
@@ -274,10 +395,76 @@ describe('submit', () => {
     expect(await screen.findByText(t('trips.create.errorMissing'))).toBeInTheDocument();
   });
 
+  it('blocks the submit while a date is invalid', async () => {
+    vi.setSystemTime(new Date(2026, 2, 2, 19, 30));
+    render({location: 'Lâm Đồng'});
+    fireEvent.click(screen.getByRole('radio', {name: new RegExp(t('trips.create.budgetLow'))}));
+    pickDate(startInput(), '2026-03-03');
+    pickDate(startInput(), '2026-03-02');
+
+    submit();
+
+    expect(await screen.findByText(t('trips.create.errorTooLate'))).toBeInTheDocument();
+    expect(screen.getByText(t('trips.create.title'))).toBeInTheDocument();
+  });
+
+  it('shows no error before the user types or submits', () => {
+    render({location: 'Lâm Đồng'});
+
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('a valid date clears the error', async () => {
+    vi.setSystemTime(new Date(2026, 2, 2, 19, 30));
+    render();
+    pickDate(startInput(), '2026-03-03');
+    pickDate(startInput(), '2026-03-02');
+    expect(await screen.findByText(t('trips.create.errorTooLate'))).toBeInTheDocument();
+
+    pickDate(startInput(), '2026-03-04');
+
+    await waitFor(() => expect(screen.queryByText(t('trips.create.errorTooLate'))).toBeNull());
+  });
+
+  it('needs at least one kind of place, and the error goes away when one is chosen', async () => {
+    render({location: 'Lâm Đồng'});
+    fireEvent.click(screen.getByRole('radio', {name: new RegExp(t('trips.create.budgetLow'))}));
+
+    submit();
+
+    expect(await screen.findByText(t('trips.create.errorInterests'))).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: t('trips.create.areaHistory')})).toHaveClass('border-rose-300');
+
+    fireEvent.click(screen.getByRole('button', {name: t('trips.create.areaHistory')}));
+
+    await waitFor(() => expect(screen.queryByText(t('trips.create.errorInterests'))).toBeNull());
+  });
+
+  it('shows the error of the province and of the budget together', async () => {
+    render();
+
+    submit();
+
+    expect(await screen.findByText(t('trips.create.errorProvince'))).toBeInTheDocument();
+    expect(screen.getByText(t('trips.create.errorMissing'))).toBeInTheDocument();
+  });
+
+  it('reset clears the form and its errors', async () => {
+    const user = userEvent.setup();
+    render({location: 'Lâm Đồng'});
+    submit();
+    expect(await screen.findByText(t('trips.create.errorMissing'))).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', {name: t('trips.create.reset')}));
+
+    expect(province()).toHaveValue('');
+    await waitFor(() => expect(screen.queryByText(t('trips.create.errorMissing'))).toBeNull());
+  });
+
   it('limits a trip to 7 days', async () => {
     render({location: 'Lâm Đồng'});
     fireEvent.click(screen.getByRole('radio', {name: new RegExp(t('trips.create.budgetLow'))}));
-    fireEvent.change(endInput(), {target: {value: '2026-03-10'}});
+    pickDate(endInput(), '2026-03-10');
 
     submit();
 
@@ -315,6 +502,7 @@ describe('submit', () => {
   it('sends no note when it is blank', async () => {
     render({location: 'Lâm Đồng'});
     fireEvent.click(screen.getByRole('radio', {name: new RegExp(t('trips.create.budgetLow'))}));
+    fireEvent.click(screen.getByRole('button', {name: t('trips.create.areaHistory')}));
 
     submit();
 
@@ -330,7 +518,7 @@ describe('submit', () => {
 
     expect(province()).toHaveValue('');
     expect(quantity()).toHaveValue('1');
-    expect(endInput()).toHaveValue('2026-03-02');
+    expect(endInput()).toHaveTextContent('02/03/2026');
     expect(screen.getByRole('radio', {name: new RegExp(t('trips.create.budgetLow'))})).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByLabelText(new RegExp(t('trips.create.note')))).toHaveValue('');
   });

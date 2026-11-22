@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import {describe, expect, it, vi} from 'vitest';
 import Toast from '@/components/ui/Toast';
 import AdminRoutes from '@/features/admin/AdminRoutes';
-import {mockActivityLogs, mockModeration, mockRoles} from '@/__tests__/fixtures/admin/data';
+import {mockActivityLogs, mockDashboard, mockModeration, mockRoles} from '@/__tests__/fixtures/admin/data';
 import DashboardPage from '@/features/admin/pages/DashboardPage';
 import ModerationPage from '@/features/admin/pages/ModerationPage';
 import ReportsPage from '@/features/admin/pages/ReportsPage';
@@ -39,6 +39,14 @@ describe('DashboardPage', () => {
   it('shows skeletons while loading', () => {
     page();
     expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
+  });
+
+  it('still shows the figures when no destination has a trip yet (empty database)', async () => {
+    vi.mocked(adminApi.fetchDashboard).mockResolvedValue({...mockDashboard, topDestinations: []});
+    page();
+
+    expect(await screen.findByText(vi_.format(12846))).toBeInTheDocument();
+    expect(screen.getByText(t('admin.dashboard.topDestinations'))).toBeInTheDocument();
   });
 
   it('shows the four key figures with their change', async () => {

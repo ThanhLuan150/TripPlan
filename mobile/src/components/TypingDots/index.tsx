@@ -11,8 +11,16 @@ export default function TypingDots() {
       Animated.loop(
         Animated.sequence([
           Animated.delay(i * 150),
-          Animated.timing(v, {toValue: 1, duration: 300, useNativeDriver: true}),
-          Animated.timing(v, {toValue: 0, duration: 300, useNativeDriver: true}),
+          Animated.timing(v, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(v, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
           Animated.delay((2 - i) * 150),
         ]),
       ),
@@ -24,13 +32,40 @@ export default function TypingDots() {
   return (
     <View style={[styles.bubble, shadow]}>
       {dots.map((v, i) => (
-        <Animated.View key={i} style={[styles.dot, {transform: [{translateY: v.interpolate({inputRange: [0, 1], outputRange: [0, -5]})}]}]} />
+        <Animated.View
+          key={i}
+          style={[
+            styles.dot,
+            {
+              transform: [
+                {
+                  translateY: v.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -5],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bubble: {alignSelf: 'flex-start', flexDirection: 'row', gap: 5, marginTop: 10, backgroundColor: '#fff', borderRadius: 18, borderBottomLeftRadius: 4, paddingHorizontal: 16, paddingVertical: 16, borderWidth: 1, borderColor: '#B8EFEA'},
+  bubble: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    gap: 5,
+    marginTop: 10,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    borderBottomLeftRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#B8EFEA',
+  },
   dot: {width: 8, height: 8, borderRadius: 4, backgroundColor: colors.faint},
 });

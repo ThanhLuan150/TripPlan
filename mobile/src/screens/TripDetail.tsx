@@ -15,12 +15,17 @@ import {apiMessage, errorText} from '../lib/apiClient';
 import {CheckInError, checkIn as runCheckIn} from '../lib/checkIn';
 
 // Readable text for a failed check-in (location, distance, no place found, photo...).
-const checkInMessage = (e: unknown, t: (key: string, options?: Record<string, unknown>) => string) => {
-  if (e instanceof CheckInError) return t(`trips.${e.key}`, e.params);
-  if ((e as Error)?.message === 'denied') return t('trips.locationDenied');
-  if ((e as Error)?.message === 'unavailable') return t('trips.locationUnavailable');
+const checkInMessage = (
+  e: unknown,
+  t: (key: string, options?: Record<string, unknown>) => string,
+) => {
+  if (e instanceof CheckInError) {return t(`trips.${e.key}`, e.params);}
+  if ((e as Error)?.message === 'denied') {return t('trips.locationDenied');}
+  if ((e as Error)?.message === 'unavailable')
+    {return t('trips.locationUnavailable');}
   const message = apiMessage(e);
-  if (message === 'This challenge has no location') return t('trips.noLocation');
+  if (message === 'This challenge has no location')
+    {return t('trips.noLocation');}
   return errorText(e);
 };
 
@@ -35,7 +40,7 @@ export default function TripDetail() {
   // be at the place (backend: within 250 m), take a photo, mark the challenge done
   const checkIn = useApiMutation(runCheckIn, {
     onSuccess: async done => {
-      if (!done) return;
+      if (!done) {return;}
       await qc.invalidateQueries({queryKey: queryKeys.trip(id)});
       alert.success(t('common.success'), t('trips.checkedIn'));
     },
@@ -43,8 +48,8 @@ export default function TripDetail() {
   });
   const [retake, setRetake] = useState<string | null>(null);
 
-  if (trip.isLoading) return <PleaseWait />;
-  if (trip.error) return <ErrorText message={errorText(trip.error)} />;
+  if (trip.isLoading) {return <PleaseWait />;}
+  if (trip.error) {return <ErrorText message={errorText(trip.error)} />;}
 
   return (
     <View style={styles.container}>
@@ -52,11 +57,25 @@ export default function TripDetail() {
       <FlatList
         showsVerticalScrollIndicator={false}
         style={styles.list}
-        ListHeaderComponent={<TripHero location={trip.data?.location} startDate={trip.data?.startDate} endDate={trip.data?.endDate} onMap={() => navigation.navigate('TripMap', {id})} />}
+        ListHeaderComponent={
+          <TripHero
+            location={trip.data?.location}
+            startDate={trip.data?.startDate}
+            endDate={trip.data?.endDate}
+            onMap={() => navigation.navigate('TripMap', {id})}
+          />
+        }
         data={trip.data?.dataTripDays ?? []}
         keyExtractor={(_, i) => String(i)}
         renderItem={({item, index}) => (
-          <DayCard day={item} open={open.includes(index)} onToggle={() => setOpen(p => (p.includes(index) ? p.filter(x => x !== index) : [...p, index]))}>
+          <DayCard
+            day={item}
+            open={open.includes(index)}
+            onToggle={() =>
+              setOpen(p =>
+                p.includes(index) ? p.filter(x => x !== index) : [...p, index],
+              )
+            }>
             {item.challenges.map(c => (
               <ActivityRow
                 key={c._id}
@@ -75,7 +94,7 @@ export default function TripDetail() {
         title={t('trips.retake')}
         onCancel={() => setRetake(null)}
         onConfirm={() => {
-          if (retake) checkIn.mutate(retake);
+          if (retake) {checkIn.mutate(retake);}
           setRetake(null);
         }}
       />

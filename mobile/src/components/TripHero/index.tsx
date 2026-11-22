@@ -1,5 +1,10 @@
 import {useTranslation} from 'react-i18next';
-import {ImageBackground, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {formatDate} from '../../lib/date';
@@ -16,9 +21,15 @@ interface Props {
 // Picture of the province with a "view map" button and a dark gradient carrying the place and dates.
 export default function TripHero({location, startDate, endDate, onMap}: Props) {
   const {t, i18n} = useTranslation();
-  const dates = `${formatDate(startDate ?? '', i18n.language)} - ${formatDate(endDate ?? '', i18n.language)}`;
+  const dates = `${formatDate(startDate ?? '', i18n.language)} - ${formatDate(
+    endDate ?? '',
+    i18n.language,
+  )}`;
   return (
-    <ImageBackground style={styles.background} resizeMode="cover" source={{uri: images[location ?? '']}}>
+    <ImageBackground
+      style={styles.background}
+      resizeMode="cover"
+      source={{uri: images[location ?? '']}}>
       <TouchableOpacity style={styles.map} onPress={onMap}>
         <Text style={styles.mapText}>{t('trips.viewMap')}</Text>
         <Ionicons name="map" size={20} color="#fff" />
@@ -32,10 +43,37 @@ export default function TripHero({location, startDate, endDate, onMap}: Props) {
 }
 
 const styles = StyleSheet.create({
-  background: {width: '100%', height: 220, marginBottom: 16, justifyContent: 'flex-end', backgroundColor: colors.primary, borderRadius: 24, overflow: 'hidden'},
-  map: {backgroundColor: colors.primary, paddingVertical: 10, borderRadius: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, width: '50%', alignSelf: 'center', marginBottom: 50},
+  background: {
+    width: '100%',
+    height: 220,
+    marginBottom: 16,
+    justifyContent: 'flex-end',
+    backgroundColor: colors.primary,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  map: {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    borderRadius: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    width: '50%',
+    alignSelf: 'center',
+    marginBottom: 50,
+  },
   mapText: {color: '#fff', fontWeight: '700'},
-  gradient: {height: '55%', width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 18, paddingBottom: 16},
+  gradient: {
+    height: '55%',
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+  },
   heading: {color: '#fff', fontWeight: '800', fontSize: 21},
   light: {fontWeight: '300', fontSize: 14},
 });

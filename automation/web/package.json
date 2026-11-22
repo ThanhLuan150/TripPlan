@@ -1,0 +1,31 @@
+{
+  "name": "aloca-automation-web",
+  "private": true,
+  "version": "0.0.1",
+  "description": "End-to-end tests of the web app (Cypress). The backend is mocked.",
+  "scripts": {
+    "app:serve": "node scripts/serve-app.mjs",
+    "cy:desktop": "cypress run",
+    "cy:phone": "cypress run --config viewportWidth=412,viewportHeight=915 --spec \"cypress/e2e/**/{login,register,create,home,list}.cy.ts\"",
+    "cypress:run": "start-server-and-test app:serve http://localhost:5174 cy:desktop",
+    "cypress:mobile": "start-server-and-test app:serve http://localhost:5174 cy:phone",
+    "cypress:open": "start-server-and-test app:serve http://localhost:5174 \"cypress open --e2e\"",
+    "app:dev": "node scripts/serve-dev.mjs",
+    "cypress:dev": "start-server-and-test app:dev http://localhost:5173 \"cypress open --e2e --config baseUrl=http://localhost:5173\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@testing-library/cypress": "10.1.3",
+    "@types/node": "20.17.6",
+    "chokidar": "3.6.0",
+    "cypress": "16.3.0",
+    "cypress-vite": "1.10.2",
+    "start-server-and-test": "3.0.13",
+    "typescript": "5.6.2",
+    "vite": "^5.4.21"
+  },
+  "packageManager": "yarn@3.6.4+sha512.e70835d4d6d62c07be76b3c1529cb640c7443f0fe434ef4b6478a5a399218cbaf1511b396b3c56eb03bc86424cff2320f6167ad2fde273aa0df6e60b7754029f"
+}

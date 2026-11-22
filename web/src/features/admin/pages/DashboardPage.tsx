@@ -38,7 +38,8 @@ export default function DashboardPage() {
   const logs = useAdminActivityLogs();
   const moderation = useAdminModeration();
   const pending = moderation.data?.filter(item => item.status === 'pending');
-  const topTrips = data ? data.topDestinations[0].trips : 1;
+  // the biggest destination is the full bar (1 when there is none, so the ratio never divides by zero)
+  const topTrips = Math.max(1, data?.topDestinations?.[0]?.trips ?? 1);
 
   return (
     <>

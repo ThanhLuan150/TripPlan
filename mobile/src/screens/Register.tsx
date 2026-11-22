@@ -13,15 +13,29 @@ export default function Register() {
   const {t} = useTranslation();
   const navigation = useNavigation<any>();
   const register = useApiMutation(authApi.register, {
-    onSuccess: (_res, vars) => navigation.replace('Verify', {email: vars.email}),
+    onSuccess: (_res, vars) =>
+      navigation.replace('Verify', {email: vars.email}),
   });
 
   return (
     <Formik
-      initialValues={{email: '', username: '', password: '', confirmPassword: ''}}
+      initialValues={{
+        email: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+      }}
       validationSchema={registerSchema}
       onSubmit={values => register.mutate(values)}>
-      {({errors, touched, handleChange, handleBlur, handleSubmit, values, setFieldError}) => (
+      {({
+        errors,
+        touched,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        values,
+        setFieldError,
+      }) => (
         <AuthScreen logoSize={135}>
           <FormInput
             label="EMAIL"
@@ -56,14 +70,22 @@ export default function Register() {
             value={values.confirmPassword}
             onChangeText={handleChange('confirmPassword')}
             onBlur={handleBlur('confirmPassword')}
-            error={touched.confirmPassword && errors.confirmPassword && t(errors.confirmPassword)}
+            error={
+              touched.confirmPassword &&
+              errors.confirmPassword &&
+              t(errors.confirmPassword)
+            }
           />
           <ErrorText message={register.errorMessage} />
           <Button
             title={t('auth.register.submit')}
             loading={register.isPending}
             onPress={() => {
-              if (values.password !== values.confirmPassword) return setFieldError('confirmPassword', t('auth.register.passwordMismatch'));
+              if (values.password !== values.confirmPassword)
+                {return setFieldError(
+                  'confirmPassword',
+                  t('auth.register.passwordMismatch'),
+                );}
               handleSubmit();
             }}
           />
@@ -80,7 +102,13 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
-  row: {flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 6},
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+  },
   text: {color: colors.muted},
   link: {color: colors.primary, fontWeight: '700'},
 });

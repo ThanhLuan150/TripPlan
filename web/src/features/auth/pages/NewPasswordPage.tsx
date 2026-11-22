@@ -6,6 +6,7 @@ import {routes} from '@/app/routes';
 import Field from '@/components/ui/Field';
 import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
+import {fieldMessage} from '@/lib/forms';
 import {apiMessage, apiStatus} from '@/lib/apiClient';
 import {storage, StorageKeys} from '@/lib/storage';
 import {authApi} from '../api/authApi';
@@ -66,12 +67,12 @@ export default function NewPasswordPage() {
         initialValues={{password: '', confirmPassword: ''}}
         validationSchema={newPasswordSchema}
         onSubmit={values => handleNewPassword(values)}>
-        {({errors, touched, handleChange, handleBlur, handleSubmit, values}) => (
+        {({errors, touched, handleChange, handleBlur, handleSubmit, values, initialValues, submitCount}) => (
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             <Field
               label={t('auth.newPassword.password')}
               htmlFor="password"
-              error={touched.password && errors.password && t(errors.password)}>
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'password', t)}>
               <PasswordInput
                 id="password"
                 name="password"
@@ -86,7 +87,7 @@ export default function NewPasswordPage() {
               label={t('auth.newPassword.confirm')}
               htmlFor="confirmPassword"
               error={
-                touched.confirmPassword && errors.confirmPassword && t(errors.confirmPassword)
+                fieldMessage({errors, touched, values, initialValues, submitCount}, 'confirmPassword', t)
               }>
               <PasswordInput
                 id="confirmPassword"

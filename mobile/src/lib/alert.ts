@@ -18,15 +18,19 @@ let listener: Listener | null = null;
 export const subscribeAlert = (next: Listener) => {
   listener = next;
   return () => {
-    if (listener === next) listener = null;
+    if (listener === next) {listener = null;}
   };
 };
 
 const show = (options: AlertOptions) => listener?.(options);
 
 export const alert = {
-  success: (title: string, message?: string) => show({type: 'success', title, message}),
-  error: (title: string, message?: string) => show({type: 'error', title, message}),
-  info: (title: string, message?: string) => show({type: 'info', title, message}),
-  confirm: (options: Omit<AlertOptions, 'type'>) => show({...options, type: 'confirm'}),
+  success: (title: string, message?: string) =>
+    show({type: 'success', title, message}),
+  error: (title: string, message?: string) =>
+    show({type: 'error', title, message}),
+  info: (title: string, message?: string) =>
+    show({type: 'info', title, message}),
+  confirm: (options: Omit<AlertOptions, 'type'>) =>
+    show({...options, type: 'confirm'}),
 };
