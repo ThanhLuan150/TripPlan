@@ -1,4 +1,5 @@
 import {useId, useState} from 'react';
+import FieldError from '@/components/ui/FieldError';
 import {useTranslation} from 'react-i18next';
 import AdminModal from '../components/AdminModal';
 import {adminButton, adminInput} from '../components/styles';
@@ -70,11 +71,9 @@ export function UserSuspendDialog({users, busy, error, onSubmit, onClose}: Dialo
             placeholder={t('admin.users.dialogs.reasonPlaceholder')}
             className={`${adminInput} h-auto resize-none py-2 ${submitted && missing ? 'border-rose-400' : ''}`}
           />
-          {submitted && missing && (
-            <p id={`${id}-error`} className="mt-1 text-xs text-rose-600">
-              {t('admin.users.errors.reasonRequired')}
-            </p>
-          )}
+          <FieldError id={`${id}-error`} className="mt-1">
+            {submitted && missing && t('admin.users.errors.reasonRequired')}
+          </FieldError>
         </div>
       </div>
     </AdminModal>

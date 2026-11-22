@@ -438,6 +438,42 @@ describe('UsersPage', () => {
     expect(patchUser).toHaveBeenLastCalledWith(second.id, {status: 'delete', suspendReason: undefined});
   });
 
+  it('opens the row menu upward when there is no room below the row', async () => {
+    const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(300);
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({top: 600, bottom: 640, left: 800, right: 840, width: 40, height: 40, x: 800, y: 600, toJSON: () => ({})});
+    const innerHeight = window.innerHeight;
+    window.innerHeight = 700;
+    const user = userEvent.setup();
+    page();
+    await screen.findByText(mockUsers[0].fullname);
+
+    await user.click(screen.getByRole('button', {name: t('admin.users.moreActions', {name: second.fullname})}));
+
+    // below the button it would end at 646 + 300 > 692: it ends above the button instead
+    expect(screen.getByRole('menu').style.top).toBe('294px');
+    window.innerHeight = innerHeight;
+    height.mockRestore();
+    rect.mockRestore();
+  });
+
+  it('keeps the row menu below the button when it fits', async () => {
+    const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(300);
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({top: 100, bottom: 140, left: 800, right: 840, width: 40, height: 40, x: 800, y: 100, toJSON: () => ({})});
+    const user = userEvent.setup();
+    page();
+    await screen.findByText(mockUsers[0].fullname);
+
+    await user.click(screen.getByRole('button', {name: t('admin.users.moreActions', {name: second.fullname})}));
+
+    expect(screen.getByRole('menu').style.top).toBe('146px');
+    height.mockRestore();
+    rect.mockRestore();
+  });
+
   it('cancels a dialog with Cancel and with Escape', async () => {
     const user = userEvent.setup();
     page();
@@ -675,6 +711,49 @@ describe('add user', () => {
     expect(within(dialog).getByText(t('admin.users.errors.passwordShort'))).toBeInTheDocument();
     expect(postUser).not.toHaveBeenCalled();
     expect(validateCreateForm({fullname: 'A', username: 'a_b.c', email: 'a@b.co', phone: '', password: '12345678', role: 'user'})).toEqual({});
+  });
+
+  it('shows the error of a field when it is left, and clears it once fixed', async () => {
+    const {user, dialog} = await open();
+    const email = within(dialog).getByLabelText(t('admin.users.fields.email'));
+
+    await user.type(email, 'nope');
+    await user.tab();
+
+    expect(await within(dialog).findByText(t('admin.users.errors.emailInvalid'))).toBeInTheDocument();
+    // a field that was not visited shows nothing yet
+    expect(within(dialog).queryByText(t('admin.users.errors.passwordShort'))).toBeNull();
+
+    await user.clear(email);
+    await user.type(email, 'nope@x.vn');
+
+    await waitFor(() => expect(within(dialog).queryByText(t('admin.users.errors.emailInvalid'))).toBeNull());
+  });
+
+  it('shows no error for a field that is only passed through', async () => {
+    const {user, dialog} = await open();
+
+    // the name field is focused when the dialog opens: moving on leaves it empty
+    await user.click(within(dialog).getByLabelText(t('admin.users.fields.email')));
+    await user.click(within(dialog).getByLabelText(t('admin.users.fields.phone')));
+
+    expect(within(dialog).queryByText(t('admin.users.errors.fullnameRequired'))).toBeNull();
+    expect(within(dialog).queryByText(t('admin.users.errors.emailRequired'))).toBeNull();
+    await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.createAccount')}));
+    expect(within(dialog).getByText(t('admin.users.errors.fullnameRequired'))).toBeInTheDocument();
+    expect(within(dialog).getByText(t('admin.users.errors.emailRequired'))).toBeInTheDocument();
+  });
+
+  it('an optional phone is valid when empty, and checked when typed', async () => {
+    const {user, dialog} = await open();
+    const phone = within(dialog).getByLabelText(t('admin.users.fields.phone'));
+
+    await user.type(phone, 'abc');
+    await user.tab();
+    expect(await within(dialog).findByText(t('admin.users.errors.phoneInvalid'))).toBeInTheDocument();
+
+    await user.clear(phone);
+    await waitFor(() => expect(within(dialog).queryByText(t('admin.users.errors.phoneInvalid'))).toBeNull());
   });
 
   it('creates the account and opens its profile', async () => {

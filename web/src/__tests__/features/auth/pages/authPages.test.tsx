@@ -1,4 +1,4 @@
-import {screen} from '@testing-library/react';
+import {screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {authApi} from '@/features/auth/api/authApi';
@@ -331,6 +331,21 @@ describe('code pages (VerifyAccountPage, ResetCodePage)', () => {
 
       expect(await screen.findByText(t('auth.verify.incomplete'))).toBeInTheDocument();
       expect(api()).not.toHaveBeenCalled();
+    });
+
+    it('shows no error before the first submit, and drops it once the code is complete', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<Page />, {route});
+      expect(screen.queryByText(t('auth.verify.incomplete'))).toBeNull();
+
+      await user.keyboard('123');
+      await user.click(submit());
+      expect(await screen.findByText(t('auth.verify.incomplete'))).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText(t('auth.verify.digit', {n: 4})));
+      await user.keyboard('456');
+
+      await waitFor(() => expect(screen.queryByText(t('auth.verify.incomplete'))).toBeNull());
     });
 
     it('checks the code and moves on', async () => {

@@ -1,4 +1,5 @@
 import {Formik} from 'formik';
+import {fieldMessage} from '@/lib/forms';
 import {useMutation} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
@@ -48,12 +49,12 @@ export default function ForgotPasswordPage() {
         validationSchema={forgotPasswordSchema}
         initialValues={{email: ''}}
         onSubmit={values => sendCode.mutate(values.email)}>
-        {({errors, touched, handleChange, handleBlur, values, handleSubmit}) => (
+        {({errors, touched, handleChange, handleBlur, values, handleSubmit, initialValues, submitCount}) => (
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             <Field
               label={t('auth.forgot.email')}
               htmlFor="email"
-              error={touched.email && errors.email && t(errors.email)}>
+              error={fieldMessage({errors, touched, values, initialValues, submitCount}, 'email', t)}>
               <input
                 id="email"
                 name="email"

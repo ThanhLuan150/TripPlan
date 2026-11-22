@@ -1,8 +1,9 @@
 import {type ReactNode, useState} from 'react';
+import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
 import Field from '@/components/ui/Field';
 import {apiMessage} from '@/lib/apiClient';
-import {isEmail} from '@/lib/validators';
+import {fieldError} from '@/lib/forms';
 import AdminCard from '../components/AdminCard';
 import AdminEmptyState from '../components/AdminEmptyState';
 import AdminLoadingState from '../components/AdminLoadingState';
@@ -11,8 +12,7 @@ import {adminButton, adminInput} from '../components/styles';
 import {useAdminSettings, useSaveSettings} from '../hooks/useAdminData';
 import {useAdminToast} from '../hooks/useAdminToast';
 import type {AdminSettings} from '../types';
-
-const PHONE = /^[0-9+().\s-]+$/;
+import {settingsSchema} from '../validation';
 
 // Settings the app reads: its name, the support e-mail and the hotline.
 export default function SettingsPage() {
@@ -47,50 +47,49 @@ function SettingsForm({initial}: {initial: AdminSettings}) {
   const toast = useAdminToast();
   const save = useSaveSettings();
   const [saved, setSaved] = useState(initial);
-  const [values, setValues] = useState(initial);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string>();
-  const dirty = JSON.stringify(values) !== JSON.stringify(saved);
-  const set = <K extends keyof AdminSettings>(key: K, value: AdminSettings[K]) => setValues(v => ({...v, [key]: value}));
 
-  const errors: Partial<Record<keyof AdminSettings, string>> = {};
-  if (!values.appName.trim()) errors.appName = t('admin.settings.errors.appName');
-  if (values.supportEmail.trim() && !isEmail(values.supportEmail.trim())) errors.supportEmail = t('admin.settings.errors.email');
-  if (values.hotline.trim() && !PHONE.test(values.hotline.trim())) errors.hotline = t('admin.settings.errors.hotline');
+  const formik = useFormik<AdminSettings>({
+    initialValues: initial,
+    validationSchema: settingsSchema,
+    onSubmit: values => {
+      setError(undefined);
+      const next = {appName: values.appName.trim(), supportEmail: values.supportEmail.trim(), hotline: values.hotline.trim()};
+      save.mutate(next, {
+        onSuccess: result => {
+          setSaved(result);
+          formik.resetForm({values: result});
+          toast.done(t('admin.settings.savedToast'));
+        },
+        onError: e => setError(apiMessage(e) ?? t('admin.common.tryAgain')),
+      });
+    },
+  });
+  const {values} = formik;
+  const dirty = JSON.stringify(values) !== JSON.stringify(saved);
+
+  const shown = (key: keyof AdminSettings) => {
+    const message = fieldError(formik, key);
+    return message ? t(message) : undefined;
+  };
 
   const text = (key: keyof AdminSettings, type = 'text') => (
-    <Field label={t(`admin.settings.fields.${key}`)} htmlFor={`setting-${key}`} error={submitted ? errors[key] : undefined}>
+    <Field label={t(`admin.settings.fields.${key}`)} htmlFor={`setting-${key}`} error={shown(key)}>
       <input
         id={`setting-${key}`}
         type={type}
+        name={key}
+        aria-invalid={!!shown(key)}
         value={values[key]}
-        onChange={e => set(key, e.target.value)}
+        onBlur={formik.handleBlur}
+        onChange={formik.handleChange}
         className={adminInput}
       />
     </Field>
   );
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    setError(undefined);
-    if (Object.keys(errors).length) {
-      return;
-    }
-    const next = {appName: values.appName.trim(), supportEmail: values.supportEmail.trim(), hotline: values.hotline.trim()};
-    save.mutate(next, {
-      onSuccess: result => {
-        setSaved(result);
-        setValues(result);
-        setSubmitted(false);
-        toast.done(t('admin.settings.savedToast'));
-      },
-      onError: e => setError(apiMessage(e) ?? t('admin.common.tryAgain')),
-    });
-  };
-
   return (
-    <form onSubmit={submit} noValidate className="space-y-6 pb-20">
+    <form onSubmit={formik.handleSubmit} noValidate className="space-y-6 pb-20">
       <Section title={t('admin.settings.sections.general')} hint={t('admin.settings.sections.generalHint')}>
         {error && (
           <p role="alert" className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
@@ -112,8 +111,7 @@ function SettingsForm({initial}: {initial: AdminSettings}) {
             className={adminButton.secondary}
             disabled={!dirty || save.isPending}
             onClick={() => {
-              setValues(saved);
-              setSubmitted(false);
+              formik.resetForm({values: saved});
             }}>
             {t('admin.settings.reset')}
           </button>

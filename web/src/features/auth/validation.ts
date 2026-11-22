@@ -33,3 +33,12 @@ export const registerSchema = Yup.object().shape({
 export const forgotPasswordSchema = Yup.object().shape({email});
 
 export const newPasswordSchema = Yup.object().shape({password, confirmPassword});
+
+export const OTP_LENGTH = 6;
+
+// the six boxes of the code: every one holds a digit
+export const otpSchema = Yup.object({
+  otp: Yup.array(Yup.string())
+    .length(OTP_LENGTH, 'auth.verify.incomplete')
+    .test('digits', 'auth.verify.incomplete', value => !!value && value.every(digit => /^\d$/.test(digit ?? ''))),
+});

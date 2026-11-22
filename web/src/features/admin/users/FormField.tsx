@@ -1,4 +1,5 @@
 import {type ReactNode, useId} from 'react';
+import FieldError from '@/components/ui/FieldError';
 
 // Label + control + error message of a dialog form; `children` gets the
 // props that link the control to its label and error.
@@ -21,9 +22,9 @@ export default function FormField({
       </label>
       {children({id, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-error` : undefined})}
       {error ? (
-        <p id={`${id}-error`} className="mt-1 text-xs text-rose-600">
+        <FieldError id={`${id}-error`} className="mt-1">
           {error}
-        </p>
+        </FieldError>
       ) : (
         hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>
       )}

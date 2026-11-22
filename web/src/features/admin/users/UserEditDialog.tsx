@@ -1,5 +1,8 @@
-import {type FormEvent, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
+import FieldError from '@/components/ui/FieldError';
+import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
+import {fieldError} from '@/lib/forms';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import AdminAvatar from '../components/AdminAvatar';
 import AdminModal from '../components/AdminModal';
@@ -8,7 +11,8 @@ import {adminButton, adminInput} from '../components/styles';
 import {optionsOf, roleBadge, userStatusBadge} from '../status';
 import type {AdminUser, AdminUserUpdate} from '../types';
 import FormField from './FormField';
-import {toFormValues, validateUserForm, type UserFormValues, invalidInput} from './userForm';
+import {toFormValues, invalidInput, type UserFormValues} from './userForm';
+import {userSchema} from '../validation';
 
 // Edit the profile (photo, name, email, phone) and the role of an account.
 // Password and tokens are not part of it; the account status has its own
@@ -27,16 +31,39 @@ export default function UserEditDialog({
   onClose: () => void;
 }) {
   const {t} = useTranslation();
-  const [values, setValues] = useState<UserFormValues>(() => toFormValues(user));
   const [image, setImage] = useState(user.image);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>();
-  const [submitted, setSubmitted] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const errors = validateUserForm(values);
-  const shown = (field: keyof typeof errors) => (submitted && errors[field] ? t(errors[field]!) : undefined);
-  const set = <K extends keyof UserFormValues>(key: K, value: UserFormValues[K]) =>
-    setValues(current => ({...current, [key]: value}));
+  const formik = useFormik<UserFormValues>({
+    initialValues: toFormValues(user),
+    validationSchema: userSchema,
+    onSubmit: values => {
+      // only what changed
+      const update: AdminUserUpdate = {};
+      if (values.fullname.trim() !== user.fullname) update.fullname = values.fullname.trim();
+      if (values.email.trim().toLowerCase() !== user.email) update.email = values.email.trim();
+      if (values.phone.trim() !== user.phone) update.phone = values.phone.trim();
+      if (values.role !== user.role) update.role = values.role;
+      if (image !== user.image) update.image = image;
+      if (!Object.keys(update).length) {
+        onClose();
+        return;
+      }
+      onSubmit(update);
+    },
+  });
+  const {values} = formik;
+  const shown = (field: keyof UserFormValues) => {
+    const message = fieldError(formik, field);
+    return message ? t(message) : undefined;
+  };
+  const bind = (field: keyof UserFormValues) => ({
+    name: field,
+    value: values[field],
+    onBlur: formik.handleBlur,
+    onChange: formik.handleChange,
+  });
 
   const pickPhoto = async (file: File | undefined) => {
     if (!file) {
@@ -54,28 +81,8 @@ export default function UserEditDialog({
     }
   };
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    if (Object.keys(errors).length) {
-      return;
-    }
-    // only what changed
-    const update: AdminUserUpdate = {};
-    if (values.fullname.trim() !== user.fullname) update.fullname = values.fullname.trim();
-    if (values.email.trim().toLowerCase() !== user.email) update.email = values.email.trim();
-    if (values.phone.trim() !== user.phone) update.phone = values.phone.trim();
-    if (values.role !== user.role) update.role = values.role;
-    if (image !== user.image) update.image = image;
-    if (!Object.keys(update).length) {
-      onClose();
-      return;
-    }
-    onSubmit(update);
-  };
-
   return (
-    <form onSubmit={submit} noValidate>
+    <form onSubmit={formik.handleSubmit} noValidate>
       <AdminModal
         title={t('admin.users.editUser')}
         description={t('admin.users.dialogs.editText')}
@@ -124,11 +131,9 @@ export default function UserEditDialog({
                   onChange={e => pickPhoto(e.target.files?.[0])}
                 />
               </div>
-              {uploadError && (
-                <p role="alert" className="mt-1 text-xs text-rose-600">
-                  {uploadError}
-                </p>
-              )}
+              <FieldError role="alert" className="mt-1">
+                {uploadError}
+              </FieldError>
             </div>
           </div>
 
@@ -137,8 +142,7 @@ export default function UserEditDialog({
               <input
                 {...props}
                 className={`${adminInput} ${invalidInput(shown('fullname'))}`}
-                value={values.fullname}
-                onChange={e => set('fullname', e.target.value)}
+                {...bind('fullname')}
                 autoComplete="off"
               />
             )}
@@ -149,8 +153,7 @@ export default function UserEditDialog({
                 {...props}
                 type="email"
                 className={`${adminInput} ${invalidInput(shown('email'))}`}
-                value={values.email}
-                onChange={e => set('email', e.target.value)}
+                {...bind('email')}
                 autoComplete="off"
               />
             )}
@@ -161,8 +164,7 @@ export default function UserEditDialog({
                 {...props}
                 type="tel"
                 className={`${adminInput} ${invalidInput(shown('phone'))}`}
-                value={values.phone}
-                onChange={e => set('phone', e.target.value)}
+                {...bind('phone')}
                 autoComplete="off"
               />
             )}
@@ -172,8 +174,7 @@ export default function UserEditDialog({
               <select
                 {...props}
                 className={adminInput}
-                value={values.role}
-                onChange={e => set('role', e.target.value as UserFormValues['role'])}>
+                {...bind('role')}>
                 {optionsOf(roleBadge, t).map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}

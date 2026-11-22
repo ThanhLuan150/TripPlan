@@ -8,3 +8,8 @@ coverage
 .env
 .env.*
 !.env.example
+
+# the build used by the end-to-end tests (mocked API on the same origin)
+!.env.e2e
+
+dist-e2e*
