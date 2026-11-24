@@ -4,6 +4,7 @@ import {
   IoCamera,
   IoCheckmarkCircle,
   IoClose,
+  IoCloudUpload,
   IoLocate,
   IoLocationOutline,
   IoRefresh,
@@ -55,6 +56,7 @@ export default function ChallengeLocationDialog({
   const stateRef = useRef(state);
   stateRef.current = state;
   const fileInput = useRef<HTMLInputElement>(null);
+  const uploadInput = useRef<HTMLInputElement>(null);
 
   const locate = useCallback(async () => {
     setState({kind: 'locating'});
@@ -209,13 +211,22 @@ export default function ChallengeLocationDialog({
       title = t('location.nearTitle');
       body = <p>{t('location.nearText', {distance: distanceText(state.distance)})}</p>;
       actions = (
-        <button
-          type="button"
-          className="btn btn-primary h-11 w-full"
-          onClick={() => fileInput.current?.click()}>
-          <IoCamera size={18} />
-          {t('location.takePhoto')}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            className="btn btn-primary h-11 w-full"
+            onClick={() => fileInput.current?.click()}>
+            <IoCamera size={18} />
+            {t('location.takePhoto')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline h-11 w-full"
+            onClick={() => uploadInput.current?.click()}>
+            <IoCloudUpload size={18} />
+            {t('location.uploadPhoto')}
+          </button>
+        </div>
       );
       break;
     case 'far':
@@ -266,6 +277,7 @@ export default function ChallengeLocationDialog({
           hidden
           onChange={handleFile}
         />
+        <input ref={uploadInput} type="file" accept="image/*" hidden onChange={handleFile} />
       </div>
     </div>
   );

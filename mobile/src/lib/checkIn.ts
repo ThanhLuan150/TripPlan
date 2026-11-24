@@ -3,6 +3,8 @@ import {
   launchImageLibrary,
   Asset,
 } from 'react-native-image-picker';
+import {Alert} from 'react-native';
+import i18n from '../i18n';
 import {challengeApi} from '../api';
 import {getCurrentPosition} from './location';
 import {uploadImage} from './upload';
@@ -17,15 +19,39 @@ export class CheckInError extends Error {
   }
 }
 
-// Takes a photo; on a device without a camera (emulator) falls back to the gallery.
+// Asks whether to take a photo or upload one from the gallery; null = cancelled.
+const askSource = () =>
+  new Promise<'camera' | 'gallery' | null>(resolve =>
+    Alert.alert(
+      i18n.t('trips.photoChoose'),
+      undefined,
+      [
+        {text: i18n.t('trips.photoCamera'), onPress: () => resolve('camera')},
+        {text: i18n.t('trips.photoGallery'), onPress: () => resolve('gallery')},
+        {
+          text: i18n.t('common.cancel'),
+          style: 'cancel',
+          onPress: () => resolve(null),
+        },
+      ],
+      {cancelable: true, onDismiss: () => resolve(null)},
+    ),
+  );
+
+// Takes a photo or uploads one; on a device without a camera (emulator) falls back to the gallery.
 const takePhoto = async (): Promise<Asset | undefined> => {
+  const source = await askSource();
+  if (!source) {return undefined;}
   const options = {
     mediaType: 'photo' as const,
     quality: 0.7 as const,
     maxWidth: 1600,
     maxHeight: 1600,
   };
-  let result = await launchCamera(options);
+  let result =
+    source === 'camera'
+      ? await launchCamera(options)
+      : await launchImageLibrary(options);
   if (result.errorCode === 'camera_unavailable')
     {result = await launchImageLibrary(options);}
   if (result.errorCode) {throw new CheckInError('photoFailed');}

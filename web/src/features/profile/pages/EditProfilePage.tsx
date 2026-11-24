@@ -4,7 +4,7 @@ import {useFormik} from 'formik';
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {IoCamera} from 'react-icons/io5';
+import {IoCamera, IoCloudUpload} from 'react-icons/io5';
 import {routes} from '@/app/routes';
 import Page from '@/components/layout/Page';
 import Field from '@/components/ui/Field';
@@ -111,7 +111,10 @@ export default function EditProfilePage() {
               <IoCamera size={18} />
             </span>
           </button>
-          <span className="text-xs text-slate-500">{t('profile.changePhoto')}</span>
+          <button type="button" className="btn btn-outline h-10 gap-2 px-4 text-sm" onClick={() => fileInput.current?.click()}>
+            <IoCloudUpload size={18} />
+            {t('profile.uploadPhoto')}
+          </button>
           <FieldError role="alert" className="mt-0">
             {shown('image')}
           </FieldError>

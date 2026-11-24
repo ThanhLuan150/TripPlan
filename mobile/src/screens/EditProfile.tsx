@@ -120,7 +120,13 @@ export default function EditProfile() {
             <AntDesign name="camera" size={20} color={colors.primaryDark} />
           </View>
         </TouchableOpacity>
-        <Text style={styles.hint}>{t('profile.changePhoto')}</Text>
+        <TouchableOpacity
+          style={styles.upload}
+          onPress={pickPhoto}
+          activeOpacity={0.8}>
+          <AntDesign name="clouduploado" size={18} color={colors.primaryDark} />
+          <Text style={styles.uploadText}>{t('profile.uploadPhoto')}</Text>
+        </TouchableOpacity>
         <View style={[styles.card, shadow]}>
           <FormInput
             label={t('profile.fullname').toUpperCase()}
@@ -194,13 +200,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hint: {
-    color: colors.muted,
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 10,
+  upload: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 8,
+    marginTop: 12,
     marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primaryDark,
   },
+  uploadText: {color: colors.primaryDark, fontSize: 14, fontWeight: '600'},
   card: {backgroundColor: '#fff', borderRadius: radius.lg + 4, padding: 20},
   disabled: {color: colors.muted},
 });
