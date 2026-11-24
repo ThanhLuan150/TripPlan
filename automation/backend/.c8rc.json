@@ -1,0 +1,21 @@
+{
+  "allowExternal": true,
+  "include": [
+    "**/backend/src/**"
+  ],
+  "exclude": [
+    "**/backend/src/seed/**",
+    "**/backend/src/server.js",
+    "**/node_modules/**"
+  ],
+  "reporter": [
+    "text",
+    "json-summary"
+  ],
+  "reportsDirectory": "coverage",
+  "check-coverage": true,
+  "statements": 90,
+  "lines": 90,
+  "functions": 90,
+  "branches": 75
+}

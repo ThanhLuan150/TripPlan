@@ -1,0 +1,12 @@
+node_modules
+
+# test output
+coverage
+cypress/screenshots
+cypress/videos
+cypress/downloads
+
+# this project uses npm: if yarn runs here by mistake, its files stay out of git
+.yarn
+yarn.lock
+.pnp.*
