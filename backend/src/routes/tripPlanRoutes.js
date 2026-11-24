@@ -17,6 +17,7 @@ router.post("/", tripPlanController.generatePlans);                      // role
 router.post("/save-trip", logActivity("createTrip", (req) => req.body?.nameTrip), tripPlanController.saveTrip);                  // role: user|admin — saves the chosen plan for req.user
 router.get("/get-trip", tripPlanController.listTrips);                   // role: user|admin — own trips
 router.get("/get-trip/:id", ownTrip, tripPlanController.getTripDetail);  // role: user|admin + owner of the trip
+router.post("/:id/duplicate", ownTrip, logActivity("createTrip", (req) => `${req.trip?.nameTrip} (duplicate)`), tripPlanController.duplicateTrip); // role: user|admin + owner of the trip — copy owned by req.user
 router.delete("/:id", ownTrip, tripPlanController.deleteTrip);           // role: user|admin + owner of the trip — soft delete
 router.get("/location/:id", ownTrip, tripPlanController.getTripLocations); // role: user|admin + owner of the trip
 

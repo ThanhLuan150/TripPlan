@@ -98,6 +98,30 @@ describe('TripListPage', () => {
     expect(await screen.findByText(t('trips.list.deleteFailed'))).toBeInTheDocument();
   });
 
+  it('duplicates a trip, reloads the list and confirms', async () => {
+    vi.mocked(tripsApi.duplicate).mockResolvedValue({tripId: 'n1', nameTrip: 'Đà Lạt mộng mơ (bản sao)'});
+    const user = userEvent.setup();
+    render();
+
+    await user.click(await screen.findByRole('button', {name: t('trips.list.duplicateLabel', {name: 'Đà Lạt mộng mơ'})}));
+
+    expect(vi.mocked(tripsApi.duplicate).mock.calls[0][0]).toBe('t1');
+    expect(await screen.findByText(t('trips.list.duplicateSuccessText', {name: 'Đà Lạt mộng mơ (bản sao)'}))).toBeInTheDocument();
+    await vi.waitFor(() => expect(tripsApi.list).toHaveBeenCalledTimes(2));
+    expect(screen.queryByTestId('location')).toBeNull(); // the card was not opened
+  });
+
+  it('tells when the duplication failed', async () => {
+    vi.mocked(tripsApi.duplicate).mockRejectedValue(new Error('404'));
+    const user = userEvent.setup();
+    render();
+
+    await user.click(await screen.findByRole('button', {name: t('trips.list.duplicateLabel', {name: 'Biển Nha Trang'})}));
+
+    expect(await screen.findByText(t('trips.list.duplicateFailed'))).toBeInTheDocument();
+    expect(tripsApi.list).toHaveBeenCalledTimes(1);
+  });
+
   it('reloads on "refresh"', async () => {
     const user = userEvent.setup();
     render();

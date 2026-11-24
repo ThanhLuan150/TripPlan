@@ -185,4 +185,69 @@ const getTripLocations = async (trip) => {
     return { message: "Get location successfully", result };
 };
 
-export default { generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };
+const COPY_SUFFIX = " (bản sao)";
+
+// "Đà Lạt (bản sao)", then "Đà Lạt (bản sao 2)", ... : names stay unique per user.
+const uniqueCopyName = async (userId, nameTrip) => {
+    const base = String(nameTrip ?? "").replace(/ \(bản sao(?: \d+)?\)$/, "");
+    let candidate = `${base}${COPY_SUFFIX}`;
+    for (let n = 2; await tripPlanRepository.existsActiveWithName(userId, candidate); n++) {
+        candidate = `${base} (bản sao ${n})`;
+    }
+    return candidate;
+};
+
+// Copy of a trip the user owns: new trip -> new days -> new challenges, each with a fresh
+// (not completed) progress for the user. The original is only read, never changed.
+const duplicateTrip = async (trip, userId) => {
+    const copy = await tripPlanRepository.create({
+        userId,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        location: trip.location,
+        imageUrl: trip.imageUrl,
+        transportCostTotal: trip.transportCostTotal,
+        foodCostTotal: trip.foodCostTotal,
+        otherCostTotal: trip.otherCostTotal,
+        nameTrip: await uniqueCopyName(userId, trip.nameTrip),
+        status: "active",
+    });
+
+    try {
+        const days = await tripDayRepository.findByTripId(trip._id);
+        for (const day of days) {
+            const newDay = await tripDayRepository.create({
+                tripId: copy._id,
+                imageUrl: day.imageUrl,
+                day: day.day,
+                dayOfWeek: day.dayOfWeek,
+                date: day.date,
+                title: day.title,
+                transportCost: day.transportCost,
+                foodCost: day.foodCost,
+                otherCost: day.otherCost,
+            });
+            const challenges = await challengeRepository.findByTripDayId(day._id);
+            for (const challenge of challenges) {
+                // the check-in photo (imageUrl) belongs to the original's progress: not copied
+                const newChallenge = await challengeRepository.create({
+                    tripDayId: newDay._id,
+                    challengeSummary: challenge.challengeSummary,
+                    nameLocation: challenge.nameLocation,
+                    location: challenge.location,
+                    latitude: challenge.latitude,
+                    longitude: challenge.longitude,
+                    points: challenge.points,
+                });
+                await challengeProgressRepository.create(userId, newChallenge._id);
+            }
+        }
+    } catch (error) {
+        // do not leave a half copied trip in the user's list
+        await tripPlanRepository.softDelete(copy._id).catch(() => {});
+        throw error;
+    }
+    return { message: "Trip duplicated successfully", tripId: copy._id, nameTrip: copy.nameTrip };
+};
+
+export default { generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations, duplicateTrip };

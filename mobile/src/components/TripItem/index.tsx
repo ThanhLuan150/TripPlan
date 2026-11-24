@@ -9,10 +9,11 @@ interface Props {
   trip: Trip;
   onOpen: () => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
 }
 
 // Teal-outlined row of a saved plan: name, place, dates and the trash icon.
-export default function TripItem({trip, onOpen, onDelete}: Props) {
+export default function TripItem({trip, onOpen, onDelete, onDuplicate}: Props) {
   const {i18n} = useTranslation();
   // dd/mm - dd/mm (the year is dropped so it stays on one line)
   const short = (d: string) => formatDate(d, i18n.language).slice(0, 5);
@@ -25,6 +26,11 @@ export default function TripItem({trip, onOpen, onDelete}: Props) {
           <Text style={styles.text}>{trip.location}</Text>
           <Text style={styles.text}>{dates}</Text>
         </View>
+        {onDuplicate && (
+          <TouchableOpacity style={styles.trash} onPress={onDuplicate}>
+            <Ionicons name="copy-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.trash} onPress={onDelete}>
           <Ionicons name="trash" size={20} color={colors.primary} />
         </TouchableOpacity>

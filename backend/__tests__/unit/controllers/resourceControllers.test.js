@@ -28,6 +28,7 @@ vi.mock("../../../src/services/tripService.js", () => ({
         getTripDetail: vi.fn(),
         deleteTrip: vi.fn(),
         getTripLocations: vi.fn(),
+        duplicateTrip: vi.fn(),
     },
 }));
 vi.mock("../../../src/services/userService.js", () => ({
@@ -150,6 +151,16 @@ describe("tripPlanController", () => {
         await callController(tripPlanController.getTripDetail, mockReq({ user, trip }));
 
         expect(tripService.getTripDetail).toHaveBeenCalledWith(trip, "u1");
+    });
+
+    it("duplicateTrip copies the trip loaded by ownTrip for the user and answers 201", async () => {
+        tripService.duplicateTrip.mockResolvedValue({ message: "ok" });
+
+        const { res } = await callController(tripPlanController.duplicateTrip, mockReq({ user, trip }));
+
+        expect(tripService.duplicateTrip).toHaveBeenCalledWith(trip, "u1");
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith({ message: "ok" });
     });
 
     it.each([["deleteTrip"], ["getTripLocations"]])("%s uses the trip loaded by ownTrip", async (method) => {

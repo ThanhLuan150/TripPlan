@@ -33,7 +33,7 @@ jest.mock('../src/api', () => ({
   contentApi: {home: jest.fn(), videos: jest.fn()},
   rankingApi: {get: jest.fn()},
   profileApi: {notifications: jest.fn(), update: jest.fn()},
-  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn()},
+  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;
@@ -115,6 +115,31 @@ describe('Trips', () => {
     expect(nav.navigate).toHaveBeenCalledWith('TripDetail', {id: 't1'});
     press(touchables(tree)[0]);
     expect(nav.navigate).toHaveBeenCalledWith('CreateTrip');
+  });
+
+  it('duplicates a trip, reloads the list and tells it worked', async () => {
+    (tripsApi.list as jest.Mock).mockResolvedValue(trips);
+    (tripsApi.duplicate as jest.Mock).mockResolvedValue({tripId: 'n1', nameTrip: 'Hue (bản sao)'});
+    const tree = renderApp(<Trips />);
+    await flush();
+    const items = touchables(tree);
+    press(items[items.length - 2]);
+    await flush();
+    expect(tripsApi.duplicate).toHaveBeenCalledWith('t1');
+    expect(tripsApi.list).toHaveBeenCalledTimes(2);
+    expect(alerts[0].type).toBe('success');
+  });
+
+  it('tells when the duplication failed', async () => {
+    (tripsApi.list as jest.Mock).mockResolvedValue(trips);
+    (tripsApi.duplicate as jest.Mock).mockRejectedValue({response: {data: {message: 'Data Trip not found!'}}});
+    const tree = renderApp(<Trips />);
+    await flush();
+    const items = touchables(tree);
+    press(items[items.length - 2]);
+    await flush();
+    expect(alerts[0].type).toBe('error');
+    expect(tripsApi.list).toHaveBeenCalledTimes(1);
   });
 
   it('deletes after a confirmation and reloads the list', async () => {

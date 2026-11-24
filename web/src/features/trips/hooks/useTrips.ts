@@ -24,6 +24,14 @@ export const useDeleteTrip = () => {
   });
 };
 
+export const useDuplicateTrip = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: tripsApi.duplicate,
+    onSuccess: () => queryClient.invalidateQueries({queryKey: ['trips']}),
+  });
+};
+
 // Generating plans is slow (AI), so the result is cached per form input and
 // not refetched automatically; call refetch() to try again.
 export const useGeneratedPlans = (params: GenerateTripParams | null) =>

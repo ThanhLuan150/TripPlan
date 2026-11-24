@@ -288,3 +288,101 @@ describe("reading and deleting trips", () => {
         });
     });
 });
+
+describe("duplicateTrip", () => {
+    const OTHER = "64b000000000000000000002";
+    const original = doc({
+        _id: "trip1",
+        userId: OTHER,
+        nameTrip: "Đà Lạt",
+        location: "Lâm Đồng",
+        startDate: "2026-03-02",
+        endDate: "2026-03-03",
+        imageUrl: "trip.jpg",
+        transportCostTotal: 1,
+        foodCostTotal: 2,
+        otherCostTotal: 3,
+        status: "active",
+    });
+
+    beforeEach(() => {
+        tripPlanRepository.existsActiveWithName.mockResolvedValue(false);
+        tripPlanRepository.create.mockImplementation(async (t) => ({ _id: "copy1", ...t }));
+        tripPlanRepository.softDelete.mockResolvedValue({});
+        tripDayRepository.findByTripId.mockResolvedValue([
+            { _id: "d0", tripId: "trip1", day: 0, title: "Ngày 1", dayOfWeek: "Monday", date: "2026-03-02", transportCost: 5, foodCost: 6, otherCost: 7, imageUrl: "d.jpg" },
+            { _id: "d1", tripId: "trip1", day: 1, title: "Ngày 2" },
+        ]);
+        tripDayRepository.create.mockImplementation(async (d) => ({ _id: `new-day${d.day}` }));
+        challengeRepository.findByTripDayId.mockImplementation(async (id) =>
+            id === "d0"
+                ? [{ _id: "c1", tripDayId: "d0", challengeSummary: "Chụp ảnh", nameLocation: "Hồ", location: "Đà Lạt", latitude: "1", longitude: "2", points: 20, imageUrl: "checkin.jpg" }]
+                : [],
+        );
+        challengeRepository.create.mockResolvedValue({ _id: "new-c1" });
+    });
+
+    it("creates a new trip owned by the user with new days, challenges and fresh progress", async () => {
+        const result = await tripService.duplicateTrip(original, USER);
+
+        expect(result).toEqual({ message: "Trip duplicated successfully", tripId: "copy1", nameTrip: "Đà Lạt (bản sao)" });
+        const created = tripPlanRepository.create.mock.calls[0][0];
+        expect(created).toMatchObject({
+            userId: USER,
+            location: "Lâm Đồng",
+            startDate: "2026-03-02",
+            endDate: "2026-03-03",
+            transportCostTotal: 1,
+            foodCostTotal: 2,
+            otherCostTotal: 3,
+            status: "active",
+        });
+        expect(created).not.toHaveProperty("_id");
+        expect(tripDayRepository.create).toHaveBeenCalledTimes(2);
+        expect(tripDayRepository.create.mock.calls[0][0]).toEqual({
+            tripId: "copy1",
+            imageUrl: "d.jpg",
+            day: 0,
+            dayOfWeek: "Monday",
+            date: "2026-03-02",
+            title: "Ngày 1",
+            transportCost: 5,
+            foodCost: 6,
+            otherCost: 7,
+        });
+        expect(challengeRepository.create).toHaveBeenCalledOnce();
+        const challenge = challengeRepository.create.mock.calls[0][0];
+        expect(challenge).toEqual({
+            tripDayId: "new-day0",
+            challengeSummary: "Chụp ảnh",
+            nameLocation: "Hồ",
+            location: "Đà Lạt",
+            latitude: "1",
+            longitude: "2",
+            points: 20,
+        });
+        expect(challengeProgressRepository.create).toHaveBeenCalledWith(USER, "new-c1");
+    });
+
+    it("never writes to the original trip", async () => {
+        await tripService.duplicateTrip(original, USER);
+
+        expect(tripPlanRepository.updateById).not.toHaveBeenCalled();
+        expect(tripPlanRepository.softDelete).not.toHaveBeenCalled();
+    });
+
+    it("picks a free name when the copy name is already used", async () => {
+        tripPlanRepository.existsActiveWithName.mockImplementation(async (_u, name) => name !== "Đà Lạt (bản sao 3)");
+
+        const result = await tripService.duplicateTrip(doc({ ...original, nameTrip: "Đà Lạt (bản sao)" }), USER);
+
+        expect(result.nameTrip).toBe("Đà Lạt (bản sao 3)");
+    });
+
+    it("removes the half copied trip and rethrows when a step fails", async () => {
+        challengeRepository.create.mockRejectedValue(new Error("db down"));
+
+        await expect(tripService.duplicateTrip(original, USER)).rejects.toThrow("db down");
+        expect(tripPlanRepository.softDelete).toHaveBeenCalledWith("copy1");
+    });
+});

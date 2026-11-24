@@ -4,6 +4,7 @@ import {useTranslation} from 'react-i18next';
 import {
   IoAdd,
   IoCalendarOutline,
+  IoCopyOutline,
   IoLocationSharp,
   IoMapOutline,
   IoRefresh,
@@ -14,7 +15,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
 import {formatShortDate} from '@/lib/date';
 import {images} from '../data/provinceImages';
-import {useDeleteTrip, useTrips} from '../hooks/useTrips';
+import {useDeleteTrip, useDuplicateTrip, useTrips} from '../hooks/useTrips';
 import type {Trip} from '../types';
 
 // Saved plans ("AddNewTrip" on mobile).
@@ -24,9 +25,25 @@ export default function TripListPage() {
   const [itemDelete, setItemDelete] = useState<Trip | null>(null);
   const {data: result, isFetching, isLoading, refetch} = useTrips();
   const deleteTrip = useDeleteTrip();
+  const duplicateTrip = useDuplicateTrip();
 
   // Inverted FlatList on mobile: newest plan first
   const trips = (result ?? []).filter(item => item.status === 'active').slice().reverse();
+  const duplicate = (trip: Trip) =>
+    duplicateTrip.mutate(trip._id, {
+      onSuccess: copy =>
+        Toast.show({
+          type: 'success',
+          text1: t('trips.list.duplicateSuccess'),
+          text2: t('trips.list.duplicateSuccessText', {name: copy.nameTrip}),
+        }),
+      onError: () =>
+        Toast.show({
+          type: 'error',
+          text1: t('common.failed'),
+          text2: t('trips.list.duplicateFailed'),
+        }),
+    });
   const open = (id: string) => navigate(routes.DetailTripScreen(id));
 
   return (
@@ -109,6 +126,18 @@ export default function TripListPage() {
                   <span className="truncate">{item.location}</span>
                 </span>
               </div>
+              <button
+                type="button"
+                aria-label={t('trips.list.duplicateLabel', {name: item.nameTrip})}
+                title={t('trips.list.duplicate')}
+                disabled={duplicateTrip.isPending}
+                onClick={e => {
+                  e.stopPropagation();
+                  duplicate(item);
+                }}
+                className="absolute top-2 right-12 grid size-9 place-items-center rounded-full bg-white/90 text-slate-600 backdrop-blur transition hover:bg-white hover:text-brand-600 disabled:opacity-60">
+                <IoCopyOutline size={18} />
+              </button>
               <button
                 type="button"
                 aria-label={t('trips.list.deleteLabel', {name: item.nameTrip})}

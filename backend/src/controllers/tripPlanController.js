@@ -25,4 +25,8 @@ const getTripLocations = asyncHandler(async (req, res) => {
     res.status(200).json(await tripService.getTripLocations(req.trip));
 });
 
-export default { generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };
+const duplicateTrip = asyncHandler(async (req, res) => {
+    res.status(201).json(await tripService.duplicateTrip(req.trip, req.user._id));
+});
+
+export default { duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };

@@ -16,6 +16,7 @@ import TripItem from '../components/TripItem';
 import {queryKeys, useTrips} from '../hooks/queries';
 import {useApiMutation} from '../hooks/useApiMutation';
 import {alert} from '../lib/alert';
+import {errorText} from '../lib/apiClient';
 import {colors} from '../lib/theme';
 
 // "Kế hoạch" tab: the "add a plan" box and the plans already created.
@@ -26,6 +27,14 @@ export default function Trips() {
   const trips = useTrips();
   const remove = useApiMutation(tripsApi.remove, {
     onSuccess: () => qc.invalidateQueries({queryKey: queryKeys.trips}),
+  });
+  const duplicate = useApiMutation(tripsApi.duplicate, {
+    onSuccess: ({nameTrip}) => {
+      qc.invalidateQueries({queryKey: queryKeys.trips});
+      alert.success(t('trips.duplicateSuccess', {name: nameTrip}));
+    },
+    onError: error =>
+      alert.error(t('trips.duplicateFailed'), errorText(error)),
   });
   const list = trips.data ?? [];
 
@@ -74,6 +83,7 @@ export default function Trips() {
               trip={item}
               onOpen={() => navigation.navigate('TripDetail', {id: item._id})}
               onDelete={() => askDelete(item)}
+              onDuplicate={() => duplicate.mutate(item._id)}
             />
           )}
         />

@@ -263,6 +263,17 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 | `/trip-plan/*` | user, admin; `/:id` phải là kế hoạch của mình |
 | `/challenge/*` | user, admin; `chaId` phải thuộc kế hoạch của mình |
 
+### Sao chép chuyến đi (Duplicate Trip)
+
+`POST /trip-plan/:id/duplicate` (user, admin; `:id` phải là kế hoạch của mình) tạo bản sao của một kế hoạch.
+
+- Trả 201 `{ message, tripId, nameTrip }`. Kế hoạch không tồn tại, của người khác hoặc `:id` không hợp lệ trả 404; không có token trả 401.
+- Sao chép thông tin cơ bản (địa điểm, ngày đi/về, chi phí), các ngày và thử thách (địa điểm, toạ độ, điểm). Mọi bản ghi đều có ID mới, người gọi là chủ sở hữu, tiến độ thử thách bắt đầu lại (chưa hoàn thành, không chép ảnh check-in).
+- Kế hoạch gốc chỉ được đọc, không bị thay đổi.
+- Tên bản sao là `<tên> (bản sao)`, nếu trùng thì `(bản sao 2)`, `(bản sao 3)`... Nếu lỗi giữa chừng, bản sao dở dang bị xoá mềm và lỗi được trả về.
+- Ghi nhật ký hoạt động với action `createTrip`.
+- Web (`TripListPage`) và mobile (tab "Kế hoạch") có nút sao chép cạnh nút xoá, kèm thông báo thành công / thất bại.
+
 ### API quản trị — `/admin/*` (role admin)
 
 | Nhóm | Endpoint |
