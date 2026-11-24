@@ -295,7 +295,22 @@ Quan hệ yêu thích lưu ở collection riêng `favoritetrips` (`userId`, `tri
 - Trả 200 `application/pdf`, `Content-Disposition: attachment` với tên file `<tên chuyến đi>.pdf` (ký tự không hợp lệ bị thay bằng khoảng trắng). Kế hoạch không tồn tại, của người khác, đã xoá hoặc `:id` không hợp lệ trả 404 (cùng middleware `ownTrip`); không có token trả 401.
 - Nội dung: tên, địa điểm, ngày đi/về, tổng chi phí; từng ngày (tiêu đề, thứ/ngày, chi phí) với các hoạt động đánh số theo thứ tự lưu và địa điểm. Chuyến đi chưa có lịch trình hoặc ngày chưa có hoạt động vẫn xuất được, kèm dòng thông báo. Có số trang, khổ A4 để in.
 - Dùng lại `getTripDetail`, chỉ đọc, không ghi gì vào database. PDF tạo bằng `pdfkit`, font DejaVu Sans (gói `dejavu-fonts-ttf`) để hiển thị tiếng Việt.
-- Web: nút "Xuất PDF" ở trang chi tiết chuyến đi (tải file theo ngôn ngữ đang chọn). Chưa làm chia sẻ PDF hay đồng bộ file.
+- Web: nút "Xuất PDF" ở trang chi tiết chuyến đi (tải file theo ngôn ngữ đang chọn). Mobile: nút "Xuất PDF" ở màn chi tiết, tải file kèm token bằng `react-native-blob-util` rồi mở bằng trình xem PDF của hệ thống (cần build lại app; iOS cần `pod install`). Chưa làm chia sẻ PDF hay đồng bộ file.
+
+### Chia sẻ chuyến đi (Trip Sharing)
+
+| Endpoint | Mô tả |
+| --- | --- |
+| `GET /trip-plan/:id/share` | Trạng thái chia sẻ (`isShared`, `permission`, `shareToken`, `sharedAt`). Chỉ chủ sở hữu (`ownTrip`, người khác 404, không token 401) |
+| `POST /trip-plan/:id/share` | Bật chia sẻ, tạo link. Idempotent: đang bật thì trả lại cùng link |
+| `DELETE /trip-plan/:id/share` | Tắt chia sẻ: xoá token, link cũ vô hiệu vĩnh viễn (bật lại sẽ ra link mới) |
+| `GET /shared/:token` | **Công khai** (không cần đăng nhập, có rate limit), chỉ đọc. Token sai, không tồn tại, đã thu hồi hoặc chuyến đi đã xoá đều trả cùng một 404 |
+
+- Token là 32 byte ngẫu nhiên (`crypto.randomBytes`, base64url 43 ký tự), không đoán được; sai định dạng bị từ chối trước khi chạm database. Phản hồi công khai `Cache-Control: no-store`.
+- Quyền hiện có: `view` (chỉ xem). Link không có route ghi nào; sửa/xoá vẫn đòi đăng nhập + `ownTrip`. Không có cộng tác chỉnh sửa.
+- Người xem link chỉ thấy kế hoạch (tên, địa điểm, ngày, chi phí, hoạt động) qua whitelist trường. Không lộ `userId`/thông tin chủ, tiến độ hoàn thành, ảnh check-in hay cấu hình chia sẻ.
+- Web: nút "Chia sẻ" ở trang chi tiết (bật/tắt, trạng thái, sao chép link) và trang công khai `/shared/:token`.
+- Mobile: nút chia sẻ ở màn chi tiết chuyến đi (bật/tắt, trạng thái, gửi/sao chép link qua share sheet của hệ thống). Link mở trang web, nên đặt `WEB_URL` (địa chỉ web) ở backend để API trả sẵn `shareUrl` đầy đủ; nếu để trống, mobile dùng tạm địa chỉ API.
 
 ### API quản trị — `/admin/*` (role admin)
 

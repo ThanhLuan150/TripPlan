@@ -1,5 +1,5 @@
 import React from 'react';
-import {FlatList, TextInput, TouchableOpacity} from 'react-native';
+import {FlatList, Share, TextInput, TouchableOpacity} from 'react-native';
 import i18n from '../src/i18n';
 import {profileApi, rankingApi, tripsApi, contentApi} from '../src/api';
 import AreaTypeGrid from '../src/components/AreaTypeGrid';
@@ -12,6 +12,7 @@ import QuantityInput from '../src/components/QuantityInput';
 import {areaTypes} from '../src/lib/areaTypes';
 import {subscribeAlert} from '../src/lib/alert';
 import {CheckInError, checkIn} from '../src/lib/checkIn';
+import {exportTripPdf} from '../src/lib/exportPdf';
 import {getCurrentPosition} from '../src/lib/location';
 import CreateTrip from '../src/screens/CreateTrip';
 import GenerateTrips from '../src/screens/GenerateTrips';
@@ -24,6 +25,7 @@ import {act, allText, flush, press, pressText, renderApp, renderer, makeAuth} fr
 
 jest.mock('@react-navigation/native', () => require('./helpers/nav').navModule);
 jest.mock('../src/lib/location', () => ({getCurrentPosition: jest.fn()}));
+jest.mock('../src/lib/exportPdf', () => ({exportTripPdf: jest.fn()}));
 jest.mock('../src/lib/checkIn', () => ({
   ...jest.requireActual('../src/lib/checkIn'),
   checkIn: jest.fn(),
@@ -33,7 +35,7 @@ jest.mock('../src/api', () => ({
   contentApi: {home: jest.fn(), videos: jest.fn()},
   rankingApi: {get: jest.fn()},
   profileApi: {notifications: jest.fn(), update: jest.fn()},
-  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn()},
+  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;
@@ -285,6 +287,84 @@ describe('TripDetail', () => {
     expect(nav.navigate).toHaveBeenCalledWith('TripMap', {id: 'trip1'});
     press(touchables(tree)[0]);
     expect(nav.goBack).toHaveBeenCalled();
+  });
+
+  describe('export PDF', () => {
+    const pdfButton = (tree: Tree) => tree.root.findAll(n => n.props.accessibilityLabel === t('trips.exportPdf') && n.props.onPress)[0];
+
+    it('exports the trip in the current language, named after the trip', async () => {
+      (exportTripPdf as jest.Mock).mockResolvedValue(undefined);
+      const tree = await mount(detail());
+      press(pdfButton(tree));
+      await flush();
+      expect(exportTripPdf).toHaveBeenCalledWith('trip1', expect.any(String), 'Huế');
+      expect(alerts).toEqual([]);
+    });
+
+    it('tells the user when the PDF cannot be created', async () => {
+      (exportTripPdf as jest.Mock).mockRejectedValue(new Error('PDF export failed (500)'));
+      const tree = await mount();
+      press(pdfButton(tree));
+      await flush();
+      expect(alerts.some(a => a.message === t('trips.exportPdfFailed'))).toBe(true);
+    });
+  });
+
+  describe('sharing', () => {
+    const off = {isShared: false, permission: null, shareToken: null, shareUrl: null, sharedAt: null};
+    const on = {isShared: true, permission: 'view', shareToken: 'tok', shareUrl: 'https://aloca.test/shared/tok', sharedAt: 'x'};
+    const shareButton = (tree: Tree) => tree.root.findAll(n => n.props.accessibilityLabel === t('trips.share') && n.props.onPress)[0];
+    const toggle = (tree: Tree) => tree.root.findAll(n => n.props.accessibilityLabel === t('trips.shareToggle') && n.props.onValueChange)[0];
+
+    it('opens the dialog showing the status, turns sharing on and shows the link', async () => {
+      (tripsApi.shareStatus as jest.Mock).mockResolvedValue(off);
+      (tripsApi.enableShare as jest.Mock).mockResolvedValue(on);
+      const tree = await mount();
+      press(shareButton(tree));
+      await flush();
+      expect(tripsApi.shareStatus).toHaveBeenCalledWith('trip1');
+      expect(allText(tree)).toContain(t('trips.shareOff'));
+      await act(async () => toggle(tree).props.onValueChange(true));
+      await flush();
+      expect(tripsApi.enableShare).toHaveBeenCalledWith('trip1');
+      expect(allText(tree)).toContain(t('trips.shareOn'));
+      expect(allText(tree)).toContain('https://aloca.test/shared/tok');
+      expect(allText(tree)).toContain(t('trips.shareViewOnly'));
+    });
+
+    it('turns sharing off and hides the link', async () => {
+      (tripsApi.shareStatus as jest.Mock).mockResolvedValue(on);
+      (tripsApi.disableShare as jest.Mock).mockResolvedValue(off);
+      const tree = await mount();
+      press(shareButton(tree));
+      await flush();
+      await act(async () => toggle(tree).props.onValueChange(false));
+      await flush();
+      expect(tripsApi.disableShare).toHaveBeenCalledWith('trip1');
+      expect(allText(tree)).not.toContain('https://aloca.test/shared/tok');
+    });
+
+    it('sends the link through the system share sheet', async () => {
+      const share = jest.spyOn(Share, 'share').mockResolvedValue({action: 'sharedAction'} as any);
+      (tripsApi.shareStatus as jest.Mock).mockResolvedValue(on);
+      const tree = await mount();
+      press(shareButton(tree));
+      await flush();
+      pressText(tree, t('trips.shareCopy'));
+      expect(share).toHaveBeenCalledWith({message: 'https://aloca.test/shared/tok'});
+    });
+
+    it('tells the user when sharing cannot be changed', async () => {
+      (tripsApi.shareStatus as jest.Mock).mockResolvedValue(off);
+      (tripsApi.enableShare as jest.Mock).mockRejectedValue({response: {data: {message: 'boom'}}});
+      const tree = await mount();
+      press(shareButton(tree));
+      await flush();
+      await act(async () => toggle(tree).props.onValueChange(true));
+      await flush();
+      expect(alerts.some(a => a.title === t('trips.shareFailed'))).toBe(true);
+      expect(allText(tree)).toContain(t('trips.shareOff'));
+    });
   });
 
   it('shows the error of a trip that cannot be loaded', async () => {

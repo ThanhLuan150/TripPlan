@@ -280,6 +280,31 @@
       "saveFailed": "Could not save the plan",
       "duplicateName": "You already have a plan with this name"
     },
+    "share": {
+      "open": "Share",
+      "title": "Share this plan",
+      "toggle": "Turn link sharing on or off",
+      "statusOn": "Sharing is on",
+      "statusOff": "Sharing is off",
+      "hintOn": "Anyone with the link can view this plan.",
+      "hintOff": "Only you can see this plan.",
+      "permissionView": "View only: people with the link cannot edit anything.",
+      "linkLabel": "Share link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Could not copy the link, select it and copy by hand",
+      "failed": "Could not change the sharing",
+      "loadFailed": "Could not load the sharing status"
+    },
+    "shared": {
+      "readOnly": "Shared plan · view only",
+      "invalidTitle": "This link does not work",
+      "invalidText": "The link is wrong, or the owner turned sharing off.",
+      "errorTitle": "Could not load the plan",
+      "errorText": "Something went wrong. Please try again.",
+      "goHome": "Go to Aloca",
+      "footer": "Shared with Aloca"
+    },
     "detail": {
       "backToList": "Back to your plans",
       "viewMap": "View map",

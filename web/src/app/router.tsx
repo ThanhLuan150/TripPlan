@@ -18,6 +18,7 @@ import CreateTripPage from '@/features/trips/pages/CreateTripPage';
 import GenerateTripsPage from '@/features/trips/pages/GenerateTripsPage';
 import TripDetailPage from '@/features/trips/pages/TripDetailPage';
 import TripMapPage from '@/features/trips/pages/TripMapPage';
+import SharedTripPage from '@/features/trips/pages/SharedTripPage';
 import RankingPage from '@/features/ranking/pages/RankingPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import EditProfilePage from '@/features/profile/pages/EditProfilePage';
@@ -41,6 +42,9 @@ export default function AppRouter() {
         <Route path={routes.VerifyAccount} element={<VerifyAccountPage />} />
         <Route path={routes.RefreshVerifyCode} element={<ResetCodePage />} />
         <Route path={routes.NewPassword} element={<NewPasswordPage />} />
+
+        {/* public, read only view of a shared trip */}
+        <Route path="/shared/:token" element={<SharedTripPage />} />
 
         {/* signed in (any role) */}
         <Route element={<RequireAuth />}>

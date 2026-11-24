@@ -26,3 +26,13 @@ jest.mock('react-native-image-picker', () => ({
   launchCamera: jest.fn(),
   launchImageLibrary: jest.fn(),
 }));
+
+jest.mock('react-native-blob-util', () => ({
+  __esModule: true,
+  default: {
+    fs: {dirs: {CacheDir: '/cache'}, unlink: jest.fn(() => Promise.resolve())},
+    config: jest.fn(),
+    android: {actionViewIntent: jest.fn(() => Promise.resolve())},
+    ios: {openDocument: jest.fn(() => Promise.resolve())},
+  },
+}));

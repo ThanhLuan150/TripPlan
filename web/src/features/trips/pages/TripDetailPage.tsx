@@ -13,6 +13,7 @@ import {
   IoHeartOutline,
   IoLocationOutline,
   IoMap,
+  IoShareSocialOutline,
   IoTimeOutline,
 } from 'react-icons/io5';
 import {routes} from '@/app/routes';
@@ -25,6 +26,7 @@ import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import {safeFileName, saveBlob} from '@/lib/download';
 import {challengeApi, tripsApi} from '../api/tripsApi';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
+import ShareTripDialog from '../components/ShareTripDialog';
 import {images} from '../data/provinceImages';
 import {useFavoriteTrips, useToggleFavorite, useTripDetail} from '../hooks/useTrips';
 import type {Challenge} from '../types';
@@ -55,6 +57,7 @@ export default function TripDetailPage() {
   const queryClient = useQueryClient();
   const {idTrip} = useParams();
   const [exporting, setExporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const {data: result, isLoading, isError} = useTripDetail(idTrip);
   const favorites = useFavoriteTrips();
   const toggleFavorite = useToggleFavorite();
@@ -209,6 +212,14 @@ export default function TripDetailPage() {
             </button>
             <button
               type="button"
+              aria-label={t('trips.share.open')}
+              onClick={() => setSharing(true)}
+              className="flex h-10 items-center gap-2 rounded-full bg-white/90 px-3 text-sm font-semibold text-slate-800 backdrop-blur transition hover:bg-white md:px-4">
+              <IoShareSocialOutline size={18} className="text-brand-600" />
+              <span className="hidden sm:inline">{t('trips.share.open')}</span>
+            </button>
+            <button
+              type="button"
               aria-label={t('trips.detail.exportPdf')}
               disabled={exporting}
               onClick={exportPdf}
@@ -355,6 +366,8 @@ export default function TripDetailPage() {
           setRetake(null);
         }}
       />
+
+      {sharing && idTrip && <ShareTripDialog tripId={idTrip} onClose={() => setSharing(false)} />}
 
       {locating && (
         <ChallengeLocationDialog

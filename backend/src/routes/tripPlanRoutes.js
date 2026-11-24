@@ -22,6 +22,9 @@ router.post("/:id/favorite", ownTrip, tripPlanController.addFavoriteTrip);  // r
 router.delete("/:id/favorite", validTripId, tripPlanController.removeFavoriteTrip); // role: user|admin — removes only the caller's own favorite
 router.post("/:id/duplicate", ownTrip, logActivity("createTrip", (req) => `${req.trip?.nameTrip} (duplicate)`), tripPlanController.duplicateTrip); // role: user|admin + owner of the trip — copy owned by req.user
 router.get("/:id/export-pdf", ownTrip, tripPlanController.exportTripPdf); // role: user|admin + owner of the trip — read only, PDF download
+router.get("/:id/share", ownTrip, tripPlanController.getShareStatus);    // role: user|admin + owner of the trip
+router.post("/:id/share", ownTrip, tripPlanController.enableShare);      // role: user|admin + owner of the trip — idempotent
+router.delete("/:id/share", ownTrip, tripPlanController.disableShare);   // role: user|admin + owner of the trip — revokes the link
 router.delete("/:id", ownTrip, tripPlanController.deleteTrip);           // role: user|admin + owner of the trip — soft delete
 router.get("/location/:id", ownTrip, tripPlanController.getTripLocations); // role: user|admin + owner of the trip
 

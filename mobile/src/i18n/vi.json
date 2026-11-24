@@ -151,7 +151,20 @@
     "unfavorite": "Bỏ yêu thích",
     "favoriteFailed": "Không cập nhật được danh sách yêu thích",
     "favoritesEmpty": "Chưa có chuyến đi yêu thích. Nhấn vào trái tim ở chuyến đi để lưu tại đây.",
-    "favoritesError": "Không tải được danh sách yêu thích"
+    "favoritesError": "Không tải được danh sách yêu thích",
+    "exportPdf": "Xuất PDF",
+    "exportPdfFailed": "Không xuất được PDF",
+    "share": "Chia sẻ",
+    "shareTitle": "Chia sẻ kế hoạch",
+    "shareToggle": "Chia sẻ bằng liên kết",
+    "shareOn": "Đang chia sẻ",
+    "shareOff": "Chưa chia sẻ",
+    "shareHintOn": "Bất kỳ ai có liên kết đều xem được kế hoạch này.",
+    "shareHintOff": "Chỉ bạn xem được kế hoạch này.",
+    "shareViewOnly": "Chỉ xem: người có liên kết không thể chỉnh sửa gì.",
+    "shareCopy": "Sao chép / gửi liên kết",
+    "shareFailed": "Không thay đổi được chia sẻ",
+    "shareLoadFailed": "Không tải được trạng thái chia sẻ"
   },
   "tabs": {
     "home": "Trang chủ",

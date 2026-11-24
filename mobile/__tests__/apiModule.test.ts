@@ -135,6 +135,19 @@ describe('tripsApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/7/favorite');
   });
 
+  it('share: status, enable and disable use the share route', async () => {
+    const on = {isShared: true, permission: 'view', shareToken: 'tok', shareUrl: null, sharedAt: null};
+    get.mockResolvedValue(reply(on));
+    post.mockResolvedValue(reply(on));
+    del.mockResolvedValue(reply({...on, isShared: false}));
+    await expect(tripsApi.shareStatus('7')).resolves.toEqual(on);
+    await expect(tripsApi.enableShare('7')).resolves.toEqual(on);
+    await expect(tripsApi.disableShare('7')).resolves.toMatchObject({isShared: false});
+    expect(get).toHaveBeenCalledWith('/trip-plan/7/share');
+    expect(post).toHaveBeenCalledWith('/trip-plan/7/share');
+    expect(del).toHaveBeenCalledWith('/trip-plan/7/share');
+  });
+
   it('duplicate posts to the trip duplicate route', async () => {
     post.mockResolvedValue(reply({tripId: '8', nameTrip: 'x (bản sao)'}));
     await expect(tripsApi.duplicate('7')).resolves.toEqual({tripId: '8', nameTrip: 'x (bản sao)'});

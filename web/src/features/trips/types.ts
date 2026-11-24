@@ -35,6 +35,29 @@ export interface TripDetail {
   dataTripDays: TripDay[];
 }
 
+export interface ShareStatus {
+  isShared: boolean;
+  permission: 'view' | null;
+  shareToken: string | null;
+  sharedAt: string | null;
+}
+
+// What a share link shows: the plan only (no progress, photos or owner)
+export interface SharedTrip {
+  nameTrip?: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  dataTripDays: {
+    title: string;
+    date: string;
+    transportCost?: number;
+    foodCost?: number;
+    otherCost?: number;
+    challenges: {_id: string; challengeSummary: string; location?: string; points: number}[];
+  }[];
+}
+
 // Form values passed from "create" to "generate" (router state)
 export type BudgetTier = 'low' | 'mid' | 'high';
 

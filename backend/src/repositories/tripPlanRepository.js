@@ -26,7 +26,19 @@ const updateById = (id, update) => TripPlan.findByIdAndUpdate(id, update, { new:
 
 const softDelete = (id) => TripPlan.findByIdAndUpdate(id, { $set: { status: "delete" } }, { new: true });
 
+// Trip behind a share link: sharing on, not deleted. Anything else -> null.
+const findSharedByToken = (shareToken) => TripPlan.findOne({ shareToken, shareEnabled: true, ...ACTIVE });
+
+const enableShare = (id, shareToken) =>
+    TripPlan.findByIdAndUpdate(id, { $set: { shareEnabled: true, shareToken, sharePermission: "view", sharedAt: new Date() } }, { new: true });
+
+const disableShare = (id) =>
+    TripPlan.findByIdAndUpdate(id, { $set: { shareEnabled: false }, $unset: { shareToken: "", sharedAt: "" } }, { new: true });
+
 export default {
+    findSharedByToken,
+    enableShare,
+    disableShare,
     findById,
     findActiveByUser,
     findOwnedById,

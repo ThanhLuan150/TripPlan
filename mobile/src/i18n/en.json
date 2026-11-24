@@ -152,7 +152,20 @@
     "unfavorite": "Remove from favorites",
     "favoriteFailed": "Could not update your favorites",
     "favoritesEmpty": "No favorite trips yet. Tap the heart on a trip to save it here.",
-    "favoritesError": "Could not load your favorite trips"
+    "favoritesError": "Could not load your favorite trips",
+    "exportPdf": "Export PDF",
+    "exportPdfFailed": "Could not export the PDF",
+    "share": "Share",
+    "shareTitle": "Share this plan",
+    "shareToggle": "Link sharing",
+    "shareOn": "Sharing is on",
+    "shareOff": "Sharing is off",
+    "shareHintOn": "Anyone with the link can view this plan.",
+    "shareHintOff": "Only you can see this plan.",
+    "shareViewOnly": "View only: people with the link cannot edit anything.",
+    "shareCopy": "Copy / send link",
+    "shareFailed": "Could not change the sharing",
+    "shareLoadFailed": "Could not load the sharing status"
   },
   "tabs": {
     "home": "Home",

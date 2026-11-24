@@ -85,6 +85,76 @@ describe('trip list', () => {
     cy.findByText(t('trips.list.deleteFailed')).should('be.visible');
   });
 
+  it('duplicates a trip and reloads the list', () => {
+    let list = [...trips];
+    const calls = mockApi({
+      'GET /trip-plan/get-trip': () => ({dataTrip: list}),
+      'POST /trip-plan/t1/duplicate': () => {
+        list = [...list, {...trips[0], _id: 't4', nameTrip: 'Đà Lạt mộng mơ (bản sao)'}];
+        return {tripId: 't4', nameTrip: 'Đà Lạt mộng mơ (bản sao)'};
+      },
+    });
+    visit('/assistant/trips');
+
+    cy.findByRole('button', {name: t('trips.list.duplicateLabel', {name: 'Đà Lạt mộng mơ'})}).click();
+
+    expectCall(calls, 'POST', '/trip-plan/t1/duplicate');
+    cy.findByText('Đà Lạt mộng mơ (bản sao)').should('be.visible');
+    cy.findByText(t('trips.list.duplicateSuccess')).should('be.visible');
+  });
+
+  it('tells when a duplication failed', () => {
+    mockApi({'GET /trip-plan/get-trip': {dataTrip: trips}, 'POST /trip-plan/t1/duplicate': reply(500)});
+    visit('/assistant/trips');
+
+    cy.findByRole('button', {name: t('trips.list.duplicateLabel', {name: 'Đà Lạt mộng mơ'})}).click();
+
+    cy.findByText(t('trips.list.duplicateFailed')).should('be.visible');
+  });
+
+  it('adds a trip to the favorites and finds it on the favorites tab, then removes it', () => {
+    let favorites: typeof trips = [];
+    const calls = mockApi({
+      'GET /trip-plan/get-trip': {dataTrip: trips},
+      'GET /trip-plan/favorites': () => ({dataTrip: favorites}),
+      'POST /trip-plan/t1/favorite': () => {
+        favorites = [trips[0]];
+        return {isFavorite: true};
+      },
+      'DELETE /trip-plan/t1/favorite': () => {
+        favorites = [];
+        return {isFavorite: false};
+      },
+    });
+    visit('/assistant/trips');
+
+    cy.findByRole('button', {name: t('trips.list.favoriteLabel', {name: 'Đà Lạt mộng mơ'})}).click();
+    expectCall(calls, 'POST', '/trip-plan/t1/favorite');
+    cy.findByRole('button', {name: t('trips.list.unfavoriteLabel', {name: 'Đà Lạt mộng mơ'})}).should('be.visible');
+
+    cy.findByRole('tab', {name: new RegExp(t('trips.list.tabFavorites'))}).click();
+    cy.findByText('Đà Lạt mộng mơ').should('be.visible');
+    cy.findByText('Biển Nha Trang').should('not.exist');
+
+    cy.findByRole('button', {name: t('trips.list.unfavoriteLabel', {name: 'Đà Lạt mộng mơ'})}).click();
+    expectCall(calls, 'DELETE', '/trip-plan/t1/favorite');
+    cy.findByText(t('trips.list.favoritesEmptyTitle')).should('be.visible');
+  });
+
+  it('puts the heart back and tells when a favorite cannot be saved', () => {
+    mockApi({
+      'GET /trip-plan/get-trip': {dataTrip: trips},
+      'GET /trip-plan/favorites': {dataTrip: []},
+      'POST /trip-plan/t1/favorite': reply(500),
+    });
+    visit('/assistant/trips');
+
+    cy.findByRole('button', {name: t('trips.list.favoriteLabel', {name: 'Đà Lạt mộng mơ'})}).click();
+
+    cy.findByText(t('trips.list.favoriteFailed')).should('be.visible');
+    cy.findByRole('button', {name: t('trips.list.favoriteLabel', {name: 'Đà Lạt mộng mơ'})}).should('be.visible');
+  });
+
   it('shows the empty state when there is no active trip', () => {
     mockApi({'GET /trip-plan/get-trip': {dataTrip: [trips[1]]}});
     visit('/assistant/trips');

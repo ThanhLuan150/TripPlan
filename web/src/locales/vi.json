@@ -280,6 +280,31 @@
       "saveFailed": "Lưu kế hoạch không thành công",
       "duplicateName": "Bạn đã có kế hoạch trùng tên"
     },
+    "share": {
+      "open": "Chia sẻ",
+      "title": "Chia sẻ kế hoạch",
+      "toggle": "Bật hoặc tắt chia sẻ bằng liên kết",
+      "statusOn": "Đang chia sẻ",
+      "statusOff": "Chưa chia sẻ",
+      "hintOn": "Bất kỳ ai có liên kết đều xem được kế hoạch này.",
+      "hintOff": "Chỉ bạn xem được kế hoạch này.",
+      "permissionView": "Chỉ xem: người có liên kết không thể chỉnh sửa gì.",
+      "linkLabel": "Liên kết chia sẻ",
+      "copy": "Sao chép",
+      "copied": "Đã sao chép",
+      "copyFailed": "Không sao chép được, hãy chọn liên kết và sao chép thủ công",
+      "failed": "Không thay đổi được chia sẻ",
+      "loadFailed": "Không tải được trạng thái chia sẻ"
+    },
+    "shared": {
+      "readOnly": "Kế hoạch được chia sẻ · chỉ xem",
+      "invalidTitle": "Liên kết không hoạt động",
+      "invalidText": "Liên kết không đúng hoặc chủ sở hữu đã tắt chia sẻ.",
+      "errorTitle": "Không tải được kế hoạch",
+      "errorText": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "goHome": "Đến Aloca",
+      "footer": "Được chia sẻ qua Aloca"
+    },
     "detail": {
       "backToList": "Quay lại danh sách kế hoạch",
       "viewMap": "Xem bản đồ",
