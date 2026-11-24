@@ -13,6 +13,14 @@ export const tripsApi = {
   duplicate: async (id: string) =>
     (await api.post<{tripId: string; nameTrip: string}>(`/trip-plan/${id}/duplicate`)).data,
 
+  // favorites of the signed-in user (deleted trips are left out by the backend)
+  favorites: async () =>
+    (await api.get<{dataTrip: Trip[]}>('/trip-plan/favorites')).data.dataTrip,
+
+  addFavorite: async (id: string) => (await api.post(`/trip-plan/${id}/favorite`)).data,
+
+  removeFavorite: async (id: string) => (await api.delete(`/trip-plan/${id}/favorite`)).data,
+
   // AI suggestions (nothing is saved yet)
   generate: async (params: GenerateTripParams) =>
     (

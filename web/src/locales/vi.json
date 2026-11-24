@@ -201,7 +201,17 @@
       "duplicateLabel": "Sao chép kế hoạch {{name}}",
       "duplicateSuccess": "Đã sao chép kế hoạch",
       "duplicateSuccessText": "Đã tạo {{name}}",
-      "duplicateFailed": "Không sao chép được kế hoạch"
+      "duplicateFailed": "Không sao chép được kế hoạch",
+      "tabAll": "Tất cả kế hoạch",
+      "tabFavorites": "Yêu thích",
+      "favorite": "Thêm vào yêu thích",
+      "unfavorite": "Bỏ yêu thích",
+      "favoriteLabel": "Thêm kế hoạch {{name}} vào yêu thích",
+      "unfavoriteLabel": "Bỏ yêu thích kế hoạch {{name}}",
+      "favoriteFailed": "Không cập nhật được danh sách yêu thích",
+      "favoritesEmptyTitle": "Chưa có kế hoạch yêu thích",
+      "favoritesEmptyText": "Nhấn vào biểu tượng trái tim ở kế hoạch để tìm lại nhanh tại đây.",
+      "favoritesError": "Không tải được danh sách yêu thích"
     },
     "create": {
       "title": "Lên kế hoạch chuyến đi",

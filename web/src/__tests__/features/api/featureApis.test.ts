@@ -193,6 +193,20 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1');
   });
 
+  it('favorites: list, add and remove use the favorite routes', async () => {
+    get.mockResolvedValue(reply({dataTrip: [{_id: 't1'}]}));
+    post.mockResolvedValue(reply({isFavorite: true}));
+    del.mockResolvedValue(reply({isFavorite: false}));
+
+    await expect(tripsApi.favorites()).resolves.toEqual([{_id: 't1'}]);
+    await expect(tripsApi.addFavorite('t1')).resolves.toEqual({isFavorite: true});
+    await expect(tripsApi.removeFavorite('t1')).resolves.toEqual({isFavorite: false});
+
+    expect(get).toHaveBeenCalledWith('/trip-plan/favorites');
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/favorite');
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/favorite');
+  });
+
   it('duplicate posts to the duplicate route', async () => {
     post.mockResolvedValue(reply({tripId: 't2', nameTrip: 'x (bản sao)'}));
 

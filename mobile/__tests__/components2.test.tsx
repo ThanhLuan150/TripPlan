@@ -48,6 +48,21 @@ describe('TripItem duplicate', () => {
   });
 });
 
+describe('TripItem favorite', () => {
+  const trip = {_id: '1', nameTrip: 'Hue', location: 'Huế', startDate: '2026-03-05', endDate: '2026-03-07', status: 'x'};
+  it('shows a heart only when onToggleFavorite is given and reports its state', () => {
+    const onToggleFavorite = jest.fn();
+    const off = render(<TripItem trip={trip} onOpen={jest.fn()} onDelete={jest.fn()} onToggleFavorite={onToggleFavorite} />);
+    expect(touchables(off)).toHaveLength(3);
+    expect(touchables(off)[1].props.accessibilityState).toEqual({selected: false});
+    press(touchables(off)[1]);
+    expect(onToggleFavorite).toHaveBeenCalled();
+    const on = render(<TripItem trip={trip} onOpen={jest.fn()} onDelete={jest.fn()} favorite onToggleFavorite={onToggleFavorite} />);
+    expect(touchables(on)[1].props.accessibilityState).toEqual({selected: true});
+    expect(touchables(render(<TripItem trip={trip} onOpen={jest.fn()} onDelete={jest.fn()} />))).toHaveLength(2);
+  });
+});
+
 describe('VideoRail', () => {
   it('opens the YouTube link of a video', () => {
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);

@@ -145,7 +145,14 @@
     "estimate": "VND/person (estimate)",
     "backToPlan": "Back to the plan",
     "noLocation": "This challenge has no known location yet, so you cannot check in.",
-    "locationUnavailable": "Could not get your location. Turn on GPS and try again."
+    "locationUnavailable": "Could not get your location. Turn on GPS and try again.",
+    "tabAll": "All trips",
+    "tabFavorites": "Favorites",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "favoriteFailed": "Could not update your favorites",
+    "favoritesEmpty": "No favorite trips yet. Tap the heart on a trip to save it here.",
+    "favoritesError": "Could not load your favorite trips"
   },
   "tabs": {
     "home": "Home",

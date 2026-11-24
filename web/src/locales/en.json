@@ -201,7 +201,17 @@
       "duplicateLabel": "Duplicate plan {{name}}",
       "duplicateSuccess": "Plan duplicated",
       "duplicateSuccessText": "Created {{name}}",
-      "duplicateFailed": "Could not duplicate the plan"
+      "duplicateFailed": "Could not duplicate the plan",
+      "tabAll": "All plans",
+      "tabFavorites": "Favorites",
+      "favorite": "Add to favorites",
+      "unfavorite": "Remove from favorites",
+      "favoriteLabel": "Add plan {{name}} to favorites",
+      "unfavoriteLabel": "Remove plan {{name}} from favorites",
+      "favoriteFailed": "Could not update your favorites",
+      "favoritesEmptyTitle": "No favorite plans yet",
+      "favoritesEmptyText": "Tap the heart on a plan to find it here quickly.",
+      "favoritesError": "Could not load your favorite plans"
     },
     "create": {
       "title": "Plan a trip",

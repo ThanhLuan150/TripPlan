@@ -28,6 +28,7 @@ export interface TripDay {
 }
 
 export interface TripDetail {
+  nameTrip?: string;
   location: string;
   startDate: string;
   endDate: string;

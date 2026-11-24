@@ -144,7 +144,14 @@
     "estimate": "VND/người (Ước tính)",
     "backToPlan": "Quay lại kế hoạch",
     "noLocation": "Chưa xác định được vị trí của thử thách này nên chưa thể check-in.",
-    "locationUnavailable": "Không lấy được vị trí. Hãy bật GPS rồi thử lại."
+    "locationUnavailable": "Không lấy được vị trí. Hãy bật GPS rồi thử lại.",
+    "tabAll": "Tất cả",
+    "tabFavorites": "Yêu thích",
+    "favorite": "Thêm vào yêu thích",
+    "unfavorite": "Bỏ yêu thích",
+    "favoriteFailed": "Không cập nhật được danh sách yêu thích",
+    "favoritesEmpty": "Chưa có chuyến đi yêu thích. Nhấn vào trái tim ở chuyến đi để lưu tại đây.",
+    "favoritesError": "Không tải được danh sách yêu thích"
   },
   "tabs": {
     "home": "Trang chủ",

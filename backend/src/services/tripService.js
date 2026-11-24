@@ -1,4 +1,5 @@
 import tripPlanRepository from "../repositories/tripPlanRepository.js";
+import favoriteTripRepository from "../repositories/favoriteTripRepository.js";
 import tripDayRepository from "../repositories/tripDayRepository.js";
 import challengeRepository from "../repositories/challengeRepository.js";
 import challengeProgressRepository from "../repositories/challengeProgressRepository.js";
@@ -250,4 +251,25 @@ const duplicateTrip = async (trip, userId) => {
     return { message: "Trip duplicated successfully", tripId: copy._id, nameTrip: copy.nameTrip };
 };
 
-export default { generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations, duplicateTrip };
+// Favorites of the user (newest first). Trips deleted since are left out.
+const listFavoriteTrips = async (userId) => {
+    const favorites = await favoriteTripRepository.findByUser(userId);
+    const dataTrip = favorites
+        .map((favorite) => favorite.tripId)
+        .filter((trip) => trip && trip.status !== "delete" && String(trip.userId) === String(userId));
+    return { message: "Get Favorite Trips Successfully", dataTrip };
+};
+
+// trip: already loaded by ownTrip (owned by the user and not deleted)
+const addFavoriteTrip = async (trip, userId) => {
+    await favoriteTripRepository.add(userId, trip._id);
+    return { message: "Trip added to favorites", tripId: trip._id, isFavorite: true };
+};
+
+// Only the user's own favorite row is touched; works even if the trip was deleted meanwhile.
+const removeFavoriteTrip = async (tripId, userId) => {
+    await favoriteTripRepository.remove(userId, tripId);
+    return { message: "Trip removed from favorites", tripId, isFavorite: false };
+};
+
+export default { listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations, duplicateTrip };

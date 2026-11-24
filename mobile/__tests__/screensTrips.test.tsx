@@ -33,7 +33,7 @@ jest.mock('../src/api', () => ({
   contentApi: {home: jest.fn(), videos: jest.fn()},
   rankingApi: {get: jest.fn()},
   profileApi: {notifications: jest.fn(), update: jest.fn()},
-  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn()},
+  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;
@@ -45,6 +45,7 @@ let alerts: any[] = [];
 let off: () => void;
 beforeEach(() => {
   jest.clearAllMocks();
+  (tripsApi.favorites as jest.Mock).mockResolvedValue([]);
   resetNav();
   alerts = [];
   off = subscribeAlert(a => alerts.push(a));
@@ -115,6 +116,81 @@ describe('Trips', () => {
     expect(nav.navigate).toHaveBeenCalledWith('TripDetail', {id: 't1'});
     press(touchables(tree)[0]);
     expect(nav.navigate).toHaveBeenCalledWith('CreateTrip');
+  });
+
+  describe('favorites', () => {
+    const second = {_id: 't2', nameTrip: 'Nha Trang', location: 'Khánh Hòa', startDate: '2026-05-10', endDate: '2026-05-12', status: 'x'};
+    const heartOf = (tree: Tree, i: number) => touchables(tree).filter(x => x.props.accessibilityState?.selected !== undefined && x.props.accessibilityRole === 'button')[i];
+    const tabOf = (tree: Tree, i: number) => touchables(tree).filter(x => x.props.accessibilityRole === 'tab')[i];
+
+    beforeEach(() => {
+      (tripsApi.list as jest.Mock).mockResolvedValue([trips[0], second]);
+      (tripsApi.favorites as jest.Mock).mockResolvedValue([]);
+      (tripsApi.addFavorite as jest.Mock).mockResolvedValue({});
+      (tripsApi.removeFavorite as jest.Mock).mockResolvedValue({});
+    });
+
+    it('adds a trip to the favorites, shows the heart as selected and reloads', async () => {
+      const tree = renderApp(<Trips />);
+      await flush();
+      expect(heartOf(tree, 0).props.accessibilityState.selected).toBe(false);
+      (tripsApi.favorites as jest.Mock).mockResolvedValue([trips[0]]);
+      press(heartOf(tree, 0));
+      await flush();
+      expect(tripsApi.addFavorite).toHaveBeenCalledWith('t1');
+      expect(heartOf(tree, 0).props.accessibilityState.selected).toBe(true);
+      expect(heartOf(tree, 1).props.accessibilityState.selected).toBe(false);
+      expect(tripsApi.favorites).toHaveBeenCalledTimes(2);
+    });
+
+    it('removes a trip from the favorites', async () => {
+      (tripsApi.favorites as jest.Mock).mockResolvedValue([trips[0]]);
+      const tree = renderApp(<Trips />);
+      await flush();
+      (tripsApi.favorites as jest.Mock).mockResolvedValue([]);
+      press(heartOf(tree, 0));
+      await flush();
+      expect(tripsApi.removeFavorite).toHaveBeenCalledWith('t1');
+      expect(tripsApi.addFavorite).not.toHaveBeenCalled();
+      expect(heartOf(tree, 0).props.accessibilityState.selected).toBe(false);
+    });
+
+    it('goes back and tells the user when it fails', async () => {
+      (tripsApi.addFavorite as jest.Mock).mockRejectedValue({response: {data: {message: 'Data Trip not found!'}}});
+      const tree = renderApp(<Trips />);
+      await flush();
+      press(heartOf(tree, 0));
+      await flush();
+      expect(alerts[0].type).toBe('error');
+      expect(heartOf(tree, 0).props.accessibilityState.selected).toBe(false);
+    });
+
+    it('lists only the favorites in the favorites tab, hiding deleted trips', async () => {
+      (tripsApi.favorites as jest.Mock).mockResolvedValue([second, {...trips[0], status: 'delete'}]);
+      const tree = renderApp(<Trips />);
+      await flush();
+      press(tabOf(tree, 1));
+      await flush();
+      expect(allText(tree)).toContain('Nha Trang');
+      expect(allText(tree)).not.toContain('Hue');
+    });
+
+    it('shows the empty state of the favorites', async () => {
+      const tree = renderApp(<Trips />);
+      await flush();
+      press(tabOf(tree, 1));
+      await flush();
+      expect(allText(tree)).toContain(t('trips.favoritesEmpty'));
+    });
+
+    it('shows an error when the favorites cannot be loaded', async () => {
+      (tripsApi.favorites as jest.Mock).mockRejectedValue(new Error('500'));
+      const tree = renderApp(<Trips />);
+      await flush();
+      press(tabOf(tree, 1));
+      await flush();
+      expect(allText(tree)).toContain(t('trips.favoritesError'));
+    });
   });
 
   it('duplicates a trip, reloads the list and tells it worked', async () => {

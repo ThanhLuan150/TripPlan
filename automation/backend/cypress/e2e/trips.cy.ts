@@ -120,6 +120,45 @@ describe('trips', () => {
     });
   });
 
+  it('favorites: add is idempotent (no duplicate), list is per user, remove works', () => {
+    signIn().then(owner => {
+      signIn().then(other => {
+        saveTrip(owner.token, 'Fav').then(({tripId}) => {
+          post(`/trip-plan/${tripId}/favorite`, owner.token).its('status').should('eq', 200);
+          post(`/trip-plan/${tripId}/favorite`, owner.token).its('status').should('eq', 200);
+          get('/trip-plan/favorites', owner.token).its('body.dataTrip').should('have.length', 1);
+          // another account sees nothing and cannot touch the list of the owner
+          get('/trip-plan/favorites', other.token).its('body.dataTrip').should('deep.eq', []);
+          post(`/trip-plan/${tripId}/favorite`, other.token).its('status').should('eq', 404);
+          del(`/trip-plan/${tripId}/favorite`, other.token).its('status').should('eq', 200);
+          get('/trip-plan/favorites', owner.token).its('body.dataTrip').should('have.length', 1);
+          del(`/trip-plan/${tripId}/favorite`, owner.token).its('status').should('eq', 200);
+          get('/trip-plan/favorites', owner.token).its('body.dataTrip').should('deep.eq', []);
+        });
+      });
+    });
+  });
+
+  it('favorites: a deleted trip leaves the favorites list', () => {
+    signIn().then(({token}) => {
+      saveTrip(token, 'Fav then delete').then(({tripId}) => {
+        post(`/trip-plan/${tripId}/favorite`, token).its('status').should('eq', 200);
+        del(`/trip-plan/${tripId}`, token).its('status').should('eq', 200);
+        get('/trip-plan/favorites', token).its('body.dataTrip').should('deep.eq', []);
+        post(`/trip-plan/${tripId}/favorite`, token).its('status').should('eq', 404);
+        del(`/trip-plan/${tripId}/favorite`, token).its('status').should('eq', 200);
+      });
+    });
+  });
+
+  it('favorites: 404 for invalid ids and 401 without a token', () => {
+    signIn().then(({token}) => {
+      post('/trip-plan/not-an-id/favorite', token).its('status').should('eq', 404);
+      del('/trip-plan/not-an-id/favorite', token).its('status').should('eq', 404);
+      get('/trip-plan/favorites').its('status').should('eq', 401);
+    });
+  });
+
   it('answers 404 for an id that is not an ObjectId', () => {
     signIn().then(({token}) => get('/trip-plan/get-trip/not-an-id', token).its('status').should('eq', 404));
   });
