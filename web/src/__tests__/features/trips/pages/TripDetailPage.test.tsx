@@ -297,3 +297,51 @@ describe('favorite button', () => {
   });
 });
 });
+
+describe('export PDF button', () => {
+
+  it('downloads the PDF named after the trip', async () => {
+    const blob = new Blob(['%PDF'], {type: 'application/pdf'});
+    vi.mocked(tripsApi.exportPdf).mockResolvedValue(blob);
+    const createUrl = vi.fn(() => 'blob:pdf');
+    const revokeUrl = vi.fn();
+    Object.assign(URL, {createObjectURL: createUrl, revokeObjectURL: revokeUrl});
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    vi.mocked(tripsApi.get).mockResolvedValue({...trip, nameTrip: 'Đà Lạt: 3/2?'} as never);
+    const user = userEvent.setup();
+    render();
+
+    await user.click(await screen.findByRole('button', {name: t('trips.detail.exportPdf')}));
+
+    await vi.waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+    expect(tripsApi.exportPdf).toHaveBeenCalledWith('t1', expect.stringMatching(/^(vi|en)$/));
+    expect(createUrl).toHaveBeenCalledWith(blob);
+    expect(click.mock.instances[0]).toHaveProperty('download', 'Đà Lạt 3 2.pdf');
+    expect(revokeUrl).toHaveBeenCalledWith('blob:pdf');
+    click.mockRestore();
+  });
+
+  it('tells the user when the PDF cannot be created', async () => {
+    vi.mocked(tripsApi.exportPdf).mockRejectedValue(httpError(500));
+    const user = userEvent.setup();
+    render();
+
+    await user.click(await screen.findByRole('button', {name: t('trips.detail.exportPdf')}));
+
+    expect(await screen.findByText(t('trips.detail.exportPdfFailed'))).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: t('trips.detail.exportPdf')})).toBeEnabled();
+  });
+
+  it('is disabled while the PDF is being created', async () => {
+    vi.mocked(tripsApi.exportPdf).mockReturnValue(pending());
+    const user = userEvent.setup();
+    render();
+
+    const button = await screen.findByRole('button', {name: t('trips.detail.exportPdf')});
+    await user.click(button);
+
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(tripsApi.exportPdf).toHaveBeenCalledTimes(1);
+  });
+});

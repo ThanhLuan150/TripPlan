@@ -29,7 +29,14 @@ const duplicateTrip = asyncHandler(async (req, res) => {
     res.status(201).json(await tripService.duplicateTrip(req.trip, req.user._id));
 });
 
-const listFavoriteTrips = asyncHandler(async (req, res) => {
+const exportTripPdf = asyncHandler(async (req, res) => {
+    const lang = req.query?.lang === "en" ? "en" : "vi";
+    const { filename, buffer } = await tripService.exportTripPdf(req.trip, req.user._id, lang);
+    res.attachment(filename); // also sets Content-Type: application/pdf from the extension
+    res.send(buffer);
+});
+
+const listFavoriteTrips =asyncHandler(async (req, res) => {
     res.status(200).json(await tripService.listFavoriteTrips(req.user._id));
 });
 
@@ -41,4 +48,4 @@ const removeFavoriteTrip = asyncHandler(async (req, res) => {
     res.status(200).json(await tripService.removeFavoriteTrip(req.params.id, req.user._id));
 });
 
-export default { listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };
+export default { exportTripPdf, listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };

@@ -8,6 +8,7 @@ import {
   IoCamera,
   IoCheckmarkCircle,
   IoChevronDown,
+  IoDocumentTextOutline,
   IoHeart,
   IoHeartOutline,
   IoLocationOutline,
@@ -21,7 +22,8 @@ import Toast from '@/components/ui/Toast';
 import {addCommas, formatDate} from '@/lib/date';
 import {connectionErrorKey} from '@/lib/apiClient';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
-import {challengeApi} from '../api/tripsApi';
+import {safeFileName, saveBlob} from '@/lib/download';
+import {challengeApi, tripsApi} from '../api/tripsApi';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
 import {images} from '../data/provinceImages';
 import {useFavoriteTrips, useToggleFavorite, useTripDetail} from '../hooks/useTrips';
@@ -48,10 +50,11 @@ function Cost({label, value}: {label: string; value?: number}) {
 }
 
 export default function TripDetailPage() {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const {idTrip} = useParams();
+  const [exporting, setExporting] = useState(false);
   const {data: result, isLoading, isError} = useTripDetail(idTrip);
   const favorites = useFavoriteTrips();
   const toggleFavorite = useToggleFavorite();
@@ -64,6 +67,27 @@ export default function TripDetailPage() {
   // challenge whose "add photo" dialog is open (location check -> camera)
   const [locating, setLocating] = useState<Challenge | null>(null);
   const [heroError, setHeroError] = useState(false);
+
+  // Downloads the PDF the backend builds from the saved trip (nothing is changed).
+  const exportPdf = async () => {
+    if (!idTrip || exporting) {
+      return;
+    }
+    setExporting(true);
+    try {
+      const blob = await tripsApi.exportPdf(idTrip, i18n.language?.startsWith('en') ? 'en' : 'vi');
+      saveBlob(blob, `${safeFileName(result?.nameTrip ?? result?.location, 'trip')}.pdf`);
+    } catch (error) {
+      console.log(error);
+      Toast.show({
+        type: 'error',
+        text1: t('common.failed'),
+        text2: t(connectionErrorKey(error) ?? 'trips.detail.exportPdfFailed'),
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const toggleDay = (day: string) =>
     setOpenDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]));
@@ -182,6 +206,17 @@ export default function TripDetailPage() {
               }
               className="grid size-10 place-items-center rounded-full bg-white/90 text-slate-800 backdrop-blur transition hover:bg-white">
               {isFavorite ? <IoHeart size={20} className="text-rose-500" /> : <IoHeartOutline size={20} />}
+            </button>
+            <button
+              type="button"
+              aria-label={t('trips.detail.exportPdf')}
+              disabled={exporting}
+              onClick={exportPdf}
+              className="flex h-10 items-center gap-2 rounded-full bg-white/90 px-3 text-sm font-semibold text-slate-800 backdrop-blur transition hover:bg-white disabled:opacity-60 md:px-4">
+              <IoDocumentTextOutline size={18} className="text-brand-600" />
+              <span className="hidden sm:inline">
+                {t(exporting ? 'trips.detail.exportingPdf' : 'trips.detail.exportPdf')}
+              </span>
             </button>
             <button
               type="button"

@@ -4,6 +4,7 @@ import tripDayRepository from "../repositories/tripDayRepository.js";
 import challengeRepository from "../repositories/challengeRepository.js";
 import challengeProgressRepository from "../repositories/challengeProgressRepository.js";
 import HttpError from "../utils/HttpError.js";
+import { buildTripPdf, pdfFileName } from "./tripPdfService.js";
 import { startChat, getResponseText } from "../utils/gemini.js";
 import { getDayOfWeek } from "../utils/date.js";
 import { getLocationFromNameLocation } from "../utils/geocode.js";
@@ -251,6 +252,12 @@ const duplicateTrip = async (trip, userId) => {
     return { message: "Trip duplicated successfully", tripId: copy._id, nameTrip: copy.nameTrip };
 };
 
+// PDF of a trip the user owns (loaded by ownTrip). Read only: nothing is written.
+const exportTripPdf = async (trip, userId, lang) => {
+    const { tripDatas } = await getTripDetail(trip, userId);
+    return { filename: pdfFileName(tripDatas.nameTrip ?? tripDatas.location, lang), buffer: await buildTripPdf(tripDatas, lang) };
+};
+
 // Favorites of the user (newest first). Trips deleted since are left out.
 const listFavoriteTrips = async (userId) => {
     const favorites = await favoriteTripRepository.findByUser(userId);
@@ -272,4 +279,4 @@ const removeFavoriteTrip = async (tripId, userId) => {
     return { message: "Trip removed from favorites", tripId, isFavorite: false };
 };
 
-export default { listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations, duplicateTrip };
+export default { exportTripPdf, listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations, duplicateTrip };

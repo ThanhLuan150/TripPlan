@@ -151,6 +151,58 @@ describe('trips', () => {
     });
   });
 
+  it('export PDF: the owner gets a PDF named after the trip, nothing is changed', () => {
+    signIn().then(({token}) => {
+      saveTrip(token, 'Da Nang: PDF/test').then(({tripId}) => {
+        get(`/trip-plan/get-trip/${tripId}`, token).then(before => {
+          get(`/trip-plan/${tripId}/export-pdf`, token, {lang: 'en'}).then(res => {
+            expect(res.status).to.eq(200);
+            expect(String(res.headers['content-type'])).to.contain('application/pdf');
+            expect(String(res.headers['content-disposition'])).to.contain('attachment').and.to.contain('filename="Da Nang PDF test.pdf"');
+            expect(String(res.body).startsWith('%PDF-')).to.eq(true);
+          });
+          // exporting is read only
+          get(`/trip-plan/get-trip/${tripId}`, token).its('body').should('deep.eq', before.body);
+        });
+      });
+    });
+  });
+
+  it('export PDF: a trip without any day still exports', () => {
+    signIn().then(({token}) => {
+      post('/trip-plan/save-trip', token, {
+        nameTrip: 'Empty plan',
+        location: 'Huế',
+        startDate: '2026-12-01',
+        endDate: '2026-12-02',
+        jsonTrip: {},
+      }).then(saved => {
+        expect(saved.status).to.eq(200);
+        get(`/trip-plan/${saved.body.tripId}/export-pdf`, token).then(res => {
+          expect(res.status).to.eq(200);
+          expect(String(res.body).startsWith('%PDF-')).to.eq(true);
+        });
+      });
+    });
+  });
+
+  it('export PDF: someone else\'s or a deleted trip gives 404, no token 401', () => {
+    signIn().then(owner => {
+      signIn().then(other => {
+        saveTrip(owner.token).then(({tripId}) => {
+          get(`/trip-plan/${tripId}/export-pdf`, other.token).its('status').should('eq', 404);
+          get(`/trip-plan/${tripId}/export-pdf`).its('status').should('eq', 401);
+          del(`/trip-plan/${tripId}`, owner.token).its('status').should('eq', 200);
+          get(`/trip-plan/${tripId}/export-pdf`, owner.token).its('status').should('eq', 404);
+        });
+      });
+    });
+    signIn().then(({token}) => {
+      get('/trip-plan/not-an-id/export-pdf', token).its('status').should('eq', 404);
+      get('/trip-plan/64b0000000000000000000aa/export-pdf', token).its('status').should('eq', 404);
+    });
+  });
+
   it('favorites: 404 for invalid ids and 401 without a token', () => {
     signIn().then(({token}) => {
       post('/trip-plan/not-an-id/favorite', token).its('status').should('eq', 404);

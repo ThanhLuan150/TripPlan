@@ -1,5 +1,5 @@
 import {tripDetail, trips} from '../../support/fixtures';
-import {mockApi, reply, signIn, t, visit} from '../../support/helpers';
+import {expectCall, mockApi, reply, signIn, t, visit} from '../../support/helpers';
 
 const api = {'GET /trip-plan/get-trip/t1': {tripDatas: tripDetail}, 'GET /trip-plan/get-trip': {dataTrip: trips}};
 
@@ -83,5 +83,25 @@ describe('trip detail', () => {
     cy.findByRole('button', {name: t('trips.detail.backToList')}).click();
 
     cy.location('pathname').should('eq', '/assistant/trips');
+  });
+
+  it('exports the trip as a PDF', () => {
+    const calls = mockApi({...api, 'GET /trip-plan/t1/export-pdf': '%PDF-1.3'});
+    visit('/assistant/trips/t1');
+
+    cy.findByRole('button', {name: t('trips.detail.exportPdf')}).click();
+
+    expectCall(calls, 'GET', '/trip-plan/t1/export-pdf').its('query.lang').should('eq', 'vi');
+    cy.findByRole('button', {name: t('trips.detail.exportPdf')}).should('be.enabled');
+    cy.findByText(t('trips.detail.exportPdfFailed')).should('not.exist');
+  });
+
+  it('tells the user when the PDF cannot be created', () => {
+    mockApi({...api, 'GET /trip-plan/t1/export-pdf': reply(500)});
+    visit('/assistant/trips/t1');
+
+    cy.findByRole('button', {name: t('trips.detail.exportPdf')}).click();
+
+    cy.findByText(t('trips.detail.exportPdfFailed')).should('be.visible');
   });
 });
