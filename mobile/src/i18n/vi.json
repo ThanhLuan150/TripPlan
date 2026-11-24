@@ -31,6 +31,8 @@
   "trips": {
     "empty": "Chưa có chuyến đi nào",
     "deleteTitle": "Xoá chuyến đi?",
+    "duplicateSuccess": "Đã tạo bản sao: {{name}}",
+    "duplicateFailed": "Không sao chép được chuyến đi",
     "detail": "Chi tiết chuyến đi",
     "points": "{{count}} điểm",
     "addNew": "Thêm mới một kế hoạch",

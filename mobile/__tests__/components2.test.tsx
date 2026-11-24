@@ -35,6 +35,19 @@ describe('TripItem', () => {
   });
 });
 
+describe('TripItem duplicate', () => {
+  const trip = {_id: '1', nameTrip: 'Hue', location: 'Huế', startDate: '2026-03-05', endDate: '2026-03-07', status: 'x'};
+  it('shows a copy button only when onDuplicate is given', () => {
+    const onDuplicate = jest.fn();
+    const withCopy = render(<TripItem trip={trip} onOpen={jest.fn()} onDelete={jest.fn()} onDuplicate={onDuplicate} />);
+    expect(touchables(withCopy)).toHaveLength(3);
+    press(touchables(withCopy)[1]);
+    expect(onDuplicate).toHaveBeenCalled();
+    const without = render(<TripItem trip={trip} onOpen={jest.fn()} onDelete={jest.fn()} />);
+    expect(touchables(without)).toHaveLength(2);
+  });
+});
+
 describe('VideoRail', () => {
   it('opens the YouTube link of a video', () => {
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);

@@ -193,6 +193,13 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1');
   });
 
+  it('duplicate posts to the duplicate route', async () => {
+    post.mockResolvedValue(reply({tripId: 't2', nameTrip: 'x (bản sao)'}));
+
+    await expect(tripsApi.duplicate('t1')).resolves.toEqual({tripId: 't2', nameTrip: 'x (bản sao)'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/duplicate');
+  });
+
   it('generate maps the form to the backend fields', async () => {
     post.mockResolvedValue(reply({data: {plan1: {}}}));
 

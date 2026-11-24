@@ -122,6 +122,12 @@ describe('tripsApi', () => {
     await expect(tripsApi.remove('7')).resolves.toEqual({message: 'deleted'});
     expect(del).toHaveBeenCalledWith('/trip-plan/7');
   });
+
+  it('duplicate posts to the trip duplicate route', async () => {
+    post.mockResolvedValue(reply({tripId: '8', nameTrip: 'x (bản sao)'}));
+    await expect(tripsApi.duplicate('7')).resolves.toEqual({tripId: '8', nameTrip: 'x (bản sao)'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/7/duplicate');
+  });
 });
 
 describe('rankingApi', () => {

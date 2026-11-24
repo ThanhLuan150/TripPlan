@@ -31,6 +31,8 @@
   "trips": {
     "empty": "No trips yet",
     "deleteTitle": "Delete this trip?",
+    "duplicateSuccess": "Created a copy: {{name}}",
+    "duplicateFailed": "Could not duplicate the trip",
     "detail": "Trip details",
     "points": "{{count}} pts",
     "addNew": "Add a new plan",

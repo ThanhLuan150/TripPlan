@@ -10,6 +10,9 @@ export const tripsApi = {
 
   remove: async (id: string) => (await api.delete(`/trip-plan/${id}`)).data,
 
+  duplicate: async (id: string) =>
+    (await api.post<{tripId: string; nameTrip: string}>(`/trip-plan/${id}/duplicate`)).data,
+
   // AI suggestions (nothing is saved yet)
   generate: async (params: GenerateTripParams) =>
     (

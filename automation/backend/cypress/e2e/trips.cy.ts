@@ -74,6 +74,52 @@ describe('trips', () => {
     });
   });
 
+  it('duplicates a trip: new id, same content, original untouched', () => {
+    signIn().then(({token}) => {
+      saveTrip(token, 'Original').then(({tripId}) => {
+        post(`/trip-plan/${tripId}/duplicate`, token).then(res => {
+          expect(res.status).to.eq(201);
+          expect(res.body.tripId).not.to.eq(tripId);
+          expect(res.body.nameTrip).to.eq('Original (bản sao)');
+          get(`/trip-plan/get-trip/${res.body.tripId}`, token).then(copy => {
+            get(`/trip-plan/get-trip/${tripId}`, token).then(orig => {
+              const c = copy.body.tripDatas;
+              const o = orig.body.tripDatas;
+              expect(c.location).to.eq(o.location);
+              expect(c.transportCostTotal).to.eq(o.transportCostTotal);
+              expect(c.dataTripDays).to.have.length(o.dataTripDays.length);
+              expect(c.dataTripDays[0]._id).not.to.eq(o.dataTripDays[0]._id);
+              expect(c.dataTripDays[0].challenges[0]._id).not.to.eq(o.dataTripDays[0].challenges[0]._id);
+              expect(c.dataTripDays[0].challenges[0]).to.include({completed: false});
+            });
+          });
+          // deleting the copy leaves the original
+          del(`/trip-plan/${res.body.tripId}`, token).its('status').should('eq', 200);
+          get(`/trip-plan/get-trip/${tripId}`, token).its('status').should('eq', 200);
+        });
+      });
+    });
+  });
+
+  it('duplicates a trip owned by someone else: 404, nothing created', () => {
+    signIn().then(owner => {
+      signIn().then(other => {
+        saveTrip(owner.token).then(({tripId}) => {
+          post(`/trip-plan/${tripId}/duplicate`, other.token).its('status').should('eq', 404);
+          get('/trip-plan/get-trip', other.token).its('body.dataTrip').should('deep.eq', []);
+        });
+      });
+    });
+  });
+
+  it('duplicate: 404 for unknown / invalid ids and 401 without a token', () => {
+    signIn().then(({token}) => {
+      post('/trip-plan/not-an-id/duplicate', token).its('status').should('eq', 404);
+      post('/trip-plan/64b0000000000000000000aa/duplicate', token).its('status').should('eq', 404);
+      post('/trip-plan/64b0000000000000000000aa/duplicate').its('status').should('eq', 401);
+    });
+  });
+
   it('answers 404 for an id that is not an ObjectId', () => {
     signIn().then(({token}) => get('/trip-plan/get-trip/not-an-id', token).its('status').should('eq', 404));
   });

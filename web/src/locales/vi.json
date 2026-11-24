@@ -196,7 +196,12 @@
       "deleteLabel": "Xóa kế hoạch {{name}}",
       "deleteTitle": "Xóa kế hoạch?",
       "deleteConfirm": "Bạn có chắc muốn xóa kế hoạch {{name}}?",
-      "deleteFailed": "Xóa kế hoạch không thành công"
+      "deleteFailed": "Xóa kế hoạch không thành công",
+      "duplicate": "Sao chép kế hoạch",
+      "duplicateLabel": "Sao chép kế hoạch {{name}}",
+      "duplicateSuccess": "Đã sao chép kế hoạch",
+      "duplicateSuccessText": "Đã tạo {{name}}",
+      "duplicateFailed": "Không sao chép được kế hoạch"
     },
     "create": {
       "title": "Lên kế hoạch chuyến đi",
