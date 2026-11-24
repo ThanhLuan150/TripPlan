@@ -2,6 +2,7 @@
 // the backend itself): they let a spec do what a user cannot, like reading the code that was
 // "e-mailed", creating an administrator, steering the stubs or taking the database away.
 import { createRequire } from "node:module";
+import { randomBytes } from "node:crypto";
 
 const backend = createRequire(new URL("../../../backend/package.json", import.meta.url));
 const express = backend("express");
@@ -26,7 +27,7 @@ export async function createControl({ mongoUri, dbName }) {
 
     // POST { ...fields } -> a user straight in the database (active, password "secret123")
     router.post("/users", async (req, res) => {
-        const n = Math.random().toString(36).slice(2, 10);
+        const n = randomBytes(6).toString("base64url");
         const user = await User.create({
             username: `user${n}`,
             email: `user${n}@example.com`,
