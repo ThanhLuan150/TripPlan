@@ -13,6 +13,15 @@ export const tripsApi = {
   duplicate: async (id: string) =>
     (await api.post<{tripId: string; nameTrip: string}>(`/trip-plan/${id}/duplicate`)).data,
 
+  // PDF of the trip (read only on the backend; only the owner can get it)
+  exportPdf: async (id: string, lang: string) =>
+    (
+      await api.get<Blob>(`/trip-plan/${id}/export-pdf`, {
+        params: {lang},
+        responseType: 'blob',
+      })
+    ).data,
+
   // favorites of the signed-in user (deleted trips are left out by the backend)
   favorites: async () =>
     (await api.get<{dataTrip: Trip[]}>('/trip-plan/favorites')).data.dataTrip,

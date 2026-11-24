@@ -12,7 +12,7 @@ import tripService from "../../../src/services/tripService.js";
 import userService from "../../../src/services/userService.js";
 import userRepository from "../../../src/repositories/userRepository.js";
 import challengeProgressRepository from "../../../src/repositories/challengeProgressRepository.js";
-import { callController, mockReq } from "../../helpers/http.js";
+import { callController, mockReq, mockRes } from "../../helpers/http.js";
 
 vi.mock("../../../src/services/challengeService.js", () => ({
     default: { checkProgress: vi.fn(), completeChallenge: vi.fn() },
@@ -29,6 +29,7 @@ vi.mock("../../../src/services/tripService.js", () => ({
         deleteTrip: vi.fn(),
         getTripLocations: vi.fn(),
         duplicateTrip: vi.fn(),
+        exportTripPdf: vi.fn(),
     },
 }));
 vi.mock("../../../src/services/userService.js", () => ({
@@ -161,6 +162,34 @@ describe("tripPlanController", () => {
         expect(tripService.duplicateTrip).toHaveBeenCalledWith(trip, "u1");
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith({ message: "ok" });
+    });
+
+    it.each([[{}, "vi"], [{ lang: "en" }, "en"], [{ lang: "xx" }, "vi"]])("exportTripPdf sends the PDF of the trip loaded by ownTrip (query %j)", async (query, lang) => {
+        const buffer = Buffer.from("%PDF-1.3");
+        tripService.exportTripPdf.mockResolvedValue({ filename: "Đà Lạt.pdf", buffer });
+        const res = mockRes();
+        res.attachment = vi.fn(() => res);
+        res.send = vi.fn(() => res);
+
+        await new Promise((resolve) => {
+            res.send = vi.fn(() => {
+                resolve();
+                return res;
+            });
+            tripPlanController.exportTripPdf(mockReq({ user, trip, query }), res, resolve);
+        });
+
+        expect(tripService.exportTripPdf).toHaveBeenCalledWith(trip, "u1", lang);
+        expect(res.attachment).toHaveBeenCalledWith("Đà Lạt.pdf");
+        expect(res.send).toHaveBeenCalledWith(buffer);
+    });
+
+    it("exportTripPdf passes a failure to next()", async () => {
+        tripService.exportTripPdf.mockRejectedValue(new Error("boom"));
+
+        const { err } = await callController(tripPlanController.exportTripPdf, mockReq({ user, trip }));
+
+        expect(err.message).toBe("boom");
     });
 
     it.each([["deleteTrip"], ["getTripLocations"]])("%s uses the trip loaded by ownTrip", async (method) => {

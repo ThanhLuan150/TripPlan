@@ -288,6 +288,15 @@ Quan hệ yêu thích lưu ở collection riêng `favoritetrips` (`userId`, `tri
 - Web (`TripListPage`: tab "Yêu thích", nút trái tim; `TripDetailPage`: nút trái tim) và mobile (tab "Kế hoạch": tab "Yêu thích", nút trái tim) cập nhật ngay khi thao tác, hoàn tác nếu lỗi, và có trạng thái loading / rỗng / lỗi.
 - Không bao gồm Favorite Destination.
 
+### Xuất lịch trình PDF (Export Trip to PDF)
+
+`GET /trip-plan/:id/export-pdf?lang=vi|en` (user, admin; `:id` phải là kế hoạch của mình) trả file PDF của kế hoạch.
+
+- Trả 200 `application/pdf`, `Content-Disposition: attachment` với tên file `<tên chuyến đi>.pdf` (ký tự không hợp lệ bị thay bằng khoảng trắng). Kế hoạch không tồn tại, của người khác, đã xoá hoặc `:id` không hợp lệ trả 404 (cùng middleware `ownTrip`); không có token trả 401.
+- Nội dung: tên, địa điểm, ngày đi/về, tổng chi phí; từng ngày (tiêu đề, thứ/ngày, chi phí) với các hoạt động đánh số theo thứ tự lưu và địa điểm. Chuyến đi chưa có lịch trình hoặc ngày chưa có hoạt động vẫn xuất được, kèm dòng thông báo. Có số trang, khổ A4 để in.
+- Dùng lại `getTripDetail`, chỉ đọc, không ghi gì vào database. PDF tạo bằng `pdfkit`, font DejaVu Sans (gói `dejavu-fonts-ttf`) để hiển thị tiếng Việt.
+- Web: nút "Xuất PDF" ở trang chi tiết chuyến đi (tải file theo ngôn ngữ đang chọn). Chưa làm chia sẻ PDF hay đồng bộ file.
+
 ### API quản trị — `/admin/*` (role admin)
 
 | Nhóm | Endpoint |

@@ -214,6 +214,14 @@ describe('tripsApi / challengeApi', () => {
     expect(post).toHaveBeenCalledWith('/trip-plan/t1/duplicate');
   });
 
+  it('exportPdf asks for the PDF as a blob in the chosen language', async () => {
+    const blob = new Blob(['%PDF']);
+    get.mockResolvedValue(reply(blob));
+
+    await expect(tripsApi.exportPdf('t1', 'en')).resolves.toBe(blob);
+    expect(get).toHaveBeenCalledWith('/trip-plan/t1/export-pdf', {params: {lang: 'en'}, responseType: 'blob'});
+  });
+
   it('generate maps the form to the backend fields', async () => {
     post.mockResolvedValue(reply({data: {plan1: {}}}));
 

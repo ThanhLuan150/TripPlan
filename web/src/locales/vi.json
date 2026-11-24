@@ -283,6 +283,9 @@
     "detail": {
       "backToList": "Quay lại danh sách kế hoạch",
       "viewMap": "Xem bản đồ",
+      "exportPdf": "Xuất PDF",
+      "exportingPdf": "Đang tạo PDF...",
+      "exportPdfFailed": "Không xuất được PDF",
       "challenges": "Thử thách",
       "pointsEarned": "Điểm đạt được",
       "days": "Số ngày",

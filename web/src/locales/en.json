@@ -283,6 +283,9 @@
     "detail": {
       "backToList": "Back to your plans",
       "viewMap": "View map",
+      "exportPdf": "Export PDF",
+      "exportingPdf": "Creating PDF...",
+      "exportPdfFailed": "Could not export the PDF",
       "challenges": "Challenges",
       "pointsEarned": "Points earned",
       "days": "Days",

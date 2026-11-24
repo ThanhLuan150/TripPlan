@@ -386,3 +386,34 @@ describe("duplicateTrip", () => {
         expect(tripPlanRepository.softDelete).toHaveBeenCalledWith("copy1");
     });
 });
+
+describe("exportTripPdf", () => {
+    const trip = doc({ _id: "trip1", userId: USER, nameTrip: "Đà Lạt", location: "Lâm Đồng", startDate: "2026-03-02", endDate: "2026-03-03" });
+
+    beforeEach(() => {
+        tripDayRepository.findByTripId.mockResolvedValue([doc({ _id: "d0", tripId: "trip1", day: 0, title: "Ngày 1" })]);
+        challengeRepository.findByTripDayId.mockResolvedValue([doc({ _id: "c1", tripDayId: "d0", challengeSummary: "Chụp ảnh", location: "Hồ" })]);
+        challengeProgressRepository.findByUserAndChallenges.mockResolvedValue([]);
+    });
+
+    it("returns a PDF named after the trip, built from the existing data, without writing anything", async () => {
+        const result = await tripService.exportTripPdf(trip, USER, "vi");
+
+        expect(result.filename).toBe("Đà Lạt.pdf");
+        expect(result.buffer.subarray(0, 5).toString()).toBe("%PDF-");
+        expect(tripDayRepository.findByTripId).toHaveBeenCalledWith("trip1");
+        expect(challengeProgressRepository.findByUserAndChallenges).toHaveBeenCalledWith(USER, ["c1"]);
+        for (const write of [tripPlanRepository.create, tripPlanRepository.updateById, tripPlanRepository.softDelete, tripDayRepository.create, challengeRepository.create, challengeProgressRepository.create]) {
+            expect(write).not.toHaveBeenCalled();
+        }
+    });
+
+    it("works for a trip without days and falls back to the location for the name", async () => {
+        tripDayRepository.findByTripId.mockResolvedValue([]);
+
+        const result = await tripService.exportTripPdf(doc({ _id: "trip2", userId: USER, location: "Huế" }), USER, "en");
+
+        expect(result.filename).toBe("Huế.pdf");
+        expect(result.buffer.subarray(0, 5).toString()).toBe("%PDF-");
+    });
+});
