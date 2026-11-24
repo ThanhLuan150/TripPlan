@@ -9,8 +9,8 @@ of test-runner dependencies.
 | Folder | What it tests | Tool | Status |
 |---|---|---|---|
 | [`web/`](web/README.md) | the web app, in a browser, with the backend mocked | Cypress | done: every screen and feature |
-| `backend/` | the REST API | to be chosen | not started |
-| `mobile/` | the React Native app | to be chosen (Maestro / Detox) | not started |
+| [`backend/`](backend/README.md) | the REST API, over HTTP, on an in-memory MongoDB (e-mail, AI and place lookups stubbed) | Cypress (`cy.request`) | done: auth, trips, challenges, content, upload, chat, geo, admin |
+| `mobile/` | the React Native app | to be chosen (Maestro / Detox) | not started (unit tests: `mobile/__tests__`) |
 
 ## Run the web tests
 
