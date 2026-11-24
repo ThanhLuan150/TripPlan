@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {GenerateTripParams, Plan, PlanDay, Trip, TripDetail} from '../types';
+import type {GenerateTripParams, Plan, PlanDay, ShareStatus, SharedTrip, Trip, TripDetail} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -21,6 +21,17 @@ export const tripsApi = {
         responseType: 'blob',
       })
     ).data,
+
+  // sharing by link (owner only; the link itself is read only)
+  shareStatus: async (id: string) => (await api.get<ShareStatus>(`/trip-plan/${id}/share`)).data,
+
+  enableShare: async (id: string) => (await api.post<ShareStatus>(`/trip-plan/${id}/share`)).data,
+
+  disableShare: async (id: string) => (await api.delete<ShareStatus>(`/trip-plan/${id}/share`)).data,
+
+  // public: the trip behind a share link (404 when invalid or turned off)
+  getShared: async (token: string) =>
+    (await api.get<{tripDatas: SharedTrip}>(`/shared/${encodeURIComponent(token)}`)).data.tripDatas,
 
   // favorites of the signed-in user (deleted trips are left out by the backend)
   favorites: async () =>

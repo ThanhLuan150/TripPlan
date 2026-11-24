@@ -85,6 +85,29 @@ describe('trip detail', () => {
     cy.location('pathname').should('eq', '/assistant/trips');
   });
 
+  it('adds the trip to the favorites from the detail page, then removes it', () => {
+    let favorites: unknown[] = [];
+    const calls = mockApi({
+      ...api,
+      'GET /trip-plan/favorites': () => ({dataTrip: favorites}),
+      'POST /trip-plan/t1/favorite': () => {
+        favorites = [trips[0]];
+        return {isFavorite: true};
+      },
+      'DELETE /trip-plan/t1/favorite': () => {
+        favorites = [];
+        return {isFavorite: false};
+      },
+    });
+    visit('/assistant/trips/t1');
+
+    cy.findByRole('button', {name: t('trips.list.favorite')}).should('have.attr', 'aria-pressed', 'false').click();
+    expectCall(calls, 'POST', '/trip-plan/t1/favorite');
+    cy.findByRole('button', {name: t('trips.list.unfavorite')}).should('have.attr', 'aria-pressed', 'true').click();
+    expectCall(calls, 'DELETE', '/trip-plan/t1/favorite');
+    cy.findByRole('button', {name: t('trips.list.favorite')}).should('have.attr', 'aria-pressed', 'false');
+  });
+
   it('exports the trip as a PDF', () => {
     const calls = mockApi({...api, 'GET /trip-plan/t1/export-pdf': '%PDF-1.3'});
     visit('/assistant/trips/t1');
@@ -94,6 +117,32 @@ describe('trip detail', () => {
     expectCall(calls, 'GET', '/trip-plan/t1/export-pdf').its('query.lang').should('eq', 'vi');
     cy.findByRole('button', {name: t('trips.detail.exportPdf')}).should('be.enabled');
     cy.findByText(t('trips.detail.exportPdfFailed')).should('not.exist');
+  });
+
+  it('shares the trip: turns the link on and shows it, then turns it off', () => {
+    const off = {isShared: false, permission: null, shareToken: null, sharedAt: null};
+    const on = {isShared: true, permission: 'view', shareToken: 'tok123', sharedAt: '2026-01-01'};
+    const calls = mockApi({
+      ...api,
+      'GET /trip-plan/t1/share': off,
+      'POST /trip-plan/t1/share': on,
+      'DELETE /trip-plan/t1/share': off,
+    });
+    visit('/assistant/trips/t1');
+
+    cy.findByRole('button', {name: t('trips.share.open')}).click();
+    cy.findByText(t('trips.share.statusOff')).should('be.visible');
+    cy.findByRole('switch').click();
+    expectCall(calls, 'POST', '/trip-plan/t1/share');
+    cy.location('origin').then(origin =>
+      cy.findByLabelText(t('trips.share.linkLabel')).should('have.value', `${origin}/shared/tok123`),
+    );
+    cy.findByText(t('trips.share.permissionView')).should('be.visible');
+
+    cy.findByRole('switch').click();
+    expectCall(calls, 'DELETE', '/trip-plan/t1/share');
+    cy.findByLabelText(t('trips.share.linkLabel')).should('not.exist');
+    cy.findByText(t('trips.share.statusOff')).should('be.visible');
   });
 
   it('tells the user when the PDF cannot be created', () => {

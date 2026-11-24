@@ -16,6 +16,7 @@ export const routes = {
   GenerateTripsScreen: '/assistant/trips/generate',
   DetailTripScreen: (idTrip: string) => `/assistant/trips/${idTrip}`,
   MapScreen: (idTrip: string) => `/assistant/trips/${idTrip}/map`,
+  SharedTrip: (token: string) => `/shared/${token}`, // public, read only
   Ranking: '/ranking', // 'Xếp hạng'
   Profile: '/profile', // 'Tài khoản'
   // stack screens without the tab bar

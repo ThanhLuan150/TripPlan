@@ -1,4 +1,4 @@
-import {FAR, NEAR, PLACE, del, get, post, saveTrip, signIn, stored} from '../support/api';
+import {FAR, NEAR, PLACE, call, del, get, post, saveTrip, signIn, stored} from '../support/api';
 
 describe('trips', () => {
   it('saves a plan, lists it and returns its detail with days and challenges', () => {
@@ -200,6 +200,72 @@ describe('trips', () => {
     signIn().then(({token}) => {
       get('/trip-plan/not-an-id/export-pdf', token).its('status').should('eq', 404);
       get('/trip-plan/64b0000000000000000000aa/export-pdf', token).its('status').should('eq', 404);
+    });
+  });
+
+  it('sharing: create a link, open it without signing in, revoke it', () => {
+    signIn().then(({token}) => {
+      saveTrip(token, 'Da Nang share').then(({tripId}) => {
+        const share = `/trip-plan/${tripId}/share`;
+        get(share, token).its('body.isShared').should('eq', false);
+
+        post(share, token).then(on => {
+          expect(on.status).to.eq(200);
+          expect(on.body).to.include({isShared: true, permission: 'view'});
+          expect(on.body.shareToken).to.match(/^[A-Za-z0-9_-]{43}$/);
+          const link = `/shared/${on.body.shareToken}`;
+
+          // asking again keeps the same link
+          post(share, token).its('body.shareToken').should('eq', on.body.shareToken);
+
+          // anyone can read it, with no token, and sees only the plan
+          get(link).then(res => {
+            expect(res.status).to.eq(200);
+            expect(String(res.headers['cache-control'])).to.contain('no-store');
+            const trip = res.body.tripDatas;
+            expect(trip.nameTrip).to.eq('Da Nang share');
+            expect(trip.dataTripDays).to.have.length(2);
+            expect(trip.dataTripDays[0].challenges[0]).to.include({points: 40});
+            const text = JSON.stringify(res.body);
+            ['userId', 'shareToken', 'completed', 'imageUrl'].forEach(key => expect(text).not.to.contain(key));
+          });
+
+          // read only: nothing can be written through the link
+          ['POST', 'PUT', 'PATCH', 'DELETE'].forEach(method => call(method, link).its('status').should('eq', 404));
+
+          // revoke: the link stops working and sharing again gives a new one
+          del(share, token).its('body.isShared').should('eq', false);
+          get(link).its('status').should('eq', 404);
+          post(share, token).then(again => {
+            expect(again.body.shareToken).not.to.eq(on.body.shareToken);
+            get(link).its('status').should('eq', 404);
+            get(`/shared/${again.body.shareToken}`).its('status').should('eq', 200);
+          });
+        });
+      });
+    });
+  });
+
+  it('sharing: only the owner manages it, bad and deleted links give 404', () => {
+    signIn().then(owner => {
+      signIn().then(other => {
+        saveTrip(owner.token).then(({tripId}) => {
+          const share = `/trip-plan/${tripId}/share`;
+          get(share, other.token).its('status').should('eq', 404);
+          post(share, other.token).its('status').should('eq', 404);
+          del(share, other.token).its('status').should('eq', 404);
+          post(share).its('status').should('eq', 401);
+          post('/trip-plan/not-an-id/share', owner.token).its('status').should('eq', 404);
+
+          post(share, owner.token).then(on => {
+            get('/shared/not-a-token').its('status').should('eq', 404);
+            get(`/shared/${'A'.repeat(43)}`).its('status').should('eq', 404);
+            // a deleted trip is no longer reachable by its link
+            del(`/trip-plan/${tripId}`, owner.token).its('status').should('eq', 200);
+            get(`/shared/${on.body.shareToken}`).its('status').should('eq', 404);
+          });
+        });
+      });
     });
   });
 

@@ -11,6 +11,9 @@ const env = {
     // public address of this backend, used in uploaded image URLs
     // (default: taken from the request, e.g. http://localhost:8080)
     publicUrl: (process.env.PUBLIC_URL || "").replace(/\/+$/, ""),
+    // public address of the web app, used to build share links (/shared/:token) for
+    // clients that do not know it, e.g. the mobile app. Empty = clients build their own.
+    webUrl: (process.env.WEB_URL || "").replace(/\/+$/, ""),
     maxImageMb: Number(process.env.MAX_IMAGE_MB) || 5,
     // requests per client IP and 15 minutes: all routes / the /auth routes
     rateLimitMax: Number(process.env.RATE_LIMIT_MAX) || 600,

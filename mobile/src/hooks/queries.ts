@@ -18,6 +18,7 @@ export const queryKeys = {
   trips: ['trips'] as const,
   favoriteTrips: ['favoriteTrips'] as const,
   trip: (id: string) => ['trip', id] as const,
+  tripShare: (id: string) => ['tripShare', id] as const,
   notifications: ['notifications'] as const,
   chats: ['chats'] as const,
   generate: (params: GenerateParams) => ['generate', params] as const,
@@ -40,6 +41,13 @@ export const useTrips = () =>
 
 export const useFavoriteTrips = () =>
   useQuery({queryKey: queryKeys.favoriteTrips, queryFn: tripsApi.favorites});
+
+export const useShareStatus = (id: string, enabled: boolean) =>
+  useQuery({
+    queryKey: queryKeys.tripShare(id),
+    queryFn: () => tripsApi.shareStatus(id),
+    enabled,
+  });
 
 export const useTrip = (id: string) =>
   useQuery({queryKey: queryKeys.trip(id), queryFn: () => tripsApi.get(id)});

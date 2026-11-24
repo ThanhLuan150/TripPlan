@@ -1,6 +1,10 @@
 import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {FlatList, StyleSheet, View} from 'react-native';
+import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import ShareTripModal from '../components/ShareTripModal';
+import {colors} from '../lib/theme';
+import {exportTripPdf} from '../lib/exportPdf';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
 import {BackPill, ConfirmModal, ErrorText} from '../components';
@@ -30,7 +34,7 @@ const checkInMessage = (
 };
 
 export default function TripDetail() {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const {id} = useRoute<any>().params as {id: string};
   const navigation = useNavigation<any>();
   const qc = useQueryClient();
@@ -47,6 +51,24 @@ export default function TripDetail() {
     onError: e => alert.error(t('common.failed'), checkInMessage(e, t)),
   });
   const [retake, setRetake] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // PDF of the saved trip (nothing is changed), opened with the system viewer
+  const exportPdf = async () => {
+    setExporting(true);
+    try {
+      await exportTripPdf(
+        id,
+        i18n.language,
+        trip.data?.nameTrip ?? trip.data?.location,
+      );
+    } catch (e) {
+      alert.error(t('common.failed'), t('trips.exportPdfFailed'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (trip.isLoading) {return <PleaseWait />;}
   if (trip.error) {return <ErrorText message={errorText(trip.error)} />;}
@@ -54,6 +76,26 @@ export default function TripDetail() {
   return (
     <View style={styles.container}>
       <BackPill onPress={() => navigation.goBack()} />
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={t('trips.share')}
+        style={styles.share}
+        onPress={() => setSharing(true)}>
+        <Ionicons name="share-social-outline" size={20} color="#fff" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={t('trips.exportPdf')}
+        disabled={exporting}
+        style={[styles.share, styles.pdf, exporting && styles.disabled]}
+        onPress={exportPdf}>
+        <Ionicons name="document-text-outline" size={20} color="#fff" />
+      </TouchableOpacity>
+      <ShareTripModal
+        tripId={id}
+        visible={sharing}
+        onClose={() => setSharing(false)}
+      />
       <FlatList
         showsVerticalScrollIndicator={false}
         style={styles.list}
@@ -105,4 +147,18 @@ export default function TripDetail() {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#fff', paddingTop: 36},
   list: {paddingHorizontal: 15},
+  pdf: {top: 88},
+  disabled: {opacity: 0.6},
+  share: {
+    position: 'absolute',
+    zIndex: 5,
+    top: 40,
+    right: 0,
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingRight: 10,
+    paddingLeft: 14,
+    borderTopLeftRadius: 50,
+    borderBottomLeftRadius: 50,
+  },
 });

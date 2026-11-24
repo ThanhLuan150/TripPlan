@@ -222,6 +222,27 @@ describe('tripsApi / challengeApi', () => {
     expect(get).toHaveBeenCalledWith('/trip-plan/t1/export-pdf', {params: {lang: 'en'}, responseType: 'blob'});
   });
 
+  it('share status / enable / disable call the owner endpoints', async () => {
+    const status = {isShared: true, permission: 'view', shareToken: 'tok', sharedAt: null};
+    get.mockResolvedValue(reply(status));
+    post.mockResolvedValue(reply(status));
+    del.mockResolvedValue(reply({...status, isShared: false}));
+
+    await expect(tripsApi.shareStatus('t1')).resolves.toEqual(status);
+    await expect(tripsApi.enableShare('t1')).resolves.toEqual(status);
+    await expect(tripsApi.disableShare('t1')).resolves.toMatchObject({isShared: false});
+    expect(get).toHaveBeenCalledWith('/trip-plan/t1/share');
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/share');
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/share');
+  });
+
+  it('getShared reads the public endpoint and unwraps the trip', async () => {
+    get.mockResolvedValue(reply({tripDatas: {location: 'Đà Lạt'}}));
+
+    await expect(tripsApi.getShared('a_b-c')).resolves.toEqual({location: 'Đà Lạt'});
+    expect(get).toHaveBeenCalledWith('/shared/a_b-c');
+  });
+
   it('generate maps the form to the backend fields', async () => {
     post.mockResolvedValue(reply({data: {plan1: {}}}));
 

@@ -28,6 +28,7 @@ export interface TripDay {
   challenges: Challenge[];
 }
 export interface TripDetail {
+  nameTrip?: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -175,7 +176,23 @@ export const tripsApi = {
     (await api.post(`/trip-plan/${id}/favorite`)).data,
   removeFavorite: async (id: string) =>
     (await api.delete(`/trip-plan/${id}/favorite`)).data,
+  // sharing by link (owner only; the link is read only)
+  shareStatus: async (id: string) =>
+    (await api.get<ShareStatus>(`/trip-plan/${id}/share`)).data,
+  enableShare: async (id: string) =>
+    (await api.post<ShareStatus>(`/trip-plan/${id}/share`)).data,
+  disableShare: async (id: string) =>
+    (await api.delete<ShareStatus>(`/trip-plan/${id}/share`)).data,
 };
+
+export interface ShareStatus {
+  isShared: boolean;
+  permission: 'view' | null;
+  shareToken: string | null;
+  // full link when the backend knows the web address (WEB_URL), else null
+  shareUrl: string | null;
+  sharedAt: string | null;
+}
 
 export const rankingApi = {
   get: async (period: 'weekly' | 'monthly' | 'highest') =>
