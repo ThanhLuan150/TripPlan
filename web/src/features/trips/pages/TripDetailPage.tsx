@@ -8,6 +8,8 @@ import {
   IoCamera,
   IoCheckmarkCircle,
   IoChevronDown,
+  IoHeart,
+  IoHeartOutline,
   IoLocationOutline,
   IoMap,
   IoTimeOutline,
@@ -22,7 +24,7 @@ import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import {challengeApi} from '../api/tripsApi';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
 import {images} from '../data/provinceImages';
-import {useTripDetail} from '../hooks/useTrips';
+import {useFavoriteTrips, useToggleFavorite, useTripDetail} from '../hooks/useTrips';
 import type {Challenge} from '../types';
 
 function Stat({label, value}: {label: string; value: string}) {
@@ -51,6 +53,9 @@ export default function TripDetailPage() {
   const queryClient = useQueryClient();
   const {idTrip} = useParams();
   const {data: result, isLoading, isError} = useTripDetail(idTrip);
+  const favorites = useFavoriteTrips();
+  const toggleFavorite = useToggleFavorite();
+  const isFavorite = (favorites.data ?? []).some(item => item._id === idTrip);
 
   const [openDays, setOpenDays] = useState<string[]>(['1']);
   const [imageSource, setImageSource] = useState<Record<string, string>>({});
@@ -147,13 +152,45 @@ export default function TripDetailPage() {
             className="grid size-10 place-items-center rounded-full bg-white/90 text-slate-800 backdrop-blur transition hover:bg-white">
             <IoArrowBack size={20} />
           </button>
-          <button
-            type="button"
-            onClick={() => navigate(routes.MapScreen(idTrip!))}
-            className="flex h-10 items-center gap-2 rounded-full bg-white/90 px-4 text-sm font-semibold text-slate-800 backdrop-blur transition hover:bg-white">
-            <IoMap size={18} className="text-brand-600" />
-            {t('trips.detail.viewMap')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label={t(isFavorite ? 'trips.list.unfavorite' : 'trips.list.favorite')}
+              aria-pressed={isFavorite}
+              onClick={() =>
+                toggleFavorite.mutate(
+                  {
+                    trip: {
+                      _id: idTrip!,
+                      nameTrip: result.nameTrip ?? result.location,
+                      location: result.location,
+                      startDate: result.startDate,
+                      endDate: result.endDate,
+                      status: 'active',
+                    },
+                    favorite: !isFavorite,
+                  },
+                  {
+                    onError: () =>
+                      Toast.show({
+                        type: 'error',
+                        text1: t('common.failed'),
+                        text2: t('trips.list.favoriteFailed'),
+                      }),
+                  },
+                )
+              }
+              className="grid size-10 place-items-center rounded-full bg-white/90 text-slate-800 backdrop-blur transition hover:bg-white">
+              {isFavorite ? <IoHeart size={20} className="text-rose-500" /> : <IoHeartOutline size={20} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(routes.MapScreen(idTrip!))}
+              className="flex h-10 items-center gap-2 rounded-full bg-white/90 px-4 text-sm font-semibold text-slate-800 backdrop-blur transition hover:bg-white">
+              <IoMap size={18} className="text-brand-600" />
+              {t('trips.detail.viewMap')}
+            </button>
+          </div>
         </div>
         <div className="absolute inset-x-5 bottom-5 text-white">
           <p className="flex items-center gap-1.5 text-sm text-white/85">

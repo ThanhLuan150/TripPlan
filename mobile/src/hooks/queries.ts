@@ -16,6 +16,7 @@ export const queryKeys = {
   videos: ['videos'] as const,
   ranking: (period: RankingPeriod) => ['ranking', period] as const,
   trips: ['trips'] as const,
+  favoriteTrips: ['favoriteTrips'] as const,
   trip: (id: string) => ['trip', id] as const,
   notifications: ['notifications'] as const,
   chats: ['chats'] as const,
@@ -36,6 +37,9 @@ export const useRanking = (period: RankingPeriod) =>
 
 export const useTrips = () =>
   useQuery({queryKey: queryKeys.trips, queryFn: tripsApi.list});
+
+export const useFavoriteTrips = () =>
+  useQuery({queryKey: queryKeys.favoriteTrips, queryFn: tripsApi.favorites});
 
 export const useTrip = (id: string) =>
   useQuery({queryKey: queryKeys.trip(id), queryFn: () => tripsApi.get(id)});

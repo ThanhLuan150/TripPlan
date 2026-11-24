@@ -63,6 +63,9 @@ const trip = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(tripsApi.get).mockResolvedValue(trip as never);
+  vi.mocked(tripsApi.favorites).mockResolvedValue([]);
+  vi.mocked(tripsApi.addFavorite).mockResolvedValue({});
+  vi.mocked(tripsApi.removeFavorite).mockResolvedValue({});
 });
 
 const render = () =>
@@ -257,4 +260,40 @@ describe('TripDetailPage', () => {
     expect(stat('trips.detail.challenges')).toBe('0/0');
     expect(stat('trips.detail.days')).toBe('0');
   });
+
+describe('favorite button', () => {
+  it('adds the trip to the favorites', async () => {
+    const user = userEvent.setup();
+    render();
+
+    const heart = await screen.findByRole('button', {name: t('trips.list.favorite')});
+    vi.mocked(tripsApi.favorites).mockResolvedValue([{_id: 't1'} as never]);
+    await user.click(heart);
+
+    expect(vi.mocked(tripsApi.addFavorite).mock.calls[0][0]).toBe('t1');
+    expect(await screen.findByRole('button', {name: t('trips.list.unfavorite')})).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('removes the trip from the favorites when it already is one', async () => {
+    vi.mocked(tripsApi.favorites).mockResolvedValue([{_id: 't1'} as never]);
+    const user = userEvent.setup();
+    render();
+
+    vi.mocked(tripsApi.favorites).mockResolvedValue([]);
+    await user.click(await screen.findByRole('button', {name: t('trips.list.unfavorite')}));
+
+    expect(vi.mocked(tripsApi.removeFavorite).mock.calls[0][0]).toBe('t1');
+    expect(await screen.findByRole('button', {name: t('trips.list.favorite')})).toBeInTheDocument();
+  });
+
+  it('tells the user when it fails', async () => {
+    vi.mocked(tripsApi.addFavorite).mockRejectedValue(new Error('500'));
+    const user = userEvent.setup();
+    render();
+
+    await user.click(await screen.findByRole('button', {name: t('trips.list.favorite')}));
+
+    expect(await screen.findByText(t('trips.list.favoriteFailed'))).toBeInTheDocument();
+  });
+});
 });

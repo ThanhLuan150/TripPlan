@@ -19,6 +19,14 @@ export const ownTrip = asyncHandler(async (req, res, next) => {
     next();
 });
 
+// req.params.id must be a valid id (used where the trip may already be deleted, e.g. unfavorite)
+export const validTripId = (req, res, next) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+        throw new HttpError(404, "Data Trip not found!");
+    }
+    next();
+};
+
 // req.params.id is a conversation of the user -> req.chat
 export const ownChat = asyncHandler(async (req, res, next) => {
     const { id } = req.params;

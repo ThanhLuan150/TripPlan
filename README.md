@@ -274,6 +274,20 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 - Ghi nhật ký hoạt động với action `createTrip`.
 - Web (`TripListPage`) và mobile (tab "Kế hoạch") có nút sao chép cạnh nút xoá, kèm thông báo thành công / thất bại.
 
+### Chuyến đi yêu thích (Favorite Trip)
+
+Quan hệ yêu thích lưu ở collection riêng `favoritetrips` (`userId`, `tripId`, `createdAt`) với unique index `(userId, tripId)`, nên không có dữ liệu trùng và danh sách thuộc về từng tài khoản.
+
+| Endpoint | Mô tả |
+|---|---|
+| `GET /trip-plan/favorites` | Danh sách yêu thích của tài khoản đang đăng nhập (mới nhất trước). Chuyến đi đã xoá bị loại khỏi danh sách |
+| `POST /trip-plan/:id/favorite` | Thêm yêu thích (idempotent, gọi lại không tạo bản ghi mới). `:id` phải là kế hoạch của mình, nếu không trả 404 |
+| `DELETE /trip-plan/:id/favorite` | Bỏ yêu thích. Chỉ xoá bản ghi của chính người gọi; vẫn dùng được khi chuyến đi đã bị xoá |
+
+- Không có token trả 401; `:id` không hợp lệ trả 404.
+- Web (`TripListPage`: tab "Yêu thích", nút trái tim; `TripDetailPage`: nút trái tim) và mobile (tab "Kế hoạch": tab "Yêu thích", nút trái tim) cập nhật ngay khi thao tác, hoàn tác nếu lỗi, và có trạng thái loading / rỗng / lỗi.
+- Không bao gồm Favorite Destination.
+
 ### API quản trị — `/admin/*` (role admin)
 
 | Nhóm | Endpoint |

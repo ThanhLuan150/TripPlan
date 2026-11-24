@@ -4,7 +4,10 @@ import {useTranslation} from 'react-i18next';
 import {
   IoAdd,
   IoCalendarOutline,
+  IoAlertCircleOutline,
   IoCopyOutline,
+  IoHeart,
+  IoHeartOutline,
   IoLocationSharp,
   IoMapOutline,
   IoRefresh,
@@ -15,7 +18,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import Toast from '@/components/ui/Toast';
 import {formatShortDate} from '@/lib/date';
 import {images} from '../data/provinceImages';
-import {useDeleteTrip, useDuplicateTrip, useTrips} from '../hooks/useTrips';
+import {useDeleteTrip, useDuplicateTrip, useFavoriteTrips, useToggleFavorite, useTrips} from '../hooks/useTrips';
 import type {Trip} from '../types';
 
 // Saved plans ("AddNewTrip" on mobile).
@@ -26,9 +29,33 @@ export default function TripListPage() {
   const {data: result, isFetching, isLoading, refetch} = useTrips();
   const deleteTrip = useDeleteTrip();
   const duplicateTrip = useDuplicateTrip();
+  const favorites = useFavoriteTrips();
+  const toggleFavorite = useToggleFavorite();
+  const [tab, setTab] = useState<'all' | 'favorites'>('all');
 
   // Inverted FlatList on mobile: newest plan first
-  const trips = (result ?? []).filter(item => item.status === 'active').slice().reverse();
+  const allTrips = (result ?? []).filter(item => item.status === 'active').slice().reverse();
+  const favoriteIds = new Set((favorites.data ?? []).map(item => item._id));
+  const showFavorites = tab === 'favorites';
+  // Favorites come from the server, newest favorite first (deleted trips are already left out)
+  const trips = showFavorites ? (favorites.data ?? []).filter(item => item.status === 'active') : allTrips;
+  const loading = showFavorites ? favorites.isLoading : isLoading;
+  const loaded = showFavorites ? favorites.data !== undefined : result !== undefined;
+  const failed = showFavorites && favorites.isError;
+  const fetching = showFavorites ? favorites.isFetching : isFetching;
+  const reload = () => (showFavorites ? favorites.refetch() : refetch());
+  const setFavorite = (trip: Trip, favorite: boolean) =>
+    toggleFavorite.mutate(
+      {trip, favorite},
+      {
+        onError: () =>
+          Toast.show({
+            type: 'error',
+            text1: t('common.failed'),
+            text2: t('trips.list.favoriteFailed'),
+          }),
+      },
+    );
   const duplicate = (trip: Trip) =>
     duplicateTrip.mutate(trip._id, {
       onSuccess: copy =>
@@ -63,19 +90,35 @@ export default function TripListPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-slate-900">
           {t('trips.list.title')}
-          {result && <span className="ml-1.5 font-medium text-slate-400">({trips.length})</span>}
+          {loaded && !failed && <span className="ml-1.5 font-medium text-slate-400">({trips.length})</span>}
         </h2>
         <button
           type="button"
           className="btn btn-ghost px-3 py-2 text-brand-600"
-          onClick={() => refetch()}
-          disabled={isFetching}>
-          <IoRefresh size={18} className={isFetching ? 'animate-spin' : ''} />
+          onClick={() => reload()}
+          disabled={fetching}>
+          <IoRefresh size={18} className={fetching ? 'animate-spin' : ''} />
           {t('common.refresh')}
         </button>
       </div>
 
-      {isLoading && (
+      <div role="tablist" className="flex gap-2">
+        {(['all', 'favorites'] as const).map(key => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+              tab === key ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}>
+            {t(key === 'all' ? 'trips.list.tabAll' : 'trips.list.tabFavorites')}
+          </button>
+        ))}
+      </div>
+
+      {loading && (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map(i => (
             <li key={i} className="card animate-pulse overflow-hidden">
@@ -89,16 +132,34 @@ export default function TripListPage() {
         </ul>
       )}
 
-      {result && trips.length === 0 && (
+      {failed && (
+        <div role="alert" className="card flex flex-col items-center gap-3 p-10 text-center">
+          <IoAlertCircleOutline size={40} className="text-rose-400" />
+          <p className="font-medium text-slate-700">{t('trips.list.favoritesError')}</p>
+          <button type="button" className="btn btn-ghost text-brand-600" onClick={() => reload()}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
+      {loaded && !failed && trips.length === 0 && (
         <div className="card flex flex-col items-center gap-2 p-10 text-center">
-          <IoMapOutline size={40} className="text-slate-300" />
-          <p className="font-medium text-slate-700">{t('trips.list.emptyTitle')}</p>
-          <p className="text-sm text-slate-500">{t('trips.list.emptyText')}</p>
+          {showFavorites ? (
+            <IoHeartOutline size={40} className="text-slate-300" />
+          ) : (
+            <IoMapOutline size={40} className="text-slate-300" />
+          )}
+          <p className="font-medium text-slate-700">
+            {t(showFavorites ? 'trips.list.favoritesEmptyTitle' : 'trips.list.emptyTitle')}
+          </p>
+          <p className="text-sm text-slate-500">
+            {t(showFavorites ? 'trips.list.favoritesEmptyText' : 'trips.list.emptyText')}
+          </p>
         </div>
       )}
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {trips.map((item, index) => (
+        {!failed && trips.map((item, index) => (
           <li key={item._id ?? item.nameTrip + index}>
             <div
               role="link"
@@ -126,6 +187,24 @@ export default function TripListPage() {
                   <span className="truncate">{item.location}</span>
                 </span>
               </div>
+              <button
+                type="button"
+                aria-label={t(favoriteIds.has(item._id) ? 'trips.list.unfavoriteLabel' : 'trips.list.favoriteLabel', {
+                  name: item.nameTrip,
+                })}
+                aria-pressed={favoriteIds.has(item._id)}
+                title={t(favoriteIds.has(item._id) ? 'trips.list.unfavorite' : 'trips.list.favorite')}
+                onClick={e => {
+                  e.stopPropagation();
+                  setFavorite(item, !favoriteIds.has(item._id));
+                }}
+                className="absolute top-2 left-2 grid size-9 place-items-center rounded-full bg-white/90 text-slate-600 backdrop-blur transition hover:bg-white hover:text-rose-500">
+                {favoriteIds.has(item._id) ? (
+                  <IoHeart size={18} className="text-rose-500" />
+                ) : (
+                  <IoHeartOutline size={18} />
+                )}
+              </button>
               <button
                 type="button"
                 aria-label={t('trips.list.duplicateLabel', {name: item.nameTrip})}
