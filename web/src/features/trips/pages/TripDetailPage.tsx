@@ -27,6 +27,7 @@ import {safeFileName, saveBlob} from '@/lib/download';
 import {challengeApi, tripsApi} from '../api/tripsApi';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
 import ShareTripDialog from '../components/ShareTripDialog';
+import TripVisibilityButton from '../components/TripVisibilityButton';
 import {images} from '../data/provinceImages';
 import {useFavoriteTrips, useToggleFavorite, useTripDetail} from '../hooks/useTrips';
 import type {Challenge} from '../types';
@@ -210,6 +211,7 @@ export default function TripDetailPage() {
               className="grid size-10 place-items-center rounded-full bg-white/90 text-slate-800 backdrop-blur transition hover:bg-white">
               {isFavorite ? <IoHeart size={20} className="text-rose-500" /> : <IoHeartOutline size={20} />}
             </button>
+            {idTrip && <TripVisibilityButton tripId={idTrip} />}
             <button
               type="button"
               aria-label={t('trips.share.open')}

@@ -39,14 +39,9 @@ const disableShare = async (trip) => {
     return { message: "Sharing turned off", ...statusOf({}) };
 };
 
-// What a visitor with the link may see: the plan only. Nothing about the owner
-// (id, e-mail, name), the owner's progress, check-in photos or share settings.
-const getSharedTrip = async (token) => {
-    const trip = SHARE_TOKEN_PATTERN.test(String(token)) ? await tripPlanRepository.findSharedByToken(token) : null;
-    if (!trip) {
-        // same answer for malformed, unknown, revoked and deleted: nothing to tell apart
-        throw new HttpError(404, "This shared link is invalid or has been turned off");
-    }
+// What a visitor (share link or public trip) may see: the plan only. Nothing about the
+// owner (id, e-mail, name), the owner's progress, check-in photos or share settings.
+export const buildPublicTripView = async (trip) => {
     const days = await tripDayRepository.findByTripId(trip._id);
     const dataTripDays = await Promise.all(days.map(async (day) => {
         const challenges = await challengeRepository.findByTripDayId(day._id);
@@ -70,18 +65,27 @@ const getSharedTrip = async (token) => {
         };
     }));
     return {
+        nameTrip: trip.nameTrip,
+        location: trip.location,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        transportCostTotal: trip.transportCostTotal,
+        foodCostTotal: trip.foodCostTotal,
+        otherCostTotal: trip.otherCostTotal,
+        dataTripDays,
+    };
+};
+
+const getSharedTrip = async (token) => {
+    const trip = SHARE_TOKEN_PATTERN.test(String(token)) ? await tripPlanRepository.findSharedByToken(token) : null;
+    if (!trip) {
+        // same answer for malformed, unknown, revoked and deleted: nothing to tell apart
+        throw new HttpError(404, "This shared link is invalid or has been turned off");
+    }
+    return {
         message: "Get shared trip successfully",
         permission: trip.sharePermission ?? "view",
-        tripDatas: {
-            nameTrip: trip.nameTrip,
-            location: trip.location,
-            startDate: trip.startDate,
-            endDate: trip.endDate,
-            transportCostTotal: trip.transportCostTotal,
-            foodCostTotal: trip.foodCostTotal,
-            otherCostTotal: trip.otherCostTotal,
-            dataTripDays,
-        },
+        tripDatas: await buildPublicTripView(trip),
     };
 };
 

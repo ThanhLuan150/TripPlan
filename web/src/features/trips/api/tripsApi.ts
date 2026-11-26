@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {GenerateTripParams, Plan, PlanDay, ShareStatus, SharedTrip, Trip, TripDetail} from '../types';
+import type {GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -29,9 +29,28 @@ export const tripsApi = {
 
   disableShare: async (id: string) => (await api.delete<ShareStatus>(`/trip-plan/${id}/share`)).data,
 
+  // visibility (owner only): "public" = anyone can read it, "private" = only the owner
+  visibility: async (id: string) =>
+    (await api.get<{visibility: TripVisibility}>(`/trip-plan/${id}/visibility`)).data,
+
+  setVisibility: async (id: string, visibility: TripVisibility) =>
+    (await api.put<{visibility: TripVisibility}>(`/trip-plan/${id}/visibility`, {visibility})).data,
+
   // public: the trip behind a share link (404 when invalid or turned off)
   getShared: async (token: string) =>
     (await api.get<{tripDatas: SharedTrip}>(`/shared/${encodeURIComponent(token)}`)).data.tripDatas,
+
+  // public: a trip its owner made public (404 when private, deleted or unknown)
+  getPublic: async (id: string) =>
+    (await api.get<{tripDatas: SharedTrip}>(`/public-trip/${encodeURIComponent(id)}`)).data.tripDatas,
+
+  // public trips of everyone (cards only), newest first
+  listPublic: async (page: number) =>
+    (await api.get<PublicTripsPage>('/public-trip', {params: {page}})).data,
+
+  // keep a private copy of a public trip (signed in)
+  copyPublic: async (id: string) =>
+    (await api.post<{tripId: string; nameTrip: string}>(`/public-trip/${encodeURIComponent(id)}/copy`)).data,
 
   // favorites of the signed-in user (deleted trips are left out by the backend)
   favorites: async () =>

@@ -30,7 +30,8 @@
     "ranking": "Xếp hạng",
     "account": "Tài khoản",
     "chat": "Chat",
-    "plans": "Kế hoạch"
+    "plans": "Kế hoạch",
+    "explore": "Khám phá"
   },
   "validation": {
     "usernameRequired": "Nhập tên đăng nhập",
@@ -280,6 +281,20 @@
       "saveFailed": "Lưu kế hoạch không thành công",
       "duplicateName": "Bạn đã có kế hoạch trùng tên"
     },
+    "visibility": {
+      "public": "Công khai",
+      "private": "Riêng tư",
+      "change": "Đổi người có thể xem kế hoạch này",
+      "hintPublic": "Công khai: ai cũng xem được kế hoạch này. Nhấn để chuyển sang riêng tư.",
+      "hintPrivate": "Riêng tư: chỉ bạn xem được kế hoạch này. Nhấn để chuyển sang công khai.",
+      "confirmPublicTitle": "Công khai kế hoạch này?",
+      "confirmPublicText": "Mọi người sẽ xem được kế hoạch này (chỉ xem). Bạn có thể chuyển lại riêng tư bất cứ lúc nào.",
+      "confirmPublicAction": "Công khai",
+      "copyLink": "Sao chép liên kết công khai",
+      "linkCopied": "Đã sao chép liên kết công khai",
+      "copyFailed": "Không sao chép được liên kết",
+      "failed": "Không thể đổi chế độ hiển thị"
+    },
     "share": {
       "open": "Chia sẻ",
       "title": "Chia sẻ kế hoạch",
@@ -295,6 +310,27 @@
       "copyFailed": "Không sao chép được, hãy chọn liên kết và sao chép thủ công",
       "failed": "Không thay đổi được chia sẻ",
       "loadFailed": "Không tải được trạng thái chia sẻ"
+    },
+    "explore": {
+      "title": "Khám phá kế hoạch công khai",
+      "subtitle": "Kế hoạch người khác đã công khai. Mở một kế hoạch và lưu bản sao riêng cho bạn.",
+      "empty": "Chưa có kế hoạch công khai nào.",
+      "error": "Không tải được kế hoạch công khai.",
+      "cost": "Khoảng {{amount}} VND",
+      "pagination": "Phân trang",
+      "prev": "Trước",
+      "next": "Sau",
+      "page": "Trang {{page}} / {{pages}}"
+    },
+    "publicTrip": {
+      "saveCopy": "Lưu về kế hoạch của tôi",
+      "saving": "Đang lưu...",
+      "saved": "Đã lưu vào kế hoạch của bạn",
+      "saveFailed": "Không lưu được kế hoạch này",
+      "signInToSave": "Đăng nhập để lưu kế hoạch này",
+      "readOnly": "Kế hoạch công khai · chỉ xem",
+      "invalidTitle": "Không xem được kế hoạch này",
+      "invalidText": "Kế hoạch không tồn tại hoặc chủ sở hữu đã chuyển sang riêng tư."
     },
     "shared": {
       "readOnly": "Kế hoạch được chia sẻ · chỉ xem",

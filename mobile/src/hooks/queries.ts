@@ -1,4 +1,4 @@
-import {useQuery} from '@tanstack/react-query';
+import {useInfiniteQuery, useQuery} from '@tanstack/react-query';
 import {
   GenerateParams,
   chatApi,
@@ -19,6 +19,9 @@ export const queryKeys = {
   favoriteTrips: ['favoriteTrips'] as const,
   trip: (id: string) => ['trip', id] as const,
   tripShare: (id: string) => ['tripShare', id] as const,
+  tripVisibility: (id: string) => ['tripVisibility', id] as const,
+  publicTrips: ['publicTrips'] as const,
+  publicTrip: (id: string) => ['publicTrip', id] as const,
   notifications: ['notifications'] as const,
   chats: ['chats'] as const,
   generate: (params: GenerateParams) => ['generate', params] as const,
@@ -47,6 +50,28 @@ export const useShareStatus = (id: string, enabled: boolean) =>
     queryKey: queryKeys.tripShare(id),
     queryFn: () => tripsApi.shareStatus(id),
     enabled,
+  });
+
+export const useTripVisibility = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.tripVisibility(id),
+    queryFn: () => tripsApi.visibility(id),
+  });
+
+export const usePublicTrips = () =>
+  useInfiniteQuery({
+    queryKey: queryKeys.publicTrips,
+    queryFn: ({pageParam}) => tripsApi.listPublic(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: last =>
+      last.page * last.limit < last.total ? last.page + 1 : undefined,
+  });
+
+export const usePublicTrip = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.publicTrip(id),
+    queryFn: () => tripsApi.getPublic(id),
+    retry: false,
   });
 
 export const useTrip = (id: string) =>

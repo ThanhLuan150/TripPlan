@@ -58,7 +58,9 @@ describe("authenticate", () => {
         expect(userRepository.findById).toHaveBeenCalledWith(userId);
         expect(req.user).toBe(user);
         expect(req.userData).toBe(user);
-        expect(res.setHeader).not.toHaveBeenCalled();
+        // no new token (the access token is still valid), but the answer is never cached
+        expect(res.setHeader).not.toHaveBeenCalledWith("Authorization", expect.anything());
+        expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", "no-store");
     });
 
     it("sends a fresh access token when it expired but the refresh token is valid", async () => {

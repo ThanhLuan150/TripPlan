@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {FlatList, Share, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ShareTripModal from '../components/ShareTripModal';
 import {colors} from '../lib/theme';
@@ -12,7 +12,9 @@ import ActivityRow from '../components/ActivityRow';
 import DayCard from '../components/DayCard';
 import {PleaseWait} from '../components/GenerateStatus';
 import TripHero from '../components/TripHero';
-import {queryKeys, useTrip} from '../hooks/queries';
+import {queryKeys, useTrip, useTripVisibility} from '../hooks/queries';
+import {tripsApi, TripVisibility} from '../api';
+import {API_URL} from '../lib/config';
 import {useApiMutation} from '../hooks/useApiMutation';
 import {alert} from '../lib/alert';
 import {apiMessage, errorText} from '../lib/apiClient';
@@ -52,6 +54,20 @@ export default function TripDetail() {
   });
   const [retake, setRetake] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [confirmPublic, setConfirmPublic] = useState(false);
+  const visibility = useTripVisibility(id);
+  const changeVisibility = useApiMutation(
+    (v: TripVisibility) => tripsApi.setVisibility(id, v),
+    {
+      onSuccess: data => {
+        qc.setQueryData(queryKeys.tripVisibility(id), data);
+        // going private also turns the share link off
+        qc.invalidateQueries({queryKey: queryKeys.tripShare(id)});
+      },
+      onError: e => alert.error(t('trips.visibilityFailed'), errorText(e)),
+    },
+  );
+  const isPublic = visibility.data?.visibility === 'public';
   const [exporting, setExporting] = useState(false);
 
   // PDF of the saved trip (nothing is changed), opened with the system viewer
@@ -91,6 +107,52 @@ export default function TripDetail() {
         onPress={exportPdf}>
         <Ionicons name="document-text-outline" size={20} color="#fff" />
       </TouchableOpacity>
+      {visibility.data && (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t('trips.visibilityChange')}
+          disabled={changeVisibility.isPending}
+          style={[
+            styles.share,
+            styles.visibility,
+            changeVisibility.isPending && styles.disabled,
+          ]}
+          onPress={() =>
+            isPublic ? changeVisibility.mutate('private') : setConfirmPublic(true)
+          }>
+          <Ionicons
+            name={isPublic ? 'globe-outline' : 'lock-closed-outline'}
+            size={20}
+            color="#fff"
+          />
+          <Text style={styles.visibilityText}>
+            {t(isPublic ? 'trips.visibilityPublic' : 'trips.visibilityPrivate')}
+          </Text>
+        </TouchableOpacity>
+      )}
+      {isPublic && (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t('trips.visibilityShareLink')}
+          style={[styles.share, styles.publicLink]}
+          onPress={() =>
+            Share.share({
+              message:
+                visibility.data?.publicUrl ?? `${API_URL}/public-trip/${id}`,
+            }).catch(() => undefined)
+          }>
+          <Ionicons name="link-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+      )}
+      <ConfirmModal
+        visible={confirmPublic}
+        title={t('trips.visibilityConfirmPublic')}
+        onCancel={() => setConfirmPublic(false)}
+        onConfirm={() => {
+          setConfirmPublic(false);
+          changeVisibility.mutate('public');
+        }}
+      />
       <ShareTripModal
         tripId={id}
         visible={sharing}
@@ -148,6 +210,9 @@ const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#fff', paddingTop: 36},
   list: {paddingHorizontal: 15},
   pdf: {top: 88},
+  visibility: {top: 136, flexDirection: 'row', alignItems: 'center', gap: 6},
+  publicLink: {top: 184},
+  visibilityText: {color: '#fff', fontWeight: '600', fontSize: 13},
   disabled: {opacity: 0.6},
   share: {
     position: 'absolute',

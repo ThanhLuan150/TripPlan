@@ -12,6 +12,7 @@ import {authApi} from '../api/authApi';
 import AuthShell, {AuthLink} from '../components/AuthShell';
 import PasswordInput from '../components/PasswordInput';
 import {homeRouteFor, saveSession} from '../store/session';
+import {resetChatCache} from '@/features/assistant/store/chatCache';
 import {loginSchema} from '../validation';
 import type {LoginInput} from '../types';
 
@@ -24,8 +25,11 @@ export default function LoginPage() {
   const login = useMutation({
     mutationFn: (data: LoginInput) => authApi.login(data),
     onSuccess: session => {
+      // a different account may sign in on this browser without a logout: nothing cached for
+      // the previous user (trips, favorites, chats...) may be shown to the new one
+      queryClient.clear();
+      resetChatCache();
       saveSession(session);
-      queryClient.invalidateQueries({queryKey: ['profile']});
       Toast.show({type: 'success', text1: t('common.success'), text2: t('auth.login.success')});
       const from = (location.state as {from?: {pathname: string}})?.from?.pathname;
       // back to the page the user wanted, else the admin panel / home page

@@ -35,8 +35,25 @@ export const saveSession = (session: StoredSession) => {
 };
 
 // The backend sends a new access token when the old one has expired.
+// userId inside a JWT (no verification: only used to compare with the signed-in user)
+const tokenUserId = (token: string): string | null => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.userId === 'string' ? payload.userId : null;
+  } catch {
+    return null;
+  }
+};
+
 export const updateAccessToken = (accessToken: string) => {
   const session = getSession();
+  // a late answer to a request of the previous account must not swap the token of the new one
+  const current = getAccessToken();
+  const owner = tokenUserId(accessToken);
+  const currentOwner = current ? tokenUserId(current) : null;
+  if (owner && currentOwner && owner !== currentOwner) {
+    return;
+  }
   if (session) {
     saveSession({...session, accessToken});
   } else {

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
 import {Trip, tripsApi} from '../api';
@@ -91,6 +92,14 @@ export default function Trips() {
         </TouchableOpacity>
         <Text style={styles.addText}>{t('trips.addNew')}</Text>
       </View>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={t('trips.exploreOpen')}
+        style={styles.explore}
+        onPress={() => navigation.navigate('PublicTrips')}>
+        <Ionicons name="compass-outline" size={18} color={colors.primaryDark} />
+        <Text style={styles.exploreText}>{t('trips.exploreOpen')}</Text>
+      </TouchableOpacity>
       <View style={styles.tabs}>
         {(['all', 'favorites'] as const).map(key => (
           <TouchableOpacity
@@ -156,6 +165,18 @@ export default function Trips() {
 }
 
 const styles = StyleSheet.create({
+  explore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    marginHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: colors.tint,
+  },
+  exploreText: {color: colors.primaryDark, fontWeight: '700', fontSize: 14},
   container: {flex: 1, backgroundColor: '#fff'},
   addNew: {
     marginTop: 16,

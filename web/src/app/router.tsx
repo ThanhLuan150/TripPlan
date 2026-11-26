@@ -18,6 +18,8 @@ import CreateTripPage from '@/features/trips/pages/CreateTripPage';
 import GenerateTripsPage from '@/features/trips/pages/GenerateTripsPage';
 import TripDetailPage from '@/features/trips/pages/TripDetailPage';
 import TripMapPage from '@/features/trips/pages/TripMapPage';
+import ExplorePage from '@/features/trips/pages/ExplorePage';
+import PublicTripPage from '@/features/trips/pages/PublicTripPage';
 import SharedTripPage from '@/features/trips/pages/SharedTripPage';
 import RankingPage from '@/features/ranking/pages/RankingPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
@@ -45,6 +47,7 @@ export default function AppRouter() {
 
         {/* public, read only view of a shared trip */}
         <Route path="/shared/:token" element={<SharedTripPage />} />
+        <Route path="/trip/:id" element={<PublicTripPage />} />
 
         {/* signed in (any role) */}
         <Route element={<RequireAuth />}>
@@ -55,6 +58,7 @@ export default function AppRouter() {
               {/* the chat is rendered by AssistantLayout so it stays mounted */}
               <Route path="chat" element={null} />
               <Route path="trips" element={<TripListPage />} />
+              <Route path="explore" element={<ExplorePage />} />
               <Route path="trips/new" element={<CreateTripPage />} />
               <Route path="trips/generate" element={<GenerateTripsPage />} />
               <Route path="trips/:idTrip" element={<TripDetailPage />} />

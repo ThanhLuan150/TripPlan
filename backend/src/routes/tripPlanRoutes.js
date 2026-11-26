@@ -25,6 +25,8 @@ router.get("/:id/export-pdf", ownTrip, tripPlanController.exportTripPdf); // rol
 router.get("/:id/share", ownTrip, tripPlanController.getShareStatus);    // role: user|admin + owner of the trip
 router.post("/:id/share", ownTrip, tripPlanController.enableShare);      // role: user|admin + owner of the trip — idempotent
 router.delete("/:id/share", ownTrip, tripPlanController.disableShare);   // role: user|admin + owner of the trip — revokes the link
+router.get("/:id/visibility", ownTrip, tripPlanController.getVisibility);   // role: user|admin + owner of the trip
+router.put("/:id/visibility", ownTrip, tripPlanController.setVisibility);   // role: user|admin + owner of the trip — { visibility: "public" | "private" }
 router.delete("/:id", ownTrip, tripPlanController.deleteTrip);           // role: user|admin + owner of the trip — soft delete
 router.get("/location/:id", ownTrip, tripPlanController.getTripLocations); // role: user|admin + owner of the trip
 

@@ -1,5 +1,5 @@
 import {tripDetail, trips} from '../../support/fixtures';
-import {expectCall, mockApi, reply, signIn, t, visit} from '../../support/helpers';
+import {expectCall, expectNoCall, mockApi, reply, signIn, t, visit} from '../../support/helpers';
 
 const api = {'GET /trip-plan/get-trip/t1': {tripDatas: tripDetail}, 'GET /trip-plan/get-trip': {dataTrip: trips}};
 
@@ -143,6 +143,33 @@ describe('trip detail', () => {
     expectCall(calls, 'DELETE', '/trip-plan/t1/share');
     cy.findByLabelText(t('trips.share.linkLabel')).should('not.exist');
     cy.findByText(t('trips.share.statusOff')).should('be.visible');
+  });
+
+  it('shows who can see the trip and lets the owner change it', () => {
+    const calls = mockApi({
+      ...api,
+      'GET /trip-plan/t1/visibility': {visibility: 'private'},
+      'PUT /trip-plan/t1/visibility': (call: {body: {visibility: string}}) => ({visibility: call.body.visibility}),
+    });
+    visit('/assistant/trips/t1');
+
+    cy.findByRole('button', {name: t('trips.visibility.change')}).as('visibility').should('contain.text', t('trips.visibility.private'));
+
+    // going public asks first: cancelling changes nothing
+    cy.get('@visibility').click();
+    cy.findByText(t('trips.visibility.confirmPublicTitle')).should('be.visible');
+    cy.findByRole('button', {name: t('common.cancel')}).click();
+    cy.findByText(t('trips.visibility.confirmPublicTitle')).should('not.exist');
+    cy.then(() => expectNoCall(calls, 'PUT'));
+
+    cy.get('@visibility').click();
+    cy.findByRole('button', {name: t('trips.visibility.confirmPublicAction')}).click();
+    cy.then(() => expect(calls.find(c => c.method === 'PUT')?.body).to.deep.eq({visibility: 'public'}));
+    cy.get('@visibility').should('contain.text', t('trips.visibility.public'));
+
+    // going private needs no question
+    cy.get('@visibility').click();
+    cy.get('@visibility').should('contain.text', t('trips.visibility.private'));
   });
 
   it('tells the user when the PDF cannot be created', () => {

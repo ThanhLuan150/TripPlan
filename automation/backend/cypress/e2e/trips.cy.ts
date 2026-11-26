@@ -1,4 +1,4 @@
-import {FAR, NEAR, PLACE, call, del, get, post, saveTrip, signIn, stored} from '../support/api';
+import {FAR, NEAR, PLACE, call, del, get, post, put, saveTrip, signIn, stored} from '../support/api';
 
 describe('trips', () => {
   it('saves a plan, lists it and returns its detail with days and challenges', () => {
@@ -264,6 +264,124 @@ describe('trips', () => {
             del(`/trip-plan/${tripId}`, owner.token).its('status').should('eq', 200);
             get(`/shared/${on.body.shareToken}`).its('status').should('eq', 404);
           });
+        });
+      });
+    });
+  });
+
+  it('visibility: private by default, the owner makes it public and private again', () => {
+    signIn().then(({token}) => {
+      saveTrip(token, 'Da Nang visibility').then(({tripId}) => {
+        const vis = `/trip-plan/${tripId}/visibility`;
+        const open = `/public-trip/${tripId}`;
+        get(vis, token).its('body.visibility').should('eq', 'private');
+        get(open).its('status').should('eq', 404);
+
+        put(vis, token, {visibility: 'public'}).its('body.visibility').should('eq', 'public');
+        get(vis, token).its('body.visibility').should('eq', 'public');
+        // anyone can read it without signing in, and sees only the plan
+        get(open).then(res => {
+          expect(res.status).to.eq(200);
+          expect(String(res.headers['cache-control'])).to.contain('no-store');
+          expect(res.body.tripDatas.nameTrip).to.eq('Da Nang visibility');
+          expect(res.body.tripDatas.dataTripDays).to.have.length(2);
+          const text = JSON.stringify(res.body);
+          ['userId', 'shareToken', 'completed', 'imageUrl'].forEach(key => expect(text).not.to.contain(key));
+        });
+        // read only
+        ['POST', 'PUT', 'PATCH', 'DELETE'].forEach(method => call(method, open).its('status').should('be.oneOf', [401, 404]));
+
+        // back to private: closed at once
+        put(vis, token, {visibility: 'private'}).its('body.visibility').should('eq', 'private');
+        get(open).its('status').should('eq', 404);
+      });
+    });
+  });
+
+  it('visibility: only the owner changes it, public does not open the owner endpoints', () => {
+    signIn().then(owner => {
+      signIn().then(other => {
+        saveTrip(owner.token).then(({tripId}) => {
+          const vis = `/trip-plan/${tripId}/visibility`;
+          put(vis, other.token, {visibility: 'public'}).its('status').should('eq', 404);
+          get(vis, other.token).its('status').should('eq', 404);
+          put(vis, undefined, {visibility: 'public'}).its('status').should('eq', 401);
+          put('/trip-plan/not-an-id/visibility', owner.token, {visibility: 'public'}).its('status').should('eq', 404);
+          get(`/public-trip/${tripId}`).its('status').should('eq', 404);
+
+          ['secret', '', null, 1].forEach(value => put(vis, owner.token, {visibility: value}).its('status').should('eq', 400));
+          get(vis, owner.token).its('body.visibility').should('eq', 'private');
+
+          put(vis, owner.token, {visibility: 'public'}).its('status').should('eq', 200);
+          get(`/trip-plan/get-trip/${tripId}`, other.token).its('status').should('eq', 404);
+          del(`/trip-plan/${tripId}`, other.token).its('status').should('eq', 404);
+          post(`/trip-plan/${tripId}/duplicate`, other.token).its('status').should('eq', 404);
+          put(vis, other.token, {visibility: 'private'}).its('status').should('eq', 404);
+          get(`/public-trip/${tripId}`).its('status').should('eq', 200);
+
+          // a deleted trip is no longer public
+          del(`/trip-plan/${tripId}`, owner.token).its('status').should('eq', 200);
+          get(`/public-trip/${tripId}`).its('status').should('eq', 404);
+          get('/public-trip/not-an-id').its('status').should('eq', 404);
+        });
+      });
+    });
+  });
+
+  it('visibility: going private also revokes the share link', () => {
+    signIn().then(({token}) => {
+      saveTrip(token).then(({tripId}) => {
+        post(`/trip-plan/${tripId}/share`, token).then(on => {
+          const link = `/shared/${on.body.shareToken}`;
+          put(`/trip-plan/${tripId}/visibility`, token, {visibility: 'public'}).its('status').should('eq', 200);
+          get(link).its('status').should('eq', 200);
+
+          put(`/trip-plan/${tripId}/visibility`, token, {visibility: 'private'}).its('status').should('eq', 200);
+          get(link).its('status').should('eq', 404);
+          get(`/trip-plan/${tripId}/share`, token).its('body.isShared').should('eq', false);
+        });
+      });
+    });
+  });
+
+  it('explore: public trips are listed for anyone and another user can keep a private copy', () => {
+    signIn().then(owner => {
+      signIn().then(reader => {
+        saveTrip(owner.token, 'Explore public').then(({tripId}) => {
+          saveTrip(owner.token, 'Explore private');
+          put(`/trip-plan/${tripId}/visibility`, owner.token, {visibility: 'public'}).its('status').should('eq', 200);
+
+          // listed without signing in: cards only, and only the public trip
+          get('/public-trip').then(res => {
+            expect(res.status).to.eq(200);
+            expect(res.body).to.include({page: 1});
+            const names = res.body.items.map((t: any) => t.nameTrip);
+            expect(names).to.include('Explore public');
+            expect(names).not.to.include('Explore private');
+            expect(JSON.stringify(res.body)).not.to.contain('userId');
+          });
+          get('/public-trip', undefined, {page: 'abc', limit: '99999'}).its('body.limit').should('eq', 50);
+
+          // keeping a copy needs a signed-in user
+          post(`/public-trip/${tripId}/copy`).its('status').should('eq', 401);
+          post(`/public-trip/${tripId}/copy`, reader.token).then(copy => {
+            expect(copy.status).to.eq(201);
+            expect(copy.body.nameTrip).to.eq('Explore public (bản sao)');
+            // the copy is the reader's, private, with fresh progress
+            get(`/trip-plan/get-trip/${copy.body.tripId}`, reader.token).then(detail => {
+              expect(detail.status).to.eq(200);
+              expect(detail.body.tripDatas.visibility).to.eq('private');
+              expect(detail.body.tripDatas.dataTripDays[0].challenges[0]).to.include({completed: false});
+            });
+            get(`/public-trip/${copy.body.tripId}`).its('status').should('eq', 404);
+            get(`/trip-plan/get-trip/${copy.body.tripId}`, owner.token).its('status').should('eq', 404);
+          });
+
+          // a private trip cannot be copied, and the original is untouched
+          post(`/public-trip/not-an-id/copy`, reader.token).its('status').should('eq', 404);
+          put(`/trip-plan/${tripId}/visibility`, owner.token, {visibility: 'private'}).its('status').should('eq', 200);
+          post(`/public-trip/${tripId}/copy`, reader.token).its('status').should('eq', 404);
+          get(`/trip-plan/get-trip/${tripId}`, owner.token).its('status').should('eq', 200);
         });
       });
     });

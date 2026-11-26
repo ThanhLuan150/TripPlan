@@ -1,5 +1,6 @@
 import tripService from "../services/tripService.js";
 import tripShareService from "../services/tripShareService.js";
+import tripVisibilityService from "../services/tripVisibilityService.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 const generatePlans = asyncHandler(async (req, res) => {
@@ -61,4 +62,12 @@ const disableShare = asyncHandler(async (req, res) => {
     res.status(200).json(await tripShareService.disableShare(req.trip));
 });
 
-export default { getShareStatus, enableShare, disableShare, exportTripPdf, listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };
+const getVisibility = asyncHandler(async (req, res) => {
+    res.status(200).json(await tripVisibilityService.getVisibility(req.trip));
+});
+
+const setVisibility = asyncHandler(async (req, res) => {
+    res.status(200).json(await tripVisibilityService.setVisibility(req.trip, req.body?.visibility));
+});
+
+export default { getVisibility, setVisibility, getShareStatus, enableShare, disableShare, exportTripPdf, listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };
