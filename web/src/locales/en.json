@@ -281,6 +281,26 @@
       "saveFailed": "Could not save the plan",
       "duplicateName": "You already have a plan with this name"
     },
+    "notes": {
+      "title": "Notes",
+      "hint": "Only you can see these notes.",
+      "placeholder": "Write a note for this trip…",
+      "add": "Add note",
+      "save": "Save",
+      "edit": "Edit note",
+      "remove": "Delete note",
+      "empty": "No notes yet",
+      "loadFailed": "Could not load the notes",
+      "retry": "Try again",
+      "required": "Please write something before saving",
+      "tooLong": "The note is too long ({{max}} characters at most)",
+      "counter": "{{length}}/{{max}}",
+      "edited": "edited",
+      "deleteTitle": "Delete this note?",
+      "deleteText": "This cannot be undone.",
+      "saveFailed": "Could not save the note",
+      "deleteFailed": "Could not delete the note"
+    },
     "visibility": {
       "public": "Public",
       "private": "Private",

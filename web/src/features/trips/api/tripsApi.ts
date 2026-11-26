@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripVisibility} from '../types';
+import type {GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -35,6 +35,19 @@ export const tripsApi = {
 
   setVisibility: async (id: string, visibility: TripVisibility) =>
     (await api.put<{visibility: TripVisibility}>(`/trip-plan/${id}/visibility`, {visibility})).data,
+
+  // personal notes (owner only; nobody else can read or change them)
+  notes: async (id: string) =>
+    (await api.get<{notes: TripNote[]}>(`/trip-plan/${id}/notes`)).data.notes,
+
+  addNote: async (id: string, content: string) =>
+    (await api.post<{note: TripNote}>(`/trip-plan/${id}/notes`, {content})).data.note,
+
+  updateNote: async (id: string, noteId: string, content: string) =>
+    (await api.put<{note: TripNote}>(`/trip-plan/${id}/notes/${noteId}`, {content})).data.note,
+
+  removeNote: async (id: string, noteId: string) =>
+    (await api.delete(`/trip-plan/${id}/notes/${noteId}`)).data,
 
   // public: the trip behind a share link (404 when invalid or turned off)
   getShared: async (token: string) =>

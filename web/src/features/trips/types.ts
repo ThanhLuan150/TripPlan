@@ -53,6 +53,17 @@ export interface PublicTripsPage {
   items: PublicTripCard[];
 }
 
+export const MAX_NOTE_LENGTH = 2000;
+
+// A private note of the signed-in user on one of their trips
+export interface TripNote {
+  _id: string;
+  tripId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type TripVisibility = 'public' | 'private';
 
 export interface ShareStatus {

@@ -236,6 +236,23 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1/share');
   });
 
+  it('notes: list / add / update / remove call the owner endpoints and unwrap the note', async () => {
+    const put = vi.spyOn(api, 'put');
+    get.mockResolvedValue(reply({notes: [{_id: 'n1'}]}));
+    post.mockResolvedValue(reply({note: {_id: 'n2'}}));
+    put.mockResolvedValue(reply({note: {_id: 'n1', content: 'new'}}));
+    del.mockResolvedValue(reply({message: 'ok'}));
+
+    await expect(tripsApi.notes('t1')).resolves.toEqual([{_id: 'n1'}]);
+    await expect(tripsApi.addNote('t1', 'hi')).resolves.toEqual({_id: 'n2'});
+    await expect(tripsApi.updateNote('t1', 'n1', 'new')).resolves.toMatchObject({content: 'new'});
+    await expect(tripsApi.removeNote('t1', 'n1')).resolves.toEqual({message: 'ok'});
+    expect(get).toHaveBeenCalledWith('/trip-plan/t1/notes');
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/notes', {content: 'hi'});
+    expect(put).toHaveBeenCalledWith('/trip-plan/t1/notes/n1', {content: 'new'});
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/notes/n1');
+  });
+
   it('getShared reads the public endpoint and unwraps the trip', async () => {
     get.mockResolvedValue(reply({tripDatas: {location: 'Đà Lạt'}}));
 

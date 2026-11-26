@@ -27,6 +27,7 @@ import {safeFileName, saveBlob} from '@/lib/download';
 import {challengeApi, tripsApi} from '../api/tripsApi';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
 import ShareTripDialog from '../components/ShareTripDialog';
+import TripNotes from '../components/TripNotes';
 import TripVisibilityButton from '../components/TripVisibilityButton';
 import {images} from '../data/provinceImages';
 import {useFavoriteTrips, useToggleFavorite, useTripDetail} from '../hooks/useTrips';
@@ -358,6 +359,8 @@ export default function TripDetailPage() {
           </section>
         );
       })}
+
+      {idTrip && <TripNotes tripId={idTrip} />}
 
       <ConfirmModal
         visible={retake !== null}

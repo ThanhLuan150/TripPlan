@@ -1,9 +1,10 @@
 import { Router } from "express";
 import tripPlanController from "../controllers/tripPlanController.js";
+import tripNoteController from "../controllers/tripNoteController.js";
 import authenticate from "../middleware/auth.js";
 import requireRole from "../middleware/requireRole.js";
 import logActivity from "../middleware/logActivity.js";
-import { ownTrip, validTripId } from "../middleware/ownership.js";
+import { ownNote, ownTrip, validTripId } from "../middleware/ownership.js";
 import { apiLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
@@ -27,6 +28,10 @@ router.post("/:id/share", ownTrip, tripPlanController.enableShare);      // role
 router.delete("/:id/share", ownTrip, tripPlanController.disableShare);   // role: user|admin + owner of the trip — revokes the link
 router.get("/:id/visibility", ownTrip, tripPlanController.getVisibility);   // role: user|admin + owner of the trip
 router.put("/:id/visibility", ownTrip, tripPlanController.setVisibility);   // role: user|admin + owner of the trip — { visibility: "public" | "private" }
+router.get("/:id/notes", ownTrip, tripNoteController.listNotes);         // role: user|admin + owner of the trip — only the caller's own notes
+router.post("/:id/notes", ownTrip, tripNoteController.createNote);       // role: user|admin + owner of the trip — { content }
+router.put("/:id/notes/:noteId", ownTrip, ownNote, tripNoteController.updateNote);    // role: user|admin + owner of the trip and of the note — { content }
+router.delete("/:id/notes/:noteId", ownTrip, ownNote, tripNoteController.deleteNote); // role: user|admin + owner of the trip and of the note
 router.delete("/:id", ownTrip, tripPlanController.deleteTrip);           // role: user|admin + owner of the trip — soft delete
 router.get("/location/:id", ownTrip, tripPlanController.getTripLocations); // role: user|admin + owner of the trip
 
