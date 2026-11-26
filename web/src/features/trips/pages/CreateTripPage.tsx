@@ -1,9 +1,12 @@
 import {useFormik} from 'formik';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {IoArrowBack, IoChatbubbles, IoSparkles} from 'react-icons/io5';
+import {IoArrowBack, IoChatbubbles, IoSparkles, IoSparklesOutline} from 'react-icons/io5';
 import {routes} from '@/app/routes';
-import {addCommas, fromInputDate, startOfDay, toInputDate} from '@/lib/date';
+import DraftBanner from '@/components/ui/DraftBanner';
+import {useDraft} from '@/hooks/useDraft';
+import {DraftNames} from '@/lib/drafts';
+import {fromInputDate, startOfDay, toInputDate} from '@/lib/date';
 import {fieldError} from '@/lib/forms';
 import {storage, StorageKeys} from '@/lib/storage';
 import BudgetField from '../components/form/BudgetField';
@@ -12,20 +15,9 @@ import InterestsField from '../components/form/InterestsField';
 import NoteField from '../components/form/NoteField';
 import ProvinceField from '../components/form/ProvinceField';
 import QuantityField from '../components/form/QuantityField';
+import {budgetOptions} from '../data/budgets';
 import type {BudgetTier, GenerateTripParams, TripFormPrefill} from '../types';
 import {countDays, createTripSchema, MAX_NOTE, MAX_PEOPLE} from '../validation';
-
-// Budget ranges per person. `value` (Vietnamese) is sent to the AI prompt.
-const budgetOptions = (people: number) => {
-  const m1 = addCommas(1000000 * people);
-  const m5 = addCommas(5000000 * people);
-  const m15 = addCommas(15000000 * people);
-  return [
-    {tier: 'low' as BudgetTier, value: `Dưới ${m1} VND`, labelKey: 'trips.create.budgetLow', key: 'trips.create.budgetUnder', vars: {max: m1}},
-    {tier: 'mid' as BudgetTier, value: `${m1} VND - ${m5} VND`, labelKey: 'trips.create.budgetMid', key: 'trips.create.budgetRange', vars: {min: m1, max: m5}},
-    {tier: 'high' as BudgetTier, value: `${m5} VND - ${m15} VND`, labelKey: 'trips.create.budgetHigh', key: 'trips.create.budgetRange', vars: {min: m5, max: m15}},
-  ];
-};
 
 export default function CreateTripPage() {
   const {t} = useTranslation();
@@ -68,6 +60,21 @@ export default function CreateTripPage() {
   });
   const {values, setFieldValue} = formik;
 
+  // the form is kept as a draft while the user fills it (not when it was opened already filled)
+  const filled = !!values.location || values.interests.length > 0 || !!values.budgetTier || !!values.note.trim() || values.quantity !== 1;
+  const draft = useDraft(DraftNames.createTrip, values, !filled, Object.keys(prefill).length === 0);
+  // a draft from days ago may start in the past: keep its length, start today
+  const resumeDraft = () => {
+    const saved = draft.resume();
+    if (saved) {
+      const length = Math.max(0, countDays(saved.startDate, saved.endDate) - 1);
+      const start = saved.startDate < today ? today : saved.startDate;
+      const end = new Date(fromInputDate(start));
+      end.setDate(end.getDate() + length);
+      formik.setValues({...saved, startDate: start, endDate: toInputDate(end)});
+    }
+  };
+
   // an error shows once its field was touched, or when the form is submitted
   const shown = (field: keyof typeof values) => {
     const message = fieldError(formik, field);
@@ -107,8 +114,31 @@ export default function CreateTripPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('trips.create.title')}</h1>
             <p className="text-sm text-slate-500">{t('trips.create.subtitle')}</p>
+            <button
+              type="button"
+              className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"
+              onClick={() => navigate(routes.Recommend)}>
+              <IoSparklesOutline size={15} aria-hidden />
+              {t('trips.create.askAi')}
+            </button>
           </div>
         </div>
+
+        {draft.pending && (
+          <div className="mb-4">
+            <DraftBanner savedAt={draft.pending.savedAt} onContinue={resumeDraft} onDiscard={draft.discard} />
+          </div>
+        )}
+
+        {prefill.fromSuggestion && (
+          <div className="mb-4 flex items-start gap-3 rounded-2xl bg-brand-50 p-4 text-sm text-brand-800 ring-1 ring-brand-100">
+            <IoSparkles size={20} className="mt-0.5 shrink-0 text-brand-600" />
+            <p>
+              {t('trips.create.fromSuggestion')}
+              {!prefill.location && ` ${t('trips.create.fromChatNoPlace')}`}
+            </p>
+          </div>
+        )}
 
         {prefill.fromChat && (
           <div className="mb-4 flex items-start gap-3 rounded-2xl bg-brand-50 p-4 text-sm text-brand-800 ring-1 ring-brand-100">

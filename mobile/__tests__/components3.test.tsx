@@ -379,6 +379,15 @@ describe('ChatView', () => {
   });
   const mount = () => renderApp(<ChatView />, {auth: makeAuth()});
 
+  it('says what the chat is for and links to the destination ideas', async () => {
+    const tree = mount();
+    await flush();
+    expect(allText(tree)).toContain(i18n.t('assistant.roleHint') as string);
+    expect(allText(tree)).toContain(i18n.t('assistant.toRecommendHint') as string);
+    pressText(tree, i18n.t('assistant.toRecommend') as string);
+    expect(navigate).toHaveBeenCalledWith('Recommend');
+  });
+
   it('shows suggestions at first, sends one, and offers a plan from the answer', async () => {
     (chatApi.send as jest.Mock).mockResolvedValue({
       message: 'Send message successfully',

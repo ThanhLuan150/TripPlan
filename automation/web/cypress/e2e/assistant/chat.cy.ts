@@ -15,6 +15,15 @@ describe('AI assistant chat', () => {
     signIn();
   });
 
+  it('says what the chat is for and links to the destination ideas', () => {
+    mockApi({'GET /chat': {data: chats}});
+    visit('/assistant/chat');
+
+    cy.findByText(t('assistant.roleHint')).should('be.visible');
+    cy.findByRole('button', {name: t('assistant.toRecommend')}).click();
+    cy.location('pathname').should('eq', '/assistant/recommend');
+  });
+
   it('greets the user and suggests questions; nothing can be sent yet', () => {
     mockApi({'GET /chat': {data: chats}});
     visit('/assistant/chat');

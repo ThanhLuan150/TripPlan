@@ -6,6 +6,7 @@ import {Navigate, useLocation, useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {IoArrowBack, IoRefresh, IoSparkles} from 'react-icons/io5';
 import {routes} from '@/app/routes';
+import {drafts, DraftNames} from '@/lib/drafts';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
@@ -33,7 +34,10 @@ export default function GenerateTripsPage() {
   const save = useMutation({
     mutationFn: ({name, days}: {name: string; days: PlanDay[]}) =>
       tripsApi.save(params!, name, days),
-    onSuccess: data => navigate(routes.DetailTripScreen(data.tripId), {replace: true}),
+    onSuccess: data => {
+      drafts.clear(DraftNames.createTrip);
+      navigate(routes.DetailTripScreen(data.tripId), {replace: true});
+    },
     onError: err =>
       Toast.show({
         type: 'error',

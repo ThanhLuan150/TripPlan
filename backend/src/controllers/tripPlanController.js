@@ -2,7 +2,12 @@ import tripService from "../services/tripService.js";
 import tripAiEditService from "../services/tripAiEditService.js";
 import tripShareService from "../services/tripShareService.js";
 import tripVisibilityService from "../services/tripVisibilityService.js";
+import tripPlaceService from "../services/tripPlaceService.js";
 import asyncHandler from "../utils/asyncHandler.js";
+
+const addPlace = asyncHandler(async (req, res) => {
+    res.status(201).json(await tripPlaceService.addPlace(req.trip, req.user._id, req.body));
+});
 
 const proposeAiEdit = asyncHandler(async (req, res) => {
     res.status(200).json(await tripAiEditService.proposeEdit(req.trip, req.user._id, req.body?.instruction));
@@ -83,4 +88,4 @@ const setVisibility = asyncHandler(async (req, res) => {
     res.status(200).json(await tripVisibilityService.setVisibility(req.trip, req.body?.visibility));
 });
 
-export default { discardAiEdit, proposeAiEdit, applyAiEdit, getVisibility, setVisibility, getShareStatus, enableShare, disableShare, exportTripPdf, listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };
+export default { addPlace, discardAiEdit, proposeAiEdit, applyAiEdit, getVisibility, setVisibility, getShareStatus, enableShare, disableShare, exportTripPdf, listFavoriteTrips, addFavoriteTrip, removeFavoriteTrip, duplicateTrip, generatePlans, saveTrip, listTrips, getTripDetail, deleteTrip, getTripLocations };

@@ -19,6 +19,7 @@ import GenerateTripsPage from '@/features/trips/pages/GenerateTripsPage';
 import TripDetailPage from '@/features/trips/pages/TripDetailPage';
 import TripMapPage from '@/features/trips/pages/TripMapPage';
 import ExplorePage from '@/features/trips/pages/ExplorePage';
+import RecommendPage from '@/features/destinations/pages/RecommendPage';
 import PublicTripPage from '@/features/trips/pages/PublicTripPage';
 import SharedTripPage from '@/features/trips/pages/SharedTripPage';
 import RankingPage from '@/features/ranking/pages/RankingPage';
@@ -59,6 +60,7 @@ export default function AppRouter() {
               <Route path="chat" element={null} />
               <Route path="trips" element={<TripListPage />} />
               <Route path="explore" element={<ExplorePage />} />
+              <Route path="recommend" element={<RecommendPage />} />
               <Route path="trips/new" element={<CreateTripPage />} />
               <Route path="trips/generate" element={<GenerateTripsPage />} />
               <Route path="trips/:idTrip" element={<TripDetailPage />} />

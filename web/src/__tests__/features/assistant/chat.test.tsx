@@ -137,6 +137,15 @@ describe('ChatPage', () => {
   const answer = (text: string, id = 'c9') =>
     vi.mocked(chatApi.send).mockResolvedValueOnce({message: CHAT_SUCCESS, data: {ChatResponse: text, chatAi: {_id: id}}});
 
+  it('says what the chat is for and links to the destination ideas', async () => {
+    render();
+
+    expect(screen.getByText(t('assistant.roleHint'))).toBeInTheDocument();
+    expect(screen.getByText(t('assistant.toRecommendHint'))).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', {name: t('assistant.toRecommend')}));
+    expect(await currentPath()).toBe('/assistant/recommend');
+  });
+
   it('greets the user and suggests questions', () => {
     render();
 

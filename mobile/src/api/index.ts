@@ -21,6 +21,7 @@ export interface Challenge {
   completed?: boolean;
 }
 export interface TripDay {
+  _id?: string;
   title: string;
   date: string;
   transportCost?: number;
@@ -207,6 +208,9 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+  // add one place to a day of the trip (owner only)
+  addPlace: async (id: string, body: AddPlaceBody) =>
+    (await api.post<AddPlaceResult>(`/trip-plan/${id}/places`, body)).data,
   // personal notes of the trip (owner only; nobody else can read or change them)
   notes: async (id: string) =>
     (await api.get<{notes: TripNote[]}>(`/trip-plan/${id}/notes`)).data.notes,
@@ -219,6 +223,101 @@ export const tripsApi = {
 };
 
 export type TripVisibility = 'public' | 'private';
+
+export const MAX_PLACES_PER_DAY = 10;
+// One place added to a day of an existing trip (e.g. a destination the AI recommended)
+export interface AddPlaceBody {
+  name: string;
+  dayId: string;
+  province?: string;
+  summary?: string;
+}
+export interface AddPlaceResult {
+  challengeId: string;
+  day: {id: string; title: string};
+  // false: the place has no position on the map yet
+  located: boolean;
+}
+
+export const MAX_RECOMMEND_QUERY_LENGTH = 500;
+export const MAX_RECOMMEND_BUDGET_LENGTH = 50;
+
+export interface RecommendParams {
+  query: string;
+  interests: string[];
+  region: string;
+  budget: string;
+}
+// A destination the app itself has data for (home page destination + its videos)
+export interface RecommendPlace {
+  id: string;
+  title: string;
+  location: string;
+  imageUrl: string;
+  videos: {id: string; title: string; youtubeLink: string; thumbnail: string}[];
+}
+export interface Recommendation {
+  name: string;
+  province: string;
+  description: string;
+  reason: string;
+  // false: only the AI suggested it (not verified by the app), no place data
+  inApp: boolean;
+  place?: RecommendPlace;
+}
+export interface RecommendResult {
+  recommendations: Recommendation[];
+  // the saved copy in the history; null when the AI found nothing
+  historyId: string | null;
+  message: string;
+}
+// "draft": not used yet, "created": a plan was started from it
+export type SearchStatus = 'draft' | 'created';
+export interface SearchSummary {
+  id: string;
+  query: string;
+  interests: string[];
+  region: string;
+  budget: string;
+  count: number;
+  names: string[];
+  status: SearchStatus;
+  tripId?: string;
+  createdAt: string;
+}
+export interface SearchDetail extends SearchSummary {
+  recommendations: Recommendation[];
+}
+
+export const destinationsApi = {
+  // AI suggestions: the answer is kept in the history, no trip is touched
+  recommend: async (params: RecommendParams) =>
+    (
+      await api.post<RecommendResult>('/destinations/recommend', {
+        query: params.query.trim(),
+        interests: params.interests,
+        region: params.region.trim(),
+        budget: params.budget.trim(),
+      })
+    ).data,
+  // the user's earlier suggestions (newest first)
+  history: async () =>
+    (await api.get<{items: SearchSummary[]}>('/destinations/history')).data
+      .items,
+  open: async (id: string) =>
+    (await api.get<{search: SearchDetail}>(`/destinations/history/${id}`)).data
+      .search,
+  // "created": the user started a plan from it
+  setStatus: async (id: string, status: SearchStatus, tripId?: string) =>
+    (
+      await api.patch(`/destinations/history/${id}`, {
+        status,
+        ...(tripId && {tripId}),
+      })
+    ).data,
+  remove: async (id: string) =>
+    (await api.delete(`/destinations/history/${id}`)).data,
+};
 
 export const MAX_NOTE_LENGTH = 2000;
 

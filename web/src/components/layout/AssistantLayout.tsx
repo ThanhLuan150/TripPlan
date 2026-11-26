@@ -1,6 +1,6 @@
 import {NavLink, Outlet, useLocation} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {IoChatbubbles, IoCompassOutline, IoMap} from 'react-icons/io5';
+import {IoChatbubbles, IoCompassOutline, IoMap, IoSparklesOutline} from 'react-icons/io5';
 import {ChatPage} from '@/features/assistant/pages/ChatPage';
 import {routes} from '@/app/routes';
 
@@ -21,7 +21,7 @@ export default function AssistantLayout() {
       <div className="sticky top-0 z-30 flex h-14 items-center justify-center bg-slate-50/90 px-4 backdrop-blur-md md:top-16 md:px-6">
         <nav
           aria-label={t('nav.assistant')}
-          className="grid w-full max-w-md grid-cols-3 rounded-full bg-slate-200/70 p-1 text-sm font-semibold">
+          className="grid w-full max-w-lg grid-cols-4 rounded-full bg-slate-200/70 p-1 text-sm font-semibold">
           <NavLink to={routes.Chat} className={tabClass}>
             <IoChatbubbles size={16} aria-hidden />
             {t('nav.chat')}
@@ -33,6 +33,10 @@ export default function AssistantLayout() {
           <NavLink to={routes.Explore} className={tabClass}>
             <IoCompassOutline size={16} aria-hidden />
             {t('nav.explore')}
+          </NavLink>
+          <NavLink to={routes.Recommend} className={tabClass}>
+            <IoSparklesOutline size={16} aria-hidden />
+            {t('nav.recommend')}
           </NavLink>
         </nav>
       </div>
