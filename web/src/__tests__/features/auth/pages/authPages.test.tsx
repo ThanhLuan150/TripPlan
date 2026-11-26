@@ -102,6 +102,19 @@ describe('LoginPage', () => {
     expect(screen.getByText(t('auth.login.success'))).toBeInTheDocument();
   });
 
+  it('drops what the previous account had cached, so a new account never sees its trips', async () => {
+    vi.mocked(authApi.login).mockResolvedValue(session);
+    const {client} = renderWithProviders(<LoginPage />, {route: '/login'});
+    client.setQueryData(['trips'], [{_id: 'old-trip'}]);
+    client.setQueryData(['favorites'], [{_id: 'old-trip'}]);
+
+    await fill();
+
+    expect(await currentPath()).toBe('/home');
+    expect(client.getQueryData(['trips'])).toBeUndefined();
+    expect(client.getQueryData(['favorites'])).toBeUndefined();
+  });
+
   it('sends an admin to the admin panel', async () => {
     const adminSession = {...session, data: {...session.data, role: 'admin' as const}};
     vi.mocked(authApi.login).mockResolvedValue(adminSession);

@@ -183,7 +183,57 @@ export const tripsApi = {
     (await api.post<ShareStatus>(`/trip-plan/${id}/share`)).data,
   disableShare: async (id: string) =>
     (await api.delete<ShareStatus>(`/trip-plan/${id}/share`)).data,
+  // public trips of everyone (cards only), newest first; no sign-in needed
+  listPublic: async (page: number) =>
+    (await api.get<PublicTripsPage>('/public-trip', {params: {page}})).data,
+  // one public trip, read only (404: private, deleted or unknown)
+  getPublic: async (id: string) =>
+    (await api.get<{tripDatas: PublicTrip}>(`/public-trip/${id}`)).data.tripDatas,
+  // keep a private copy of a public trip (signed in)
+  copyPublic: async (id: string) =>
+    (await api.post<{tripId: string; nameTrip: string}>(`/public-trip/${id}/copy`)).data,
+  // who can see the trip (owner only): "public" = anyone, read only; "private" = only the owner
+  visibility: async (id: string) =>
+    (await api.get<VisibilityStatus>(`/trip-plan/${id}/visibility`)).data,
+  setVisibility: async (id: string, visibility: TripVisibility) =>
+    (await api.put<VisibilityStatus>(`/trip-plan/${id}/visibility`, {visibility})).data,
 };
+
+export type TripVisibility = 'public' | 'private';
+
+export interface PublicTripCard {
+  _id: string;
+  nameTrip?: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  transportCostTotal?: number;
+  foodCostTotal?: number;
+  otherCostTotal?: number;
+}
+export interface PublicTripsPage {
+  page: number;
+  limit: number;
+  total: number;
+  items: PublicTripCard[];
+}
+// What anyone sees of a public trip: the plan only (no owner, progress or photos)
+export interface PublicTrip extends Omit<PublicTripCard, '_id'> {
+  dataTripDays: {
+    title: string;
+    date: string;
+    transportCost?: number;
+    foodCost?: number;
+    otherCost?: number;
+    challenges: {_id: string; challengeSummary: string; location?: string; points: number}[];
+  }[];
+}
+
+export interface VisibilityStatus {
+  visibility: TripVisibility;
+  // web page of a public trip (null: private, or the backend does not know WEB_URL)
+  publicUrl?: string | null;
+}
 
 export interface ShareStatus {
   isShared: boolean;

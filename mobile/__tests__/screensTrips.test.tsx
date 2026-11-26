@@ -35,7 +35,7 @@ jest.mock('../src/api', () => ({
   contentApi: {home: jest.fn(), videos: jest.fn()},
   rankingApi: {get: jest.fn()},
   profileApi: {notifications: jest.fn(), update: jest.fn()},
-  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn()},
+  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), visibility: jest.fn(), setVisibility: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;
@@ -48,6 +48,7 @@ let off: () => void;
 beforeEach(() => {
   jest.clearAllMocks();
   (tripsApi.favorites as jest.Mock).mockResolvedValue([]);
+  (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'private'});
   resetNav();
   alerts = [];
   off = subscribeAlert(a => alerts.push(a));
@@ -310,6 +311,71 @@ describe('TripDetail', () => {
     });
   });
 
+  const retakeModal = (tree: Tree) => tree.root.findAllByType(ConfirmModal).find(m => m.props.title === t('trips.retake'))!;
+
+  describe('visibility', () => {
+    const visibilityButton = (tree: Tree) => tree.root.findAll(n => n.props.accessibilityLabel === t('trips.visibilityChange') && n.props.onPress)[0];
+    const publicModal = (tree: Tree) => tree.root.findAllByType(ConfirmModal).find(m => m.props.title === t('trips.visibilityConfirmPublic'))!;
+
+    it('shows the current status of a private trip', async () => {
+      (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'private'});
+      const tree = await mount(detail());
+      expect(tripsApi.visibility).toHaveBeenCalledWith('trip1');
+      expect(allText(tree)).toContain(t('trips.visibilityPrivate'));
+    });
+
+    it('makes the trip public only after the owner confirms', async () => {
+      (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'private'});
+      (tripsApi.setVisibility as jest.Mock).mockResolvedValue({visibility: 'public'});
+      const tree = await mount(detail());
+      press(visibilityButton(tree));
+      expect(publicModal(tree).props.visible).toBe(true);
+      expect(tripsApi.setVisibility).not.toHaveBeenCalled();
+
+      await act(async () => publicModal(tree).props.onConfirm());
+      await flush();
+      expect(tripsApi.setVisibility).toHaveBeenCalledWith('trip1', 'public');
+      expect(allText(tree)).toContain(t('trips.visibilityPublic'));
+    });
+
+    it('makes a public trip private right away', async () => {
+      (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'public'});
+      (tripsApi.setVisibility as jest.Mock).mockResolvedValue({visibility: 'private'});
+      const tree = await mount(detail());
+      expect(allText(tree)).toContain(t('trips.visibilityPublic'));
+      press(visibilityButton(tree));
+      await flush();
+      expect(tripsApi.setVisibility).toHaveBeenCalledWith('trip1', 'private');
+      expect(allText(tree)).toContain(t('trips.visibilityPrivate'));
+    });
+
+    const linkButton = (tree: Tree) => tree.root.findAll(n => n.props.accessibilityLabel === t('trips.visibilityShareLink') && n.props.onPress)[0];
+
+    it('sends the public link through the share sheet while the trip is public', async () => {
+      const share = jest.spyOn(Share, 'share').mockResolvedValue({action: 'sharedAction'} as any);
+      (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'public', publicUrl: 'https://aloca.test/trip/trip1'});
+      const tree = await mount(detail());
+      press(linkButton(tree));
+      expect(share).toHaveBeenCalledWith({message: 'https://aloca.test/trip/trip1'});
+    });
+
+    it('has no public link button for a private trip', async () => {
+      (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'private', publicUrl: null});
+      const tree = await mount(detail());
+      expect(linkButton(tree)).toBeUndefined();
+    });
+
+    it('tells the owner when the change fails and keeps the old status', async () => {
+      (tripsApi.visibility as jest.Mock).mockResolvedValue({visibility: 'public'});
+      (tripsApi.setVisibility as jest.Mock).mockRejectedValue({response: {data: {message: 'Data Trip not found!'}}});
+      const tree = await mount(detail());
+      press(visibilityButton(tree));
+      await flush();
+      expect(alerts.some(a => a.title === t('trips.visibilityFailed'))).toBe(true);
+      expect(allText(tree)).toContain(t('trips.visibilityPublic'));
+    });
+  });
+
   describe('sharing', () => {
     const off = {isShared: false, permission: null, shareToken: null, shareUrl: null, sharedAt: null};
     const on = {isShared: true, permission: 'view', shareToken: 'tok', shareUrl: 'https://aloca.test/shared/tok', sharedAt: 'x'};
@@ -421,17 +487,17 @@ describe('TripDetail', () => {
     const tree = await mount();
     open(tree);
     const row = tree.root.findAll(n => n.props.onRetake && n.props.challenge?._id === 'c2')[0];
-    expect(tree.root.findByType(ConfirmModal).props.visible).toBe(false);
+    expect(retakeModal(tree).props.visible).toBe(false);
     act(() => row.props.onRetake());
-    expect(tree.root.findByType(ConfirmModal).props.visible).toBe(true);
-    await act(async () => tree.root.findByType(ConfirmModal).props.onConfirm());
+    expect(retakeModal(tree).props.visible).toBe(true);
+    await act(async () => retakeModal(tree).props.onConfirm());
     await flush();
     expect(checkIn).toHaveBeenCalledWith('c2');
     act(() => row.props.onRetake());
-    act(() => tree.root.findByType(ConfirmModal).props.onCancel());
-    expect(tree.root.findByType(ConfirmModal).props.visible).toBe(false);
+    act(() => retakeModal(tree).props.onCancel());
+    expect(retakeModal(tree).props.visible).toBe(false);
     // confirm with nothing chosen
-    act(() => tree.root.findByType(ConfirmModal).props.onConfirm());
+    act(() => retakeModal(tree).props.onConfirm());
   });
 });
 

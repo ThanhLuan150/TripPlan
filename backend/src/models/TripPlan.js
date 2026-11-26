@@ -12,6 +12,9 @@ const TripPlanSchema = mongoose.Schema({
     nameTrip: String,
     // "active" or "delete" (soft delete)
     status: { type: String, default: "active" },
+    // Who may open the trip: "private" (only the owner, and admins in the admin panel) or
+    // "public" (anyone may read it, read only). Old trips have no value and count as private.
+    visibility: { type: String, enum: ["private", "public"], default: "private" },
     // Sharing by link: the link works only while shareEnabled and the token matches.
     // Turning sharing off removes the token, so an old link never works again.
     shareEnabled: { type: Boolean, default: false },

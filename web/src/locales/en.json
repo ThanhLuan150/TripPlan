@@ -30,7 +30,8 @@
     "ranking": "Ranking",
     "account": "Account",
     "chat": "Chat",
-    "plans": "Plans"
+    "plans": "Plans",
+    "explore": "Explore"
   },
   "validation": {
     "usernameRequired": "Enter your username",
@@ -280,6 +281,20 @@
       "saveFailed": "Could not save the plan",
       "duplicateName": "You already have a plan with this name"
     },
+    "visibility": {
+      "public": "Public",
+      "private": "Private",
+      "change": "Change who can see this plan",
+      "hintPublic": "Public: anyone can view this plan. Click to make it private.",
+      "hintPrivate": "Private: only you can see this plan. Click to make it public.",
+      "confirmPublicTitle": "Make this plan public?",
+      "confirmPublicText": "Anyone will be able to view this plan (view only). You can make it private again at any time.",
+      "confirmPublicAction": "Make public",
+      "copyLink": "Copy public link",
+      "linkCopied": "Public link copied",
+      "copyFailed": "Could not copy the link",
+      "failed": "Could not change the visibility"
+    },
     "share": {
       "open": "Share",
       "title": "Share this plan",
@@ -295,6 +310,27 @@
       "copyFailed": "Could not copy the link, select it and copy by hand",
       "failed": "Could not change the sharing",
       "loadFailed": "Could not load the sharing status"
+    },
+    "explore": {
+      "title": "Explore public plans",
+      "subtitle": "Plans other travelers made public. Open one and keep a private copy for yourself.",
+      "empty": "No public plans yet.",
+      "error": "Could not load public plans.",
+      "cost": "About {{amount}} VND",
+      "pagination": "Pages",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} / {{pages}}"
+    },
+    "publicTrip": {
+      "saveCopy": "Save to my plans",
+      "saving": "Saving...",
+      "saved": "Saved to your plans",
+      "saveFailed": "Could not save this plan",
+      "signInToSave": "Sign in to save this plan",
+      "readOnly": "Public plan · view only",
+      "invalidTitle": "This plan is not available",
+      "invalidText": "The plan does not exist, or the owner made it private."
     },
     "shared": {
       "readOnly": "Shared plan · view only",

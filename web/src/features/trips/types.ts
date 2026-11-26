@@ -35,6 +35,26 @@ export interface TripDetail {
   dataTripDays: TripDay[];
 }
 
+export interface PublicTripCard {
+  _id: string;
+  nameTrip?: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  transportCostTotal?: number;
+  foodCostTotal?: number;
+  otherCostTotal?: number;
+}
+
+export interface PublicTripsPage {
+  page: number;
+  limit: number;
+  total: number;
+  items: PublicTripCard[];
+}
+
+export type TripVisibility = 'public' | 'private';
+
 export interface ShareStatus {
   isShared: boolean;
   permission: 'view' | null;

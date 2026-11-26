@@ -29,6 +29,8 @@ import Register from '../screens/Register';
 import ResetCode from '../screens/ResetCode';
 import TripDetail from '../screens/TripDetail';
 import TripMap from '../screens/TripMap';
+import PublicTrips from '../screens/PublicTrips';
+import PublicTripDetail from '../screens/PublicTripDetail';
 import Verify from '../screens/Verify';
 import Videos from '../screens/Videos';
 
@@ -47,6 +49,8 @@ export type RootStackParams = {
   GenerateTrips: {params: GenerateParams};
   TripDetail: {id: string};
   TripMap: {id: string};
+  PublicTrips: undefined;
+  PublicTripDetail: {id: string};
   Notifications: undefined;
   EditProfile: undefined;
   Videos: undefined;
@@ -134,6 +138,8 @@ export default function RootNavigator() {
           <Stack.Screen name="GenerateTrips" component={GenerateTrips} />
           <Stack.Screen name="TripDetail" component={TripDetail} />
           <Stack.Screen name="TripMap" component={TripMap} />
+          <Stack.Screen name="PublicTrips" component={PublicTrips} />
+          <Stack.Screen name="PublicTripDetail" component={PublicTripDetail} />
           <Stack.Screen name="Notifications" component={Notifications} />
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="Videos" component={Videos} />

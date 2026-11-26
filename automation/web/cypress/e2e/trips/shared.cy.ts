@@ -41,3 +41,27 @@ describe('shared trip', () => {
     cy.findByRole('link', {name: t('trips.shared.goHome')}).should('be.visible');
   });
 });
+
+// Public page of a trip its owner made public: no sign-in, read only.
+describe('public trip', () => {
+  it('a visitor who is not signed in sees the plan, read only', () => {
+    const calls = mockApi({'GET /public-trip/t1': shared});
+    visit('/trip/t1');
+
+    cy.location('pathname').should('eq', '/trip/t1'); // not sent to the landing page
+    cy.findByRole('heading', {name: 'Đà Lạt 3 ngày'}).should('be.visible');
+    cy.findByText(t('trips.publicTrip.readOnly')).should('be.visible');
+    cy.findByText('Chụp ảnh Hồ Xuân Hương').should('be.visible');
+    cy.findByRole('button').should('not.exist');
+    expectNoCall(calls, 'POST');
+    expectNoCall(calls, 'PUT');
+    expectNoCall(calls, 'DELETE');
+  });
+
+  it('a private, deleted or unknown plan says it is not available', () => {
+    mockApi({'GET /public-trip/t2': reply(404, {message: 'Data Trip not found!'})});
+    visit('/trip/t2');
+
+    cy.findByText(t('trips.publicTrip.invalidTitle')).should('be.visible');
+  });
+});

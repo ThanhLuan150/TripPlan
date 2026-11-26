@@ -35,7 +35,25 @@ const enableShare = (id, shareToken) =>
 const disableShare = (id) =>
     TripPlan.findByIdAndUpdate(id, { $set: { shareEnabled: false }, $unset: { shareToken: "", sharedAt: "" } }, { new: true });
 
+// Public trip (not deleted). Private, deleted or missing -> null.
+const findPublicById = (id) => TripPlan.findOne({ _id: id, visibility: "public", ...ACTIVE });
+
+// Newest public trips first; only what a card needs (no owner).
+const PUBLIC_CARD = "nameTrip location startDate endDate transportCostTotal foodCostTotal otherCostTotal";
+
+const listPublic = (skip, limit) =>
+    TripPlan.find({ visibility: "public", ...ACTIVE }).sort({ _id: -1 }).skip(skip).limit(limit).select(PUBLIC_CARD).lean();
+
+const countPublic = () => TripPlan.countDocuments({ visibility: "public", ...ACTIVE });
+
+const setVisibility = (id, visibility) =>
+    TripPlan.findByIdAndUpdate(id, { $set: { visibility } }, { new: true });
+
 export default {
+    findPublicById,
+    listPublic,
+    countPublic,
+    setVisibility,
     findSharedByToken,
     enableShare,
     disableShare,

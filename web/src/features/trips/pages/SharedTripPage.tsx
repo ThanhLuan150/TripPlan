@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {Link, useParams} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
@@ -7,17 +8,39 @@ import Spinner from '@/components/ui/Spinner';
 import {apiStatus, connectionErrorKey} from '@/lib/apiClient';
 import {addCommas, formatDate} from '@/lib/date';
 import {tripsApi} from '../api/tripsApi';
+import type {SharedTrip} from '../types';
 
 // Public, read only page behind a share link (no sign-in). It shows the plan
 // only: no progress, photos or owner details, and nothing can be changed here.
 export default function SharedTripPage() {
-  const {t} = useTranslation();
   const {token} = useParams();
+  return (
+    <ReadOnlyTripPage
+      queryKey={['sharedTrip', token]}
+      id={token}
+      load={tripsApi.getShared}
+      textKeys={{readOnly: 'trips.shared.readOnly', invalidTitle: 'trips.shared.invalidTitle', invalidText: 'trips.shared.invalidText'}}
+    />
+  );
+}
+
+interface ReadOnlyProps {
+  queryKey: unknown[];
+  id?: string;
+  load: (id: string) => Promise<SharedTrip>;
+  textKeys: {readOnly: string; invalidTitle: string; invalidText: string};
+  // e.g. "save a copy" on a public trip
+  actions?: ReactNode;
+}
+
+// Layout shared by the pages that show a plan to visitors: share link and public trip.
+export function ReadOnlyTripPage({queryKey, id: token, load, textKeys, actions}: ReadOnlyProps) {
+  const {t} = useTranslation();
   const {data, isLoading, error, refetch} = useQuery({
-    queryKey: ['sharedTrip', token],
+    queryKey,
     enabled: !!token,
     retry: false,
-    queryFn: () => tripsApi.getShared(token!),
+    queryFn: () => load(token!),
   });
 
   if (isLoading) {
@@ -36,10 +59,10 @@ export default function SharedTripPage() {
         <div className="card flex max-w-md flex-col items-center gap-3 p-8 text-center">
           <IoLinkOutline size={36} className="text-slate-400" />
           <p className="font-semibold text-slate-900">
-            {t(unavailable ? 'trips.shared.invalidTitle' : 'trips.shared.errorTitle')}
+            {t(unavailable ? textKeys.invalidTitle : 'trips.shared.errorTitle')}
           </p>
           <p className="text-sm text-slate-500">
-            {t(unavailable ? 'trips.shared.invalidText' : connectionErrorKey(error) ?? 'trips.shared.errorText')}
+            {t(unavailable ? textKeys.invalidText : connectionErrorKey(error) ?? 'trips.shared.errorText')}
           </p>
           {unavailable ? (
             <Link to={routes.LandingPage} className="btn btn-primary">
@@ -62,7 +85,7 @@ export default function SharedTripPage() {
         <div className="rounded-3xl bg-gradient-to-br from-brand-400 to-brand-800 p-6 text-white shadow-soft">
           <p className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-medium">
             <IoEyeOutline size={14} />
-            {t('trips.shared.readOnly')}
+            {t(textKeys.readOnly)}
           </p>
           <h1 className="mt-3 text-2xl font-bold md:text-3xl">{trip.nameTrip ?? trip.location}</h1>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
@@ -73,6 +96,7 @@ export default function SharedTripPage() {
             <IoLocationOutline size={16} />
             {trip.location}
           </p>
+          {actions && <div className="mt-4">{actions}</div>}
         </div>
 
         {trip.dataTripDays.map((day, i) => (

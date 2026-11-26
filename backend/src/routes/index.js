@@ -10,6 +10,7 @@ import adminRoutes from "./adminRoutes.js";
 import contentRoutes from "./contentRoutes.js";
 import geoRoutes from "./geoRoutes.js";
 import sharedTripRoutes from "./sharedTripRoutes.js";
+import publicTripRoutes from "./publicTripRoutes.js";
 
 // Same base paths as before, so existing clients keep working.
 const router = Router();
@@ -19,6 +20,7 @@ router.use("/user", userRoutes);
 router.use("/chat", chatRoutes);
 router.use("/trip-plan", tripPlanRoutes);
 router.use("/shared", sharedTripRoutes); // GET /shared/:token: public, read only view of a shared trip
+router.use("/public-trip", publicTripRoutes); // GET /public-trip/:id: read only view of a public trip, no sign-in
 router.use("/rankings", rankingRoutes);
 router.use("/challenge", challengeRoutes);
 router.use(uploadRoutes); // POST /upload/image, GET /files/:id

@@ -142,6 +142,13 @@ describe('AssistantLayout', () => {
     expect(within(tabs).getByRole('link', {name: t('nav.chat')})).toHaveAttribute('aria-current', 'page');
   });
 
+  it('has an Explore tab next to Chat and Plans', () => {
+    renderLayout('/assistant/chat');
+
+    const tabs = screen.getByRole('navigation', {name: t('nav.assistant')});
+    expect(within(tabs).getByRole('link', {name: t('nav.explore')})).toHaveAttribute('href', '/assistant/explore');
+  });
+
   it('hides the chat on the plans tab', () => {
     renderLayout('/assistant/trips');
 

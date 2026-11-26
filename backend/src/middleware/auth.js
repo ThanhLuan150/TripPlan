@@ -31,6 +31,8 @@ const authenticate = asyncHandler(async (req, res, next) => {
         Promise.resolve(userRepository.updateById(user._id, { lastActiveAt: new Date() })).catch(() => {});
     }
 
+    // answers depend on who is signed in: no browser / proxy may keep one for another account
+    res.setHeader("Cache-Control", "no-store");
     req.user = user;
     req.userData = user;
     next();
