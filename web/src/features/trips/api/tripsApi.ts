@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AiEditProposal, GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -35,6 +35,18 @@ export const tripsApi = {
 
   setVisibility: async (id: string, visibility: TripVisibility) =>
     (await api.put<{visibility: TripVisibility}>(`/trip-plan/${id}/visibility`, {visibility})).data,
+
+  // AI itinerary editing (owner only): propose changes (nothing saved), then apply the accepted proposal
+  proposeAiEdit: async (id: string, instruction: string) =>
+    (await api.post<{proposal: AiEditProposal}>(`/trip-plan/${id}/ai-edit`, {instruction})).data.proposal,
+
+  // Accept: the server saves the proposal it stored (the client sends only its id)
+  applyAiEdit: async (id: string, proposalId: string) =>
+    (await api.post(`/trip-plan/${id}/ai-edit/apply`, {proposalId})).data,
+
+  // Reject: the server forgets the proposal
+  rejectAiEdit: async (id: string, proposalId: string) =>
+    (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
 
   // personal notes (owner only; nobody else can read or change them)
   notes: async (id: string) =>

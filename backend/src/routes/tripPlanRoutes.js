@@ -32,6 +32,9 @@ router.get("/:id/notes", ownTrip, tripNoteController.listNotes);         // role
 router.post("/:id/notes", ownTrip, tripNoteController.createNote);       // role: user|admin + owner of the trip — { content }
 router.put("/:id/notes/:noteId", ownTrip, ownNote, tripNoteController.updateNote);    // role: user|admin + owner of the trip and of the note — { content }
 router.delete("/:id/notes/:noteId", ownTrip, ownNote, tripNoteController.deleteNote); // role: user|admin + owner of the trip and of the note
+router.post("/:id/ai-edit", ownTrip, tripPlanController.proposeAiEdit);         // role: user|admin + owner of the trip — { instruction }; AI proposal, NOTHING is saved
+router.post("/:id/ai-edit/apply", ownTrip, tripPlanController.applyAiEdit);     // role: user|admin + owner of the trip — { proposalId }; saves the stored proposal the user accepted
+router.delete("/:id/ai-edit/:proposalId", ownTrip, tripPlanController.discardAiEdit); // role: user|admin + owner of the trip — Reject: forgets the proposal
 router.delete("/:id", ownTrip, tripPlanController.deleteTrip);           // role: user|admin + owner of the trip — soft delete
 router.get("/location/:id", ownTrip, tripPlanController.getTripLocations); // role: user|admin + owner of the trip
 

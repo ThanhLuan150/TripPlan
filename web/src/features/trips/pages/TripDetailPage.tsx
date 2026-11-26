@@ -25,6 +25,7 @@ import {connectionErrorKey} from '@/lib/apiClient';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import {safeFileName, saveBlob} from '@/lib/download';
 import {challengeApi, tripsApi} from '../api/tripsApi';
+import AiEditPanel from '../components/AiEditPanel';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
 import ShareTripDialog from '../components/ShareTripDialog';
 import TripNotes from '../components/TripNotes';
@@ -359,6 +360,8 @@ export default function TripDetailPage() {
           </section>
         );
       })}
+
+      {idTrip && <AiEditPanel tripId={idTrip} days={result.dataTripDays} />}
 
       {idTrip && <TripNotes tripId={idTrip} />}
 

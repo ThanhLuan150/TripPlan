@@ -10,6 +10,7 @@ export interface Trip {
 export interface Challenge {
   _id: string;
   challengeSummary: string;
+  nameLocation?: string;
   location?: string;
   latitude?: string;
   longitude?: string;
@@ -131,3 +132,19 @@ export interface PlanDay {
   otherCost?: number;
 }
 export type Plan = Record<string, PlanDay>;
+
+// AI itinerary editing: the proposal is only a preview until the user accepts it
+export const MAX_AI_EDIT_LENGTH = 500;
+// What the AI proposed: kept on the server under this id until the user accepts or rejects it
+export interface AiEditProposal {
+  id: string;
+  days: AiEditDay[];
+}
+export interface AiEditDay {
+  title: string;
+  // kept: a completed place the AI left out, put back because its photo and points are already earned
+  activities: {name_location: string; challenge_summary: string; level_of_difficult: number; province?: string; kept?: boolean}[];
+  transportCost: number;
+  foodCost: number;
+  otherCost: number;
+}

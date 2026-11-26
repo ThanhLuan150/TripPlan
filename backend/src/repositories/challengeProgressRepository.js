@@ -10,6 +10,8 @@ const findByUserAndChallenges = (userId, chaIds) =>
 const markCompleted = (id) =>
     UserChallengeProgress.findByIdAndUpdate(id, { completed: true, endAt: new Date() }, { new: true });
 
+const deleteByChallengeIds = (chaIds) => UserChallengeProgress.deleteMany({ chaId: { $in: chaIds } });
+
 // Sum of points of the challenges completed in the given period, per user.
 const rankingByPeriod = ($expr) =>
     UserChallengeProgress.aggregate([
@@ -52,6 +54,7 @@ export default {
     findOne,
     findByUserAndChallenges,
     markCompleted,
+    deleteByChallengeIds,
     rankingThisMonth,
     rankingThisWeek,
 };
