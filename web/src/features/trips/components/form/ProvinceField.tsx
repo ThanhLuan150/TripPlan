@@ -21,11 +21,16 @@ export default function ProvinceField({
   onChange,
   onBlur,
   error,
+  title,
+  placeholder,
 }: {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
   error?: string;
+  // default: the destination of a new plan
+  title?: string;
+  placeholder?: string;
 }) {
   const {t} = useTranslation();
   // a destination from the chat that is not a province opens the suggestions
@@ -37,7 +42,7 @@ export default function ProvinceField({
   return (
     <FormSection
       icon={<IoLocationOutline size={18} />}
-      title={t('trips.create.destination')}
+      title={title ?? t('trips.create.destination')}
       labelFor="province"
       error={error}
       errorId="province-error">
@@ -47,7 +52,7 @@ export default function ProvinceField({
           id="province"
           name="location"
           className={`${controlClass(!!error)} h-12 pr-20 pl-10`}
-          placeholder={t('trips.create.destinationPlaceholder')}
+          placeholder={placeholder ?? t('trips.create.destinationPlaceholder')}
           autoComplete="off"
           value={value}
           aria-invalid={!!error}

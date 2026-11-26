@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AiEditProposal, GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -47,6 +47,10 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+
+  // add one place to a day of the trip (owner only)
+  addPlace: async (id: string, body: AddPlaceBody) =>
+    (await api.post<AddPlaceResult>(`/trip-plan/${id}/places`, body)).data,
 
   // personal notes (owner only; nobody else can read or change them)
   notes: async (id: string) =>

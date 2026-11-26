@@ -17,7 +17,10 @@ import {BackPill} from '../components';
 import FieldSection from '../components/FieldSection';
 import AreaTypeGrid from '../components/AreaTypeGrid';
 import DateRangeField from '../components/DateRangeField';
+import DraftBanner from '../components/DraftBanner';
 import DropdownInput from '../components/DropdownInput';
+import {useDraft} from '../hooks/useDraft';
+import {DraftNames} from '../lib/drafts';
 import QuantityInput from '../components/QuantityInput';
 import {provices} from '../lib/provinces';
 import {money, stripTones} from '../lib/text';
@@ -36,6 +39,7 @@ export default function CreateTrip() {
     days?: number;
     people?: number;
     note?: string;
+    fromSuggestion?: boolean;
   };
 
   const [provinceOpen, setProvinceOpen] = useState(
@@ -78,6 +82,32 @@ export default function CreateTrip() {
   const {location, startDate, endDate, quantity, budget, areaTypes} =
     formik.values;
   const setField = formik.setFieldValue;
+
+  // the form is kept as a draft while the user fills it (not when it was opened already filled)
+  const filled =
+    !!location || !!budget || areaTypes.length > 0 || quantity !== 1;
+  const draft = useDraft(
+    DraftNames.createTrip,
+    {location, startDate, endDate, quantity, budget, areaTypes},
+    !filled,
+    Object.keys(prefill).length === 0,
+  );
+  // a draft from days ago may start in the past: keep its length, start today
+  const resumeDraft = () => {
+    const saved = draft.resume();
+    if (saved) {
+      const start = new Date(saved.startDate);
+      const end = new Date(saved.endDate);
+      const length = Math.max(0, end.getTime() - start.getTime());
+      const today = new Date();
+      const from = start < today ? today : start;
+      formik.setValues({
+        ...saved,
+        startDate: from,
+        endDate: new Date(from.getTime() + length),
+      });
+    }
+  };
 
   const provinces = useMemo(() => {
     const q = stripTones(location);
@@ -130,6 +160,27 @@ export default function CreateTrip() {
   const header = (
     <>
       <Text style={styles.header}>{t('trips.create.title')}</Text>
+      <TouchableOpacity
+        accessibilityRole="link"
+        style={styles.askAi}
+        onPress={() => navigation.navigate('Recommend')}>
+        <Text style={styles.askAiText}>{t('trips.create.askAi')}</Text>
+      </TouchableOpacity>
+      {draft.pending && (
+        <View style={styles.banner}>
+          <DraftBanner
+            savedAt={draft.pending.savedAt}
+            onContinue={resumeDraft}
+            onDiscard={draft.discard}
+          />
+        </View>
+      )}
+      {prefill.fromSuggestion && (
+        <Text style={styles.fromSuggestion}>
+          {t('trips.create.fromSuggestion')}
+          {!prefill.location && ` ${t('trips.create.fromChatNoPlace')}`}
+        </Text>
+      )}
       <FieldSection
         icon="location-outline"
         title={t('trips.create.destination')}
@@ -276,6 +327,17 @@ const styles = StyleSheet.create({
     color: colors.primaryDark,
     alignSelf: 'center',
     marginBottom: 16,
+  },
+  askAi: {alignSelf: 'center', marginBottom: 12},
+  askAiText: {color: colors.primaryDark, fontWeight: '700'},
+  banner: {marginBottom: 12},
+  fromSuggestion: {
+    marginBottom: 12,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: colors.tint,
+    color: colors.primaryDeep,
+    fontSize: 13,
   },
   footer: {flexDirection: 'row', justifyContent: 'space-evenly'},
   send: {

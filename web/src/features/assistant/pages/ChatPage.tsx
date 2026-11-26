@@ -3,7 +3,7 @@ import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {FiSend} from 'react-icons/fi';
-import {IoAdd, IoAddCircle, IoReload, IoSparkles, IoTimeOutline} from 'react-icons/io5';
+import {IoAdd, IoAddCircle, IoReload, IoSparkles, IoSparklesOutline, IoTimeOutline} from 'react-icons/io5';
 import {routes} from '@/app/routes';
 import Toast from '@/components/ui/Toast';
 import {extractTripHints} from '@/features/trips/utils/tripHints';
@@ -214,6 +214,19 @@ export const ChatPage = () => {
           <span className="hidden sm:inline">{t('assistant.newChat')}</span>
         </button>
       </div>
+
+      {/* what the chat is for, and where to go for the other kind of help */}
+      <p className="flex flex-wrap items-center gap-x-1.5 border-b border-slate-200/70 bg-slate-50 px-4 py-1.5 text-xs text-slate-500 md:px-6">
+        <span>{t('assistant.roleHint')}</span>
+        <span>{t('assistant.toRecommendHint')}</span>
+        <button
+          type="button"
+          onClick={() => navigate(routes.Recommend)}
+          className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:underline">
+          <IoSparklesOutline size={13} aria-hidden />
+          {t('assistant.toRecommend')}
+        </button>
+      </p>
 
       <ChatHistory
         open={historyOpen}

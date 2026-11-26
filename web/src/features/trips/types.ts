@@ -20,6 +20,7 @@ export interface Challenge {
 }
 
 export interface TripDay {
+  _id?: string;
   title: string;
   date: string;
   challenges: Challenge[];
@@ -115,6 +116,8 @@ export interface TripFormPrefill {
   people?: number;
   note?: string;
   fromChat?: boolean;
+  // filled from an AI destination suggestion
+  fromSuggestion?: boolean;
 }
 
 // AI suggestion: plans -> days -> activities
@@ -148,3 +151,20 @@ export interface AiEditDay {
   foodCost: number;
   otherCost: number;
 }
+
+// One place added to a day of an existing trip (e.g. a destination the AI recommended)
+export interface AddPlaceBody {
+  name: string;
+  dayId: string;
+  province?: string;
+  summary?: string;
+}
+
+export interface AddPlaceResult {
+  challengeId: string;
+  day: {id: string; title: string};
+  // false: the place has no position on the map yet
+  located: boolean;
+}
+
+export const MAX_PLACES_PER_DAY = 10;

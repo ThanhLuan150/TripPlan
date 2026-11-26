@@ -238,7 +238,7 @@ services/        logic nghiệp vụ (đăng ký/đăng nhập, gọi Gemini, l�
                  adminService: người dùng + số liệu, contentService: video / thông báo / cài đặt / báo cáo nội dung, activityLogService)
 repositories/    toàn bộ truy vấn Mongoose
 models/          schema Mongoose (User, TripPlan, TripDay, Challenge, UserChallengeProgress, ChatAi, Question, Response, Notification,
-                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video)
+                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal)
 middleware/      auth (JWT + tự cấp lại access token), requireRole, ownership (chủ sở hữu trip/chat/challenge), logActivity (ghi nhật ký), errorHandler
 seed/            seedAdmin, seedSampleData, index.js (chạy bằng npm run seed / seed:sample)
 utils/           jwt, mailer, gemini, geocode (HERE), HttpError, asyncHandler, ...
@@ -261,6 +261,10 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 | `POST /user/:id` (xoá tài khoản) | user: chỉ tài khoản của mình · admin: bất kỳ `:id` |
 | `/chat/*` | user, admin; `/:id` phải là cuộc trò chuyện của mình |
 | `/trip-plan/*` | user, admin; `/:id` phải là kế hoạch của mình |
+| `POST /destinations/recommend`, `GET|PATCH|DELETE /destinations/history[/:id]` | user, admin; chỉ đọc / sửa / xóa gợi ý của chính mình (người khác 404) |
+| `POST /trip-plan/:id/places` | user, admin; `:id` phải là kế hoạch của mình (thêm một địa điểm vào một ngày) |
+| `GET /public-trip`, `GET /public-trip/:id`, `GET /shared/:token` | public, chỉ đọc |
+| `POST /public-trip/:id/copy` | user, admin |
 | `/challenge/*` | user, admin; `chaId` phải thuộc kế hoạch của mình |
 
 ### Sao chép chuyến đi (Duplicate Trip)
@@ -311,6 +315,109 @@ Quan hệ yêu thích lưu ở collection riêng `favoritetrips` (`userId`, `tri
 - Người xem link chỉ thấy kế hoạch (tên, địa điểm, ngày, chi phí, hoạt động) qua whitelist trường. Không lộ `userId`/thông tin chủ, tiến độ hoàn thành, ảnh check-in hay cấu hình chia sẻ.
 - Web: nút "Chia sẻ" ở trang chi tiết (bật/tắt, trạng thái, sao chép link) và trang công khai `/shared/:token`.
 - Mobile: nút chia sẻ ở màn chi tiết chuyến đi (bật/tắt, trạng thái, gửi/sao chép link qua share sheet của hệ thống). Link mở trang web, nên đặt `WEB_URL` (địa chỉ web) ở backend để API trả sẵn `shareUrl` đầy đủ; nếu để trống, mobile dùng tạm địa chỉ API.
+
+### Chế độ hiển thị và khám phá (Trip Visibility)
+
+Mỗi kế hoạch có `visibility`: `private` (mặc định, chỉ chủ sở hữu) hoặc `public` (ai cũng đọc được, chỉ đọc).
+
+| Endpoint | Mô tả |
+| --- | --- |
+| `GET /trip-plan/:id/visibility` | Trạng thái hiện tại. Chỉ chủ sở hữu (`ownTrip`) |
+| `PUT /trip-plan/:id/visibility` | `{ visibility: "public" \| "private" }`. Chỉ chủ sở hữu |
+| `GET /public-trip?page&limit` | **Công khai**, danh sách thẻ kế hoạch công khai (tối đa 50 mỗi trang) |
+| `GET /public-trip/:id` | **Công khai**, chỉ đọc. Kế hoạch riêng tư / đã xoá / không tồn tại đều trả 404 |
+| `POST /public-trip/:id/copy` | user, admin: lưu bản sao riêng của một kế hoạch công khai (ghi nhật ký `createTrip`) |
+
+- Người xem chỉ thấy kế hoạch (qua whitelist trường): không thấy chủ sở hữu, tiến độ, ảnh check-in hay ghi chú.
+- Web: nút đổi chế độ ở trang chi tiết, tab "Khám phá" (`/assistant/explore`) và trang `/trip/:id`. Mobile: nút ở màn chi tiết, màn "Kế hoạch công khai" mở từ tab "Kế hoạch".
+
+### Ghi chú cá nhân (Trip Notes)
+
+Collection `tripnotes` (`tripId`, `userId`, `content` tối đa 2000 ký tự, tối đa 50 ghi chú mỗi chuyến đi).
+
+| Endpoint | Mô tả |
+| --- | --- |
+| `GET /trip-plan/:id/notes` | Ghi chú của chính người gọi (mới nhất trước) |
+| `POST /trip-plan/:id/notes` | `{ content }` |
+| `PUT /trip-plan/:id/notes/:noteId` | `{ content }`, chỉ ghi chú của mình |
+| `DELETE /trip-plan/:id/notes/:noteId` | Chỉ ghi chú của mình |
+
+- Cần là chủ sở hữu kế hoạch (`ownTrip`) và chủ sở hữu ghi chú (`ownNote`). Ghi chú không bị sao chép theo kế hoạch và không bao giờ có trong chế độ xem chia sẻ / công khai.
+
+### Chỉnh sửa lịch trình bằng AI (AI Itinerary Editing)
+
+Người dùng mô tả thay đổi bằng lời, AI **đề xuất** lịch trình mới, người dùng xem trước rồi mới Chấp nhận hoặc Từ chối.
+
+| Endpoint | Mô tả |
+| --- | --- |
+| `POST /trip-plan/:id/ai-edit` | `{ instruction }` (tối đa 500 ký tự). Trả `{ proposal: { id, days } }`, **không ghi gì** vào lịch trình |
+| `POST /trip-plan/:id/ai-edit/apply` | `{ proposalId }`. Lưu đề xuất **do server giữ**, không bao giờ lưu dữ liệu client gửi lên |
+| `DELETE /trip-plan/:id/ai-edit/:proposalId` | Từ chối: server quên đề xuất |
+
+- Đề xuất được kiểm tra chặt (đúng số ngày, mỗi ngày 1-10 hoạt động, chi phí >= 0); AI trả sai trả 502 `AI_INVALID_RESPONSE`, AI ngừng hoạt động trả 503. Lịch trình cũ luôn giữ nguyên khi có lỗi.
+- Đề xuất lưu ở `TripAiProposal` và tự xoá sau 1 giờ (TTL). Địa điểm đã hoàn thành (đã có ảnh, điểm) không bao giờ bị AI bỏ: được đặt lại và đánh dấu `kept`.
+- Chấp nhận giữ nguyên thử thách của địa điểm còn lại (giữ tiến độ), tạo thử thách mới cho địa điểm mới, xoá địa điểm bị bỏ và cập nhật tổng chi phí.
+
+### Gợi ý địa điểm bằng AI (AI Destination Recommendation, AI-002)
+
+`POST /destinations/recommend` (user, admin, có rate limit, ghi nhật ký `useAi`). Không đụng tới chuyến đi nào; thứ duy nhất được ghi là **một bản lưu của câu trả lời** trong lịch sử gợi ý (mục dưới).
+
+- Body: `{ query?, interests?, region?, budget? }`. Cần ít nhất một trường. `query` tối đa 500 ký tự, `interests` tối đa 10 mục (mảng hoặc chuỗi cách nhau bằng dấu phẩy), `region` tối đa 100, `budget` là chuỗi tối đa 50 hoặc số >= 0. Sai trả 400 trước khi gọi AI.
+- Trả `{ recommendations: [{ name, province, description, reason, inApp, place? }], historyId, message }`, tối đa 5 mục, mỗi mục bắt buộc có tên, mô tả và lý do (mục thiếu hoặc trùng bị loại, không tự bịa).
+- **Kết hợp dữ liệu nội bộ:** không có model Destination; dữ liệu địa điểm có sẵn là `Showcase` (kind `suggestion`, điểm đến ở trang chủ do admin quản lý) và `Video`. Gợi ý khớp tên (không phân biệt dấu) với một điểm đến nội bộ thì `inApp: true` kèm `place` (ảnh, tỉnh, tối đa 3 video cùng tỉnh). Còn lại là gợi ý **chưa xác minh** của AI (`inApp: false`, không có `place`) và UI phải ghi rõ.
+- Prompt yêu cầu chỉ gợi ý địa điểm có thật, không bịa số liệu (giá vé, giờ mở cửa); danh sách rỗng khi không có gì phù hợp.
+- Không có kết quả phù hợp: 200 với `recommendations: []`. AI trả câu không đọc được hoặc rỗng: 502 `AI_INVALID_RESPONSE`. AI ngừng hoạt động: 503.
+- Web: tab "Gợi ý" trong Trợ lý (`/assistant/recommend`): ô nhu cầu, sở thích (chip), khu vực (`ProvinceField`), ngân sách (`BudgetField`, 3 mức cho 1 người, bấm lại để bỏ chọn). Mobile: màn "Gợi ý điểm đến bằng AI" mở từ tab "Kế hoạch" (`DropdownInput` cho khu vực và ngân sách).
+- "Xem chi tiết" chỉ hiện cho mục `inApp` (ảnh, video YouTube).
+- **Tạo kế hoạch từ gợi ý:** mọi gợi ý (kể cả của AI) có nút "Tạo kế hoạch từ gợi ý này" (cùng tên với nút của chat), mở form tạo kế hoạch với tỉnh điền sẵn (chỉ khi tỉnh nằm trong danh sách 63 tỉnh) và `<tên> (<tỉnh>): <mô tả>` trong ô Ghi chú (tối đa 1500 ký tự). AI tạo kế hoạch ưu tiên các địa điểm trong ghi chú, giống nút của chat; form hiện dòng "Đã điền sẵn từ gợi ý điểm đến của AI". Ngược lại, form tạo kế hoạch có dòng "Chưa biết đi đâu? Nhờ AI gợi ý điểm đến" dẫn sang trang gợi ý, nên hai màn hình nối liền nhau.
+- **Chat và Gợi ý có vai trò riêng, nối với nhau:** Chat là "hỏi đáp và trò chuyện về du lịch", Gợi ý là "tìm điểm đến theo tiêu chí". Đầu trang chat có dòng "Muốn danh sách có sẵn để chọn? Dùng Gợi ý điểm đến" (`assistant.roleHint`, `toRecommend`), đầu trang gợi ý có "Muốn hỏi thêm? Mở Chat" (`destinations.toChat` / `recommend.toChat`). Khi thêm tính năng gợi ý mới, giữ hai dòng này để người dùng không bị lẫn. Không ghi gì vào chuyến đi có sẵn. Không làm tạo cả lịch trình bằng AI trong ticket này.
+
+#### Lịch sử gợi ý (Suggestion history)
+
+Mỗi câu trả lời có ít nhất một địa điểm được lưu ở collection `destinationsearches` (`userId`, `query`, `interests`, `region`, `budget`, `recommendations`, `status`, `tripId?`). Câu trả lời rỗng không được lưu. Mỗi người giữ tối đa **30** lần gần nhất (cũ hơn tự bị xóa).
+
+| Endpoint | Mô tả |
+| --- | --- |
+| `GET /destinations/history?status=draft|created` | Danh sách tóm tắt (yêu cầu, số địa điểm, 3 tên đầu, trạng thái), mới nhất trước. `status` sai trả 400 |
+| `GET /destinations/history/:id` | Mở lại một gợi ý cùng toàn bộ địa điểm |
+| `PATCH /destinations/history/:id` | `{ status: "draft" | "created", tripId? }` |
+| `DELETE /destinations/history/:id` | Xóa gợi ý (không ảnh hưởng kế hoạch đã tạo) |
+
+- Hai nhóm: **Bản nháp** (`draft`: chưa dùng để tạo kế hoạch) và **Đã tạo** (`created`). Client chuyển sang `created` khi người dùng bấm "Tạo kế hoạch từ gợi ý này" hoặc thêm một địa điểm của gợi ý vào chuyến đi có sẵn (kèm `tripId`).
+- Mọi truy vấn đều lọc theo `userId`: id không phải của mình hoặc sai định dạng đều trả 404.
+- UI (web `SearchHistory`, mobile `SearchHistory`): dưới form gợi ý có "Lịch sử gợi ý" chia hai nhóm. **Xem lại** nạp yêu cầu cũ vào form và hiện lại các địa điểm (sửa yêu cầu rồi hỏi lại được); **Xóa** luôn hỏi xác nhận bằng `ConfirmModal`.
+
+#### Tự lưu bản nháp (Drafts)
+
+Form **tạo kế hoạch** và form **gợi ý AI** tự lưu khi người dùng nhập (sau 0,4 giây ngừng gõ) để tải lại trang, mất mạng hay thoát ra không mất công nhập lại. Lưu ở trình duyệt (web: `localStorage`, mobile: `AsyncStorage`), không qua server.
+
+- Khóa `draft:<tên form>:<username>`: mỗi tài khoản một bản nháp, người khác dùng chung máy không thấy. Form trống không được lưu (và xóa bản nháp khi người dùng xóa hết).
+- Quay lại hoặc tải lại: hiện "Bạn có một bản nháp chưa hoàn thành. Tiếp tục chỉnh sửa?" với **Tiếp tục** / **Tạo mới**. Trong lúc chờ chọn, form trống không ghi đè bản nháp. Bản nháp cũ có ngày bắt đầu đã qua thì dời về hôm nay, giữ nguyên số ngày.
+- Form tạo kế hoạch mở sẵn từ một gợi ý (chat, trang chủ, gợi ý AI) không hỏi bản nháp. Bản nháp tạo kế hoạch được xóa khi kế hoạch đã lưu; bản nháp gợi ý được xóa khi AI đã trả lời (vì lịch sử đã giữ).
+- Code: `lib/drafts` + `hooks/useDraft` + `DraftBanner` (web `components/ui`, mobile `components`).
+
+#### Thêm địa điểm gợi ý vào chuyến đi có sẵn
+
+`POST /trip-plan/:id/places` (user, admin; `:id` phải là kế hoạch của mình) thêm **một** địa điểm vào một ngày của chuyến đi.
+
+- Body: `{ name, dayId, province?, summary? }`. `name` tối đa 200 ký tự, `summary` tối đa 1000 (mặc định là tên), `dayId` phải là một ngày của chính chuyến đi đó.
+- Trả 201 `{ message, challengeId, day: { id, title }, located }`. Địa điểm trở thành thử thách thường của ngày đó (10 điểm) kèm tiến độ mới. Server tra tọa độ (HERE rồi OpenStreetMap); không tìm thấy thì vẫn thêm dạng chữ và trả `located: false`.
+- Lỗi: 400 (thiếu tên / ngày), 404 (không phải chuyến đi của mình hoặc ngày thuộc chuyến khác), 409 `PLACE_ALREADY_IN_TRIP` (chuyến đi đã có địa điểm cùng tên, không phân biệt hoa thường), 409 `DAY_FULL` (mỗi ngày tối đa 10 địa điểm). Không có lỗi nào ghi dữ liệu dở dang.
+- Không dùng AI và không đổi các địa điểm khác của chuyến đi.
+- **UX (web `AddToTripDialog`, mobile `AddToTripModal`):** nút "Thêm vào chuyến đi có sẵn" trên mỗi gợi ý mở hộp thoại từng bước: 1) chọn chuyến đi (chuyến cùng tỉnh lên đầu, có nhãn "Cùng tỉnh"; chưa có chuyến đi thì gợi ý tạo mới), 2) chọn ngày (hiện số địa điểm; ngày đã đầy bị khóa), rồi một câu tóm tắt "Thêm X vào Ngày N của chuyến Y" (kèm cảnh báo nếu là gợi ý AI chưa xác minh). Chỉ khi bấm "Thêm vào chuyến đi" mới ghi. Thành công thì hiện màn kết quả với nút "Xem chuyến đi"; lỗi hiển thị ngay trong hộp thoại và giữ nguyên lựa chọn.
+
+### Quy ước khi triển khai một ticket mới
+
+Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:
+
+1. **Backend** (`routes` ghi rõ quyền ở từng dòng -> `controllers` mỏng -> `services` -> `repositories`; lỗi dùng `HttpError`, AI qua `utils/gemini.js`). Dữ liệu AI trả về luôn được kiểm tra, không tin; AI lỗi thì không ghi gì.
+2. **Web** (`web/src/features/<tên>`: `api`, `types`, `validation`, `pages` / `components`) và **mobile** (`mobile/src`: `api/index.ts`, `lib`, `screens` / `components`, đăng ký trong `RootNavigator`). Dùng lại component sẵn có (`ProvinceField`, `BudgetField`, `DropdownInput`, `ConfirmModal`...), không dùng `<select>` mặc định hay `window.confirm`.
+3. **Chuỗi giao diện** thêm vào cả `vi.json` và `en.json` (web và mobile); `usedKeys.test` kiểm tra thiếu key.
+4. **Test** (đủ mọi lớp): backend `__tests__/unit` + `integration` (vitest), web `src/__tests__` (vitest), mobile `__tests__` (jest), `automation/backend` (Cypress API) và `automation/web` (Cypress UI). Luôn có test cho request hợp lệ, input sai và lỗi (400 / 401 / 404 / 502 / 503).
+5. **Trước khi báo xong:** chạy `npx vitest run` (backend và web, web thêm `npx tsc -b` và `npx eslint src`), `npx jest` (mobile). Lỗi `tsc` / eslint có sẵn ở mobile `RootNavigator.tsx` và `TripDetail.tsx` không thuộc ticket.
+6. **Cập nhật README này:** thêm mục mô tả tính năng (endpoint, quyền, giới hạn, hành vi khi lỗi, nơi hiển thị trên web / mobile) và cập nhật danh sách model / bảng phân quyền.
+
+Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp).
 
 ### API quản trị — `/admin/*` (role admin)
 

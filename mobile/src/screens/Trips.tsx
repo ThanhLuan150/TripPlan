@@ -100,6 +100,14 @@ export default function Trips() {
         <Ionicons name="compass-outline" size={18} color={colors.primaryDark} />
         <Text style={styles.exploreText}>{t('trips.exploreOpen')}</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={t('recommend.open')}
+        style={styles.explore}
+        onPress={() => navigation.navigate('Recommend')}>
+        <Ionicons name="sparkles-outline" size={18} color={colors.primaryDark} />
+        <Text style={styles.exploreText}>{t('recommend.open')}</Text>
+      </TouchableOpacity>
       <View style={styles.tabs}>
         {(['all', 'favorites'] as const).map(key => (
           <TouchableOpacity

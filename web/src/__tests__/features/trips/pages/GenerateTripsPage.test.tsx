@@ -89,6 +89,18 @@ describe('GenerateTripsPage', () => {
     expect(tripsApi.save).toHaveBeenCalledWith(params, 'Đà Lạt 2N', Object.values(plans.plan2));
   });
 
+  it('throws the unfinished draft of the form away once the plan is saved', async () => {
+    window.localStorage.setItem('draft:createTrip:anonymous', JSON.stringify({savedAt: 1, value: {location: 'Lâm Đồng'}}));
+    vi.mocked(tripsApi.save).mockResolvedValue({tripId: 't9'});
+    render();
+
+    const user = await choosePlan(0);
+    await user.type(screen.getByRole('textbox', {name: t('trips.generate.nameLabel')}), 'Kế hoạch A{Enter}');
+
+    expect(await currentPath()).toBe('/assistant/trips/t9');
+    expect(window.localStorage.getItem('draft:createTrip:anonymous')).toBeNull();
+  });
+
   it('can confirm with the button too', async () => {
     vi.mocked(tripsApi.save).mockResolvedValue({tripId: 't1'});
     render();

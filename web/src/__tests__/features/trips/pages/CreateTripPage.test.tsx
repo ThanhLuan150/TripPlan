@@ -9,6 +9,7 @@ import {currentPath, currentState, renderWithProviders, t} from '../../../utils/
 const NOW = new Date(2026, 2, 2, 9, 0, 0);
 
 beforeEach(() => {
+  window.localStorage.clear();
   vi.useFakeTimers({toFake: ['Date']});
   vi.setSystemTime(NOW);
 });
@@ -38,6 +39,76 @@ const pickProvince = async (text: string, option: string) => {
   await user.type(province(), text);
   await user.click(within(screen.getByRole('listbox')).getByRole('button', {name: option}));
 };
+
+describe('draft', () => {
+  const draftKey = 'draft:createTrip:anonymous';
+  const saved = () => JSON.parse(window.localStorage.getItem(draftKey) ?? 'null');
+
+  it('does not save an empty form', async () => {
+    render();
+    await new Promise(resolve => setTimeout(resolve, 600));
+    expect(saved()).toBeNull();
+  });
+
+  it('saves what the user types, offers it after a reload and puts it back with Continue', async () => {
+    const first = render();
+    await pickProvince('lam', 'Lâm Đồng');
+    await waitFor(() => expect(saved()?.value.location).toBe('Lâm Đồng'));
+    first.unmount();
+
+    render();
+    expect(screen.getByText(t('drafts.found'))).toBeInTheDocument();
+    // nothing is overwritten while the offer is open
+    expect(province()).toHaveValue('');
+    await userEvent.click(screen.getByRole('button', {name: t('drafts.continue')}));
+
+    expect(province()).toHaveValue('Lâm Đồng');
+    expect(screen.queryByText(t('drafts.found'))).toBeNull();
+  });
+
+  it('moves the dates of an old draft to today and keeps its length', async () => {
+    window.localStorage.setItem(
+      draftKey,
+      JSON.stringify({savedAt: Date.now(), value: {location: 'Lâm Đồng', startDate: '2026-02-10', endDate: '2026-02-12', quantity: 1, budgetTier: '', interests: [], note: ''}}),
+    );
+    render();
+    await userEvent.click(screen.getByRole('button', {name: t('drafts.continue')}));
+
+    expect(startInput()).toHaveTextContent('02/03/2026');
+    expect(endInput()).toHaveTextContent('04/03/2026');
+  });
+
+  it('Start new throws the draft away', async () => {
+    window.localStorage.setItem(
+      draftKey,
+      JSON.stringify({savedAt: Date.now(), value: {location: 'Lâm Đồng', startDate: '2026-03-02', endDate: '2026-03-02', quantity: 1, budgetTier: '', interests: [], note: ''}}),
+    );
+    render();
+    await userEvent.click(screen.getByRole('button', {name: t('drafts.startNew')}));
+
+    expect(province()).toHaveValue('');
+    expect(screen.queryByText(t('drafts.found'))).toBeNull();
+    expect(saved()).toBeNull();
+  });
+
+  it('does not offer a draft when the form is opened from a suggestion, and says where it came from', () => {
+    window.localStorage.setItem(
+      draftKey,
+      JSON.stringify({savedAt: Date.now(), value: {location: 'Huế', startDate: '2026-03-02', endDate: '2026-03-02', quantity: 1, budgetTier: '', interests: [], note: ''}}),
+    );
+    render({location: 'Lâm Đồng', note: 'Thác Datanla (Lâm Đồng): Thác nước', fromSuggestion: true});
+
+    expect(screen.queryByText(t('drafts.found'))).toBeNull();
+    expect(screen.getByText(t('trips.create.fromSuggestion'))).toBeInTheDocument();
+    expect(province()).toHaveValue('Lâm Đồng');
+  });
+
+  it('links to the AI destination ideas', async () => {
+    render();
+    await userEvent.click(screen.getByRole('button', {name: t('trips.create.askAi')}));
+    expect(await currentPath()).toBe('/assistant/recommend');
+  });
+});
 
 describe('destination', () => {
   it('suggests provinces, with or without accents', async () => {

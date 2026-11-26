@@ -31,6 +31,7 @@ import TripDetail from '../screens/TripDetail';
 import TripMap from '../screens/TripMap';
 import PublicTrips from '../screens/PublicTrips';
 import PublicTripDetail from '../screens/PublicTripDetail';
+import Recommend from '../screens/Recommend';
 import Verify from '../screens/Verify';
 import Videos from '../screens/Videos';
 
@@ -50,6 +51,7 @@ export type RootStackParams = {
   TripDetail: {id: string};
   TripMap: {id: string};
   PublicTrips: undefined;
+  Recommend: undefined;
   PublicTripDetail: {id: string};
   Notifications: undefined;
   EditProfile: undefined;
@@ -139,6 +141,7 @@ export default function RootNavigator() {
           <Stack.Screen name="TripDetail" component={TripDetail} />
           <Stack.Screen name="TripMap" component={TripMap} />
           <Stack.Screen name="PublicTrips" component={PublicTrips} />
+          <Stack.Screen name="Recommend" component={Recommend} />
           <Stack.Screen name="PublicTripDetail" component={PublicTripDetail} />
           <Stack.Screen name="Notifications" component={Notifications} />
           <Stack.Screen name="EditProfile" component={EditProfile} />

@@ -22,6 +22,7 @@ export const queryKeys = {
   tripVisibility: (id: string) => ['tripVisibility', id] as const,
   tripNotes: (id: string) => ['tripNotes', id] as const,
   publicTrips: ['publicTrips'] as const,
+  destinationHistory: ['destinationHistory'] as const,
   publicTrip: (id: string) => ['publicTrip', id] as const,
   notifications: ['notifications'] as const,
   chats: ['chats'] as const,

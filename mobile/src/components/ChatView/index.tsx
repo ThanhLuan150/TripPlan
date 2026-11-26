@@ -6,6 +6,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -63,6 +65,17 @@ export default function ChatView() {
         onHistory={() => setHistoryOpen(true)}
         onNew={chat.startNew}
       />
+      {/* what the chat is for, and where to go for the other kind of help */}
+      <View style={styles.role}>
+        <Text style={styles.roleText}>
+          {t('assistant.roleHint')} {t('assistant.toRecommendHint')}
+        </Text>
+        <TouchableOpacity
+          accessibilityRole="link"
+          onPress={() => navigation.navigate('Recommend')}>
+          <Text style={styles.roleLink}>{t('assistant.toRecommend')}</Text>
+        </TouchableOpacity>
+      </View>
       <ChatHistoryDrawer
         open={historyOpen}
         currentId={chat.idChat}
@@ -129,6 +142,14 @@ export default function ChatView() {
 }
 
 const styles = StyleSheet.create({
+  role: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: colors.surface,
+    gap: 2,
+  },
+  roleText: {fontSize: 12, color: colors.muted},
+  roleLink: {fontSize: 12, fontWeight: '700', color: colors.primaryDark},
   container: {flex: 1, backgroundColor: '#fff'},
   loading: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   messages: {flex: 1, paddingHorizontal: 16},
