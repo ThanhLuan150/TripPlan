@@ -204,6 +204,7 @@
     "aiEditApplied": "Your itinerary has been updated",
     "aiEditRejected": "Proposal discarded, your itinerary is unchanged",
     "aiEditInvalid": "The AI returned an incomplete answer. Your itinerary is unchanged, please try again.",
+    "aiEditUnavailable": "The AI assistant is temporarily unavailable. Your itinerary is unchanged, please try again later.",
     "aiEditFailed": "Could not get a proposal. Your itinerary is unchanged.",
     "aiEditApplyFailed": "Could not save the proposal. Your itinerary is unchanged.",
     "visibilityShareLink": "Share public link",

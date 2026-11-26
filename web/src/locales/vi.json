@@ -321,6 +321,7 @@
       "saving": "Đang lưu…",
       "applied": "Đã cập nhật lịch trình của bạn",
       "rejected": "Đã bỏ đề xuất, lịch trình của bạn không thay đổi",
+      "unavailable": "Trợ lý AI tạm thời không khả dụng. Lịch trình của bạn không thay đổi, vui lòng thử lại sau.",
       "invalid": "AI trả về kết quả chưa đầy đủ. Lịch trình của bạn không thay đổi, vui lòng thử lại.",
       "applyInvalid": "Đề xuất không hợp lệ nên chưa được lưu.",
       "failed": "Không nhận được đề xuất. Lịch trình của bạn không thay đổi.",

@@ -5,7 +5,7 @@ import {tripsApi} from '@/features/trips/api/tripsApi';
 import {aiEditErrorKey} from '@/features/trips/aiEditValidation';
 import AiEditPanel from '@/features/trips/components/AiEditPanel';
 import type {AiEditProposal, TripDay} from '@/features/trips/types';
-import {httpError, pending, renderWithProviders, t} from '../../../utils/render';
+import {httpError, networkError, pending, renderWithProviders, t} from '../../../utils/render';
 
 vi.mock('@/features/trips/api/tripsApi');
 
@@ -192,5 +192,48 @@ describe('AiEditPanel', () => {
 
     expect(await screen.findByText(t('trips.aiEdit.applyInvalid'))).toBeInTheDocument();
     expect(screen.getByText(t('trips.aiEdit.previewTitle'))).toBeInTheDocument();
+  });
+
+  it.each([
+    ['an expired proposal (404)', httpError(404), 'trips.aiEdit.applyInvalid'],
+    ['a server error', httpError(500), 'trips.aiEdit.applyFailed'],
+    ['a lost connection', networkError(), 'common.networkError'],
+  ])('tells the user why Accept failed: %s', async (_name, error, key) => {
+    vi.mocked(tripsApi.proposeAiEdit).mockResolvedValue(proposal);
+    vi.mocked(tripsApi.applyAiEdit).mockRejectedValue(error);
+    render();
+    await ask();
+
+    await userEvent.click(await screen.findByRole('button', {name: t('trips.aiEdit.accept')}));
+
+    expect(await screen.findByText(t(key))).toBeInTheDocument();
+    expect(screen.getByText(t('trips.aiEdit.previewTitle'))).toBeInTheDocument();
+  });
+
+  it.each([
+    ['a server error', httpError(500), 'trips.aiEdit.failed'],
+    ['a lost connection', networkError(), 'common.networkError'],
+    ['the AI service being down', httpError(503, {code: 'AI_BUSY'}), 'trips.aiEdit.unavailable'],
+  ])('tells the user why the AI proposal failed: %s', async (_name, error, key) => {
+    vi.mocked(tripsApi.proposeAiEdit).mockRejectedValue(error);
+    render();
+
+    await ask();
+
+    expect(await screen.findByText(t(key))).toBeInTheDocument();
+    expect(screen.queryByText(t('trips.aiEdit.previewTitle'))).toBeNull();
+  });
+
+  it('shows that it is saving while Accept is running, and blocks a second click', async () => {
+    vi.mocked(tripsApi.proposeAiEdit).mockResolvedValue(proposal);
+    vi.mocked(tripsApi.applyAiEdit).mockReturnValue(pending());
+    render();
+    await ask();
+
+    await userEvent.click(await screen.findByRole('button', {name: t('trips.aiEdit.accept')}));
+
+    expect(await screen.findByRole('button', {name: t('trips.aiEdit.saving')})).toBeDisabled();
+    expect(screen.getByRole('button', {name: t('trips.aiEdit.reject')})).toBeDisabled();
+    expect(tripsApi.applyAiEdit).toHaveBeenCalledTimes(1);
   });
 });

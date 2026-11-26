@@ -4,7 +4,7 @@ import {useTranslation} from 'react-i18next';
 import {IoSparklesOutline} from 'react-icons/io5';
 import FieldError from '@/components/ui/FieldError';
 import Toast from '@/components/ui/Toast';
-import {apiStatus, connectionErrorKey, isAiError} from '@/lib/apiClient';
+import {apiBody, apiStatus, connectionErrorKey, isAiError} from '@/lib/apiClient';
 import {addCommas} from '@/lib/date';
 import {tripsApi} from '../api/tripsApi';
 import {aiEditErrorKey} from '../aiEditValidation';
@@ -12,9 +12,17 @@ import {MAX_AI_EDIT_LENGTH, type AiEditProposal, type TripDay} from '../types';
 
 const norm = (name?: string) => (name ?? '').trim().toLowerCase();
 
-// Connection problem, or the AI answered badly / is down (the stored itinerary is untouched either way)
-const proposeErrorKey = (error: unknown) =>
-  connectionErrorKey(error) ?? (isAiError(error) || apiStatus(error) === 502 ? 'trips.aiEdit.invalid' : 'trips.aiEdit.failed');
+// Why no proposal came back (the stored itinerary is untouched in every case). The AI errors come first:
+// an AI outage is a 503 too, which connectionErrorKey would call a database problem.
+const proposeErrorKey = (error: unknown) => {
+  if (apiBody<{code?: string}>(error)?.code === 'AI_INVALID_RESPONSE' || apiStatus(error) === 502) {
+    return 'trips.aiEdit.invalid';
+  }
+  if (isAiError(error)) {
+    return 'trips.aiEdit.unavailable';
+  }
+  return connectionErrorKey(error) ?? 'trips.aiEdit.failed';
+};
 
 // Ask the AI to change the itinerary, preview the proposal, then Accept (saved) or Reject (dropped).
 // The stored itinerary is only changed by Accept.

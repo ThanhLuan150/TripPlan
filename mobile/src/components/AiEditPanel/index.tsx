@@ -36,7 +36,13 @@ export default function AiEditPanel({tripId, days}: {tripId: string; days: TripD
     onSuccess: setProposal,
     onError: e =>
       alert.error(
-        t(code(e)?.startsWith('AI_') || status(e) === 502 ? 'trips.aiEditInvalid' : 'trips.aiEditFailed'),
+        t(
+          code(e) === 'AI_INVALID_RESPONSE' || status(e) === 502
+            ? 'trips.aiEditInvalid'
+            : code(e)?.startsWith('AI_')
+              ? 'trips.aiEditUnavailable'
+              : 'trips.aiEditFailed',
+        ),
       ),
   });
   const apply = useApiMutation((proposalId: string) => tripsApi.applyAiEdit(tripId, proposalId), {

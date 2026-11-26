@@ -203,6 +203,7 @@
     "aiEditApplied": "Đã cập nhật lịch trình của bạn",
     "aiEditRejected": "Đã bỏ đề xuất, lịch trình của bạn không thay đổi",
     "aiEditInvalid": "AI trả về kết quả chưa đầy đủ. Lịch trình của bạn không thay đổi, vui lòng thử lại.",
+    "aiEditUnavailable": "Trợ lý AI tạm thời không khả dụng. Lịch trình của bạn không thay đổi, vui lòng thử lại sau.",
     "aiEditFailed": "Không nhận được đề xuất. Lịch trình của bạn không thay đổi.",
     "aiEditApplyFailed": "Không lưu được đề xuất. Lịch trình của bạn không thay đổi.",
     "visibilityShareLink": "Chia sẻ liên kết công khai",

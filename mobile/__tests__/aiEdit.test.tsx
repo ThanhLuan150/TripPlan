@@ -146,6 +146,10 @@ describe('AiEditPanel', () => {
     expect(alerted('trips.aiEditInvalid')).toBe(true);
     expect(allText(tree)).not.toContain(t('trips.aiEditPreview'));
 
+    (tripsApi.proposeAiEdit as jest.Mock).mockRejectedValue({response: {status: 503, data: {code: 'AI_BUSY'}}});
+    await ask(tree);
+    expect(alerted('trips.aiEditUnavailable')).toBe(true);
+
     (tripsApi.proposeAiEdit as jest.Mock).mockRejectedValue(new Error('x'));
     await ask(tree);
     expect(alerted('trips.aiEditFailed')).toBe(true);

@@ -321,6 +321,7 @@
       "saving": "Saving…",
       "applied": "Your itinerary has been updated",
       "rejected": "Proposal discarded, your itinerary is unchanged",
+      "unavailable": "The AI assistant is temporarily unavailable. Your itinerary is unchanged, please try again later.",
       "invalid": "The AI returned an incomplete answer. Your itinerary is unchanged, please try again.",
       "applyInvalid": "This proposal is not valid and was not saved.",
       "failed": "Could not get a proposal. Your itinerary is unchanged.",
