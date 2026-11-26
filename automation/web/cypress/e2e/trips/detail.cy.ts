@@ -201,7 +201,7 @@ describe('trip detail', () => {
     cy.then(() => expectNoCall(calls, 'POST'));
 
     // add
-    cy.findAllByRole('textbox').first().type('Rent a scooter');
+    cy.findByRole('textbox', {name: t('trips.notes.placeholder')}).type('Rent a scooter');
     cy.findByRole('button', {name: t('trips.notes.add')}).click();
     expectCall(calls, 'POST', '/trip-plan/t1/notes').its('body').should('deep.eq', {content: 'Rent a scooter'});
     cy.findByText('Rent a scooter').should('be.visible');

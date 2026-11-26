@@ -65,6 +65,8 @@ beforeEach(() => {
   vi.mocked(tripsApi.get).mockResolvedValue(trip as never);
   vi.mocked(tripsApi.favorites).mockResolvedValue([]);
   vi.mocked(tripsApi.visibility).mockResolvedValue({visibility: 'private'});
+  // the notes block under the days loads its own list
+  vi.mocked(tripsApi.notes).mockResolvedValue([]);
   vi.mocked(tripsApi.addFavorite).mockResolvedValue({});
   vi.mocked(tripsApi.removeFavorite).mockResolvedValue({});
 });
@@ -335,6 +337,8 @@ describe('export PDF button', () => {
 
   it('tells the user when the PDF cannot be created', async () => {
     vi.mocked(tripsApi.exportPdf).mockRejectedValue(httpError(500));
+    // the page logs the error it reports: expected here, keep the test output clean
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const user = userEvent.setup();
     render();
 
@@ -342,6 +346,8 @@ describe('export PDF button', () => {
 
     expect(await screen.findByText(t('trips.detail.exportPdfFailed'))).toBeInTheDocument();
     expect(screen.getByRole('button', {name: t('trips.detail.exportPdf')})).toBeEnabled();
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
   });
 
   it('is disabled while the PDF is being created', async () => {
