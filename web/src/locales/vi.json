@@ -281,6 +281,26 @@
       "saveFailed": "Lưu kế hoạch không thành công",
       "duplicateName": "Bạn đã có kế hoạch trùng tên"
     },
+    "notes": {
+      "title": "Ghi chú",
+      "hint": "Chỉ bạn xem được các ghi chú này.",
+      "placeholder": "Viết ghi chú cho chuyến đi…",
+      "add": "Thêm ghi chú",
+      "save": "Lưu",
+      "edit": "Sửa ghi chú",
+      "remove": "Xóa ghi chú",
+      "empty": "Chưa có ghi chú nào",
+      "loadFailed": "Không tải được ghi chú",
+      "retry": "Thử lại",
+      "required": "Vui lòng nhập nội dung ghi chú",
+      "tooLong": "Ghi chú quá dài (tối đa {{max}} ký tự)",
+      "counter": "{{length}}/{{max}}",
+      "edited": "đã sửa",
+      "deleteTitle": "Xóa ghi chú này?",
+      "deleteText": "Không thể hoàn tác.",
+      "saveFailed": "Không lưu được ghi chú",
+      "deleteFailed": "Không xóa được ghi chú"
+    },
     "visibility": {
       "public": "Công khai",
       "private": "Riêng tư",

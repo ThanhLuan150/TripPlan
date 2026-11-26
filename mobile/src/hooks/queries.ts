@@ -20,6 +20,7 @@ export const queryKeys = {
   trip: (id: string) => ['trip', id] as const,
   tripShare: (id: string) => ['tripShare', id] as const,
   tripVisibility: (id: string) => ['tripVisibility', id] as const,
+  tripNotes: (id: string) => ['tripNotes', id] as const,
   publicTrips: ['publicTrips'] as const,
   publicTrip: (id: string) => ['publicTrip', id] as const,
   notifications: ['notifications'] as const,
@@ -56,6 +57,12 @@ export const useTripVisibility = (id: string) =>
   useQuery({
     queryKey: queryKeys.tripVisibility(id),
     queryFn: () => tripsApi.visibility(id),
+  });
+
+export const useTripNotes = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.tripNotes(id),
+    queryFn: () => tripsApi.notes(id),
   });
 
 export const usePublicTrips = () =>

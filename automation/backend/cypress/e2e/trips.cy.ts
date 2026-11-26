@@ -465,4 +465,66 @@ describe('challenges', () => {
       });
     });
   });
+
+  it('notes: the owner adds, reads, edits and deletes a note', () => {
+    signIn().then(({token}) => {
+      saveTrip(token).then(({tripId}) => {
+        const base = `/trip-plan/${tripId}/notes`;
+        get(base, token).its('body.notes').should('deep.eq', []);
+
+        post(base, token, {content: '  Pack a coat  '}).then(created => {
+          expect(created.status).to.eq(201);
+          expect(created.body.note).to.include({content: 'Pack a coat', tripId});
+          expect(created.body.note).not.to.have.property('userId');
+          const noteId = created.body.note._id;
+
+          get(base, token).its('body.notes.0.content').should('eq', 'Pack a coat');
+          put(`${base}/${noteId}`, token, {content: 'Pack two coats'}).its('body.note.content').should('eq', 'Pack two coats');
+          get(base, token).its('body.notes.0.content').should('eq', 'Pack two coats');
+          del(`${base}/${noteId}`, token).its('status').should('eq', 200);
+          get(base, token).its('body.notes').should('deep.eq', []);
+          del(`${base}/${noteId}`, token).its('status').should('eq', 404);
+        });
+      });
+    });
+  });
+
+  it('notes: the content is validated (not empty, at most 2000 characters)', () => {
+    signIn().then(({token}) => {
+      saveTrip(token).then(({tripId}) => {
+        const base = `/trip-plan/${tripId}/notes`;
+        [undefined, null, '', '   ', 42, ['a'], {$ne: 1}].forEach(content =>
+          post(base, token, {content}).its('status').should('eq', 400),
+        );
+        post(base, token, {content: 'a'.repeat(2001)}).its('status').should('eq', 400);
+        post(base, token, {content: 'a'.repeat(2000)}).its('status').should('eq', 201);
+        get(base, token).its('body.notes').should('have.length', 1);
+      });
+    });
+  });
+
+  it('notes: another account cannot read, add, edit or delete them, even on a public trip', () => {
+    signIn().then(owner => {
+      signIn().then(other => {
+        saveTrip(owner.token).then(({tripId}) => {
+          const base = `/trip-plan/${tripId}/notes`;
+          put(`/trip-plan/${tripId}/visibility`, owner.token, {visibility: 'public'}).its('status').should('eq', 200);
+          post(base, owner.token, {content: 'my secret'}).then(created => {
+            const noteId = created.body.note._id;
+
+            get(base, other.token).its('status').should('eq', 404);
+            post(base, other.token, {content: 'hi'}).its('status').should('eq', 404);
+            put(`${base}/${noteId}`, other.token, {content: 'hacked'}).its('status').should('eq', 404);
+            del(`${base}/${noteId}`, other.token).its('status').should('eq', 404);
+            get(base, undefined).its('status').should('eq', 401);
+            put(`${base}/not-an-id`, owner.token, {content: 'x'}).its('status').should('eq', 404);
+
+            // the note is untouched and never part of the public view
+            get(base, owner.token).its('body.notes.0.content').should('eq', 'my secret');
+            get(`/public-trip/${tripId}`).then(res => expect(JSON.stringify(res.body)).not.to.contain('my secret'));
+          });
+        });
+      });
+    });
+  });
 });

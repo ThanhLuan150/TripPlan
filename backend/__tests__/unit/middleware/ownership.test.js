@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ownChallenge, ownChat, ownTrip } from "../../../src/middleware/ownership.js";
+import { ownChallenge, ownChat, ownNote, ownTrip } from "../../../src/middleware/ownership.js";
 import tripPlanRepository from "../../../src/repositories/tripPlanRepository.js";
+import tripNoteRepository from "../../../src/repositories/tripNoteRepository.js";
 import chatRepository from "../../../src/repositories/chatRepository.js";
 import challengeProgressRepository from "../../../src/repositories/challengeProgressRepository.js";
 import { mockReq, runMiddleware } from "../../helpers/http.js";
 
 vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({ default: { findOwnedById: vi.fn() } }));
+vi.mock("../../../src/repositories/tripNoteRepository.js", () => ({ default: { findOwned: vi.fn() } }));
 vi.mock("../../../src/repositories/chatRepository.js", () => ({ default: { findOwned: vi.fn() } }));
 vi.mock("../../../src/repositories/challengeProgressRepository.js", () => ({ default: { findOne: vi.fn() } }));
 
@@ -20,6 +22,14 @@ const cases = [
         req: (id) => mockReq({ user, params: { id } }),
         loadedAs: "trip",
         message: "Data Trip not found!",
+    },
+    {
+        name: "ownNote",
+        middleware: ownNote,
+        finder: () => tripNoteRepository.findOwned,
+        req: (noteId) => mockReq({ user, trip: { _id: validId }, params: { noteId } }),
+        loadedAs: "note",
+        message: "Note not found!",
     },
     {
         name: "ownChat",

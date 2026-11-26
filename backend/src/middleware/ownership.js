@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import tripPlanRepository from "../repositories/tripPlanRepository.js";
+import tripNoteRepository from "../repositories/tripNoteRepository.js";
 import chatRepository from "../repositories/chatRepository.js";
 import challengeProgressRepository from "../repositories/challengeProgressRepository.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -26,6 +27,19 @@ export const validTripId = (req, res, next) => {
     }
     next();
 };
+
+// req.params.noteId is a note of req.trip written by the user -> req.note (run after ownTrip)
+export const ownNote = asyncHandler(async (req, res, next) => {
+    const { noteId } = req.params;
+    const note = mongoose.isValidObjectId(noteId)
+        ? await tripNoteRepository.findOwned(noteId, req.trip._id, req.user._id)
+        : null;
+    if (!note) {
+        throw new HttpError(404, "Note not found!");
+    }
+    req.note = note;
+    next();
+});
 
 // req.params.id is a conversation of the user -> req.chat
 export const ownChat = asyncHandler(async (req, res, next) => {

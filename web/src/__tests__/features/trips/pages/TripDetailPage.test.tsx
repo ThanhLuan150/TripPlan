@@ -113,6 +113,17 @@ describe('TripDetailPage', () => {
     expect(screen.queryByText('Leo núi Langbiang')).toBeNull();
   });
 
+  it('shows the notes of the trip below the days', async () => {
+    vi.mocked(tripsApi.notes).mockResolvedValue([
+      {_id: 'n1', tripId: 't1', content: 'Pack a coat', createdAt: '2026-03-02T09:00:00.000Z', updatedAt: '2026-03-02T09:00:00.000Z'},
+    ]);
+    render();
+
+    expect(await screen.findByText('Pack a coat')).toBeInTheDocument();
+    expect(tripsApi.notes).toHaveBeenCalledWith('t1');
+    expect(screen.getByRole('heading', {name: t('trips.notes.title')})).toBeInTheDocument();
+  });
+
   it('opens and closes the days', async () => {
     const user = userEvent.setup();
     render();

@@ -172,6 +172,58 @@ describe('trip detail', () => {
     cy.get('@visibility').should('contain.text', t('trips.visibility.private'));
   });
 
+  it('adds, edits and deletes a personal note on the trip', () => {
+    let notes: unknown[] = [{_id: 'n1', tripId: 't1', content: 'Pack a coat', createdAt: '2026-03-02T09:00:00.000Z', updatedAt: '2026-03-02T09:00:00.000Z'}];
+    const calls = mockApi({
+      ...api,
+      'GET /trip-plan/t1/notes': () => ({notes}),
+      'POST /trip-plan/t1/notes': (call: {body: {content: string}}) => {
+        const note = {_id: 'n2', tripId: 't1', content: call.body.content, createdAt: '2026-03-03T09:00:00.000Z', updatedAt: '2026-03-03T09:00:00.000Z'};
+        notes = [note, ...notes];
+        return {note};
+      },
+      'PUT /trip-plan/t1/notes/n1': (call: {body: {content: string}}) => {
+        notes = notes.map((n: any) => (n._id === 'n1' ? {...n, content: call.body.content} : n));
+        return {note: notes.find((n: any) => n._id === 'n1')};
+      },
+      'DELETE /trip-plan/t1/notes/n1': () => {
+        notes = notes.filter((n: any) => n._id !== 'n1');
+        return {message: 'ok'};
+      },
+    });
+    visit('/assistant/trips/t1');
+
+    cy.findByText('Pack a coat').should('be.visible');
+
+    // validation: an empty note is not sent
+    cy.findByRole('button', {name: t('trips.notes.add')}).click();
+    cy.findByRole('alert').should('contain.text', t('trips.notes.required'));
+    cy.then(() => expectNoCall(calls, 'POST'));
+
+    // add
+    cy.findAllByRole('textbox').first().type('Rent a scooter');
+    cy.findByRole('button', {name: t('trips.notes.add')}).click();
+    expectCall(calls, 'POST', '/trip-plan/t1/notes').its('body').should('deep.eq', {content: 'Rent a scooter'});
+    cy.findByText('Rent a scooter').should('be.visible');
+
+    // edit
+    cy.findAllByRole('button', {name: t('trips.notes.edit')}).last().click();
+    cy.findByDisplayValue('Pack a coat').clear().type('Pack two coats');
+    cy.findByRole('button', {name: t('trips.notes.save')}).click();
+    expectCall(calls, 'PUT', '/trip-plan/t1/notes/n1').its('body').should('deep.eq', {content: 'Pack two coats'});
+    cy.findByText('Pack two coats').should('be.visible');
+
+    // delete asks first
+    cy.findAllByRole('button', {name: t('trips.notes.remove')}).last().click();
+    cy.findByRole('button', {name: t('common.cancel')}).click();
+    cy.then(() => expectNoCall(calls, 'DELETE'));
+    cy.findAllByRole('button', {name: t('trips.notes.remove')}).last().click();
+    cy.findByRole('dialog').findByRole('button', {name: t('common.delete')}).click();
+    expectCall(calls, 'DELETE', '/trip-plan/t1/notes/n1');
+    cy.findByText('Pack two coats').should('not.exist');
+    cy.findByText('Rent a scooter').should('be.visible');
+  });
+
   it('tells the user when the PDF cannot be created', () => {
     mockApi({...api, 'GET /trip-plan/t1/export-pdf': reply(500)});
     visit('/assistant/trips/t1');

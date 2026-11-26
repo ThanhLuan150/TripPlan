@@ -197,9 +197,29 @@ export const tripsApi = {
     (await api.get<VisibilityStatus>(`/trip-plan/${id}/visibility`)).data,
   setVisibility: async (id: string, visibility: TripVisibility) =>
     (await api.put<VisibilityStatus>(`/trip-plan/${id}/visibility`, {visibility})).data,
+  // personal notes of the trip (owner only; nobody else can read or change them)
+  notes: async (id: string) =>
+    (await api.get<{notes: TripNote[]}>(`/trip-plan/${id}/notes`)).data.notes,
+  addNote: async (id: string, content: string) =>
+    (await api.post<{note: TripNote}>(`/trip-plan/${id}/notes`, {content})).data.note,
+  updateNote: async (id: string, noteId: string, content: string) =>
+    (await api.put<{note: TripNote}>(`/trip-plan/${id}/notes/${noteId}`, {content})).data.note,
+  removeNote: async (id: string, noteId: string) =>
+    (await api.delete(`/trip-plan/${id}/notes/${noteId}`)).data,
 };
 
 export type TripVisibility = 'public' | 'private';
+
+export const MAX_NOTE_LENGTH = 2000;
+
+// A private note of the signed-in user on one of their trips
+export interface TripNote {
+  _id: string;
+  tripId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface PublicTripCard {
   _id: string;
