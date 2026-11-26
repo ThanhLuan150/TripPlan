@@ -45,6 +45,22 @@ describe('ExplorePage', () => {
     expect(await screen.findByText('Second plan')).toBeInTheDocument();
     expect(tripsApi.listPublic).toHaveBeenLastCalledWith(2);
     expect(screen.getByRole('button', {name: t('trips.explore.next')})).toBeDisabled();
+
+    await userEvent.click(screen.getByRole('button', {name: t('trips.explore.prev')}));
+    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(1);
+  });
+
+  it('falls back to the place and a zero cost when a card has no name or prices', async () => {
+    vi.mocked(tripsApi.listPublic).mockResolvedValue({
+      page: 1,
+      limit: 12,
+      total: 1,
+      items: [{_id: 'z9', location: 'Cà Mau', startDate: '2026-03-02T09:00:00', endDate: '2026-03-04T09:00:00'}],
+    });
+    renderWithProviders(<ExplorePage />, {route: '/assistant/explore'});
+
+    expect(await screen.findByRole('link', {name: /Cà Mau/})).toHaveAttribute('href', '/trip/z9');
+    expect(screen.getByText(t('trips.explore.cost', {amount: '0'}))).toBeInTheDocument();
   });
 
   it('says so when nothing is public yet', async () => {

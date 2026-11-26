@@ -103,4 +103,16 @@ describe('updateAccessToken with tokens of different accounts', () => {
     updateAccessToken(jwt('new-user') + 'x'); // same account: refreshed normally
     expect(getAccessToken()).toBe(jwt('new-user') + 'x');
   });
+
+  it('does not block a refreshed token it cannot read (no userId, or not a JWT)', async () => {
+    const {saveSession, updateAccessToken, getAccessToken} = await import('@/features/auth/store/session');
+    saveSession({message: 'ok', accessToken: jwt('new-user'), data: {username: 'thanhluan'}} as never);
+
+    const noUser = `h.${btoa(JSON.stringify({sub: 'x'}))}.s`;
+    updateAccessToken(noUser);
+    expect(getAccessToken()).toBe(noUser);
+
+    updateAccessToken('not-a-jwt');
+    expect(getAccessToken()).toBe('not-a-jwt');
+  });
 });

@@ -64,6 +64,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(tripsApi.get).mockResolvedValue(trip as never);
   vi.mocked(tripsApi.favorites).mockResolvedValue([]);
+  vi.mocked(tripsApi.visibility).mockResolvedValue({visibility: 'private'});
   vi.mocked(tripsApi.addFavorite).mockResolvedValue({});
   vi.mocked(tripsApi.removeFavorite).mockResolvedValue({});
 });
