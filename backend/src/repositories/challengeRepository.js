@@ -13,4 +13,8 @@ const setImage = (id, imageUrl) =>
 
 const setCoordinates = (id, latitude, longitude) => Challenge.findByIdAndUpdate(id, { latitude, longitude });
 
-export default { create, setCoordinates, findById, findByTripDayId, findFirstByTripDayId, setImage };
+const updateById = (id, update) => Challenge.findByIdAndUpdate(id, { $set: update }, { new: true });
+
+const deleteByIds = (ids) => Challenge.deleteMany({ _id: { $in: ids } });
+
+export default { updateById, deleteByIds, create, setCoordinates, findById, findByTripDayId, findFirstByTripDayId, setImage };

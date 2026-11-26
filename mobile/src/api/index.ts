@@ -12,6 +12,7 @@ export interface Trip {
 export interface Challenge {
   _id: string;
   challengeSummary: string;
+  nameLocation?: string;
   location?: string;
   latitude?: string;
   longitude?: string;
@@ -197,6 +198,15 @@ export const tripsApi = {
     (await api.get<VisibilityStatus>(`/trip-plan/${id}/visibility`)).data,
   setVisibility: async (id: string, visibility: TripVisibility) =>
     (await api.put<VisibilityStatus>(`/trip-plan/${id}/visibility`, {visibility})).data,
+  // AI itinerary editing (owner only): propose changes (nothing saved), then apply the accepted proposal
+  proposeAiEdit: async (id: string, instruction: string) =>
+    (await api.post<{proposal: AiEditProposal}>(`/trip-plan/${id}/ai-edit`, {instruction})).data.proposal,
+  // Accept: the server saves the proposal it stored (the client sends only its id)
+  applyAiEdit: async (id: string, proposalId: string) =>
+    (await api.post(`/trip-plan/${id}/ai-edit/apply`, {proposalId})).data,
+  // Reject: the server forgets the proposal
+  rejectAiEdit: async (id: string, proposalId: string) =>
+    (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
   // personal notes of the trip (owner only; nobody else can read or change them)
   notes: async (id: string) =>
     (await api.get<{notes: TripNote[]}>(`/trip-plan/${id}/notes`)).data.notes,
@@ -211,6 +221,22 @@ export const tripsApi = {
 export type TripVisibility = 'public' | 'private';
 
 export const MAX_NOTE_LENGTH = 2000;
+
+export const MAX_AI_EDIT_LENGTH = 500;
+// A day of an AI proposal for a trip (only a preview until the user accepts it)
+// What the AI proposed: kept on the server under this id until the user accepts or rejects it
+export interface AiEditProposal {
+  id: string;
+  days: AiEditDay[];
+}
+// kept: a completed place the AI left out, put back because its photo and points are already earned
+export interface AiEditDay {
+  title: string;
+  activities: {name_location: string; challenge_summary: string; level_of_difficult: number; province?: string; kept?: boolean}[];
+  transportCost: number;
+  foodCost: number;
+  otherCost: number;
+}
 
 // A private note of the signed-in user on one of their trips
 export interface TripNote {

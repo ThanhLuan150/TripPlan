@@ -224,6 +224,79 @@ describe('trip detail', () => {
     cy.findByText('Rent a scooter').should('be.visible');
   });
 
+  describe('AI edit', () => {
+    const proposal = {
+      id: 'p1',
+      days: [
+      {
+        title: 'Ngày 1 mới',
+        activities: [{name_location: 'Quán cà phê Mê Linh', challenge_summary: 'Uống cà phê', level_of_difficult: 20}],
+        transportCost: 1,
+        foodCost: 2,
+        otherCost: 3,
+      },
+      ],
+    };
+    const ask = () => {
+      cy.findByRole('textbox', {name: t('trips.aiEdit.placeholder')}).type('Thêm quán cà phê');
+      cy.findByRole('button', {name: t('trips.aiEdit.ask')}).click();
+    };
+
+    it('asks for text, previews the proposal and saves only on Accept', () => {
+      const calls = mockApi({
+        ...api,
+        'GET /trip-plan/t1/notes': {notes: []},
+        'POST /trip-plan/t1/ai-edit': {proposal},
+        'POST /trip-plan/t1/ai-edit/apply': {message: 'ok'},
+        'DELETE /trip-plan/t1/ai-edit/p1': {message: 'ok'},
+      });
+      visit('/assistant/trips/t1');
+
+      // an empty request is not sent
+      cy.findByRole('button', {name: t('trips.aiEdit.ask')}).click();
+      cy.findByRole('alert').should('contain.text', t('trips.aiEdit.required'));
+      cy.then(() => expectNoCall(calls, 'POST'));
+
+      ask();
+      expectCall(calls, 'POST', '/trip-plan/t1/ai-edit').its('body').should('deep.eq', {instruction: 'Thêm quán cà phê'});
+      cy.findByText('Quán cà phê Mê Linh').should('be.visible');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/ai-edit/apply'));
+
+      cy.findByRole('button', {name: t('trips.aiEdit.accept')}).click();
+      expectCall(calls, 'POST', '/trip-plan/t1/ai-edit/apply').its('body').should('deep.eq', {proposalId: 'p1'});
+      cy.findByText(t('trips.aiEdit.applied')).should('be.visible');
+    });
+
+    it('Reject keeps the itinerary: nothing is saved', () => {
+      const calls = mockApi({...api, 'GET /trip-plan/t1/notes': {notes: []},
+        'POST /trip-plan/t1/ai-edit': {proposal},
+        'DELETE /trip-plan/t1/ai-edit/p1': {message: 'ok'},
+      });
+      visit('/assistant/trips/t1');
+
+      ask();
+      cy.findByRole('button', {name: t('trips.aiEdit.reject')}).click();
+      expectCall(calls, 'DELETE', '/trip-plan/t1/ai-edit/p1');
+
+      cy.findByText('Quán cà phê Mê Linh').should('not.exist');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/ai-edit/apply'));
+    });
+
+    it('tells the user when the AI fails and shows no preview', () => {
+      mockApi({
+        ...api,
+        'GET /trip-plan/t1/notes': {notes: []},
+        'POST /trip-plan/t1/ai-edit': reply(502, {message: 'bad', code: 'AI_INVALID_RESPONSE'}),
+      });
+      visit('/assistant/trips/t1');
+
+      ask();
+
+      cy.findByText(t('trips.aiEdit.invalid')).should('be.visible');
+      cy.findByText(t('trips.aiEdit.previewTitle')).should('not.exist');
+    });
+  });
+
   it('tells the user when the PDF cannot be created', () => {
     mockApi({...api, 'GET /trip-plan/t1/export-pdf': reply(500)});
     visit('/assistant/trips/t1');

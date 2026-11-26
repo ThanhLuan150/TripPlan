@@ -6,6 +6,7 @@ import challengeProgressRepository from "../repositories/challengeProgressReposi
 import HttpError from "../utils/HttpError.js";
 import { buildTripPdf, pdfFileName } from "./tripPdfService.js";
 import { startChat, getResponseText } from "../utils/gemini.js";
+import parseJsonObject from "../utils/parseJsonObject.js";
 import { getDayOfWeek } from "../utils/date.js";
 import { getLocationFromNameLocation } from "../utils/geocode.js";
 
@@ -44,20 +45,6 @@ const buildPrompt = ({ location, numberOfPeople, budget, interest, numberOfDay, 
         }}
         THERE IS NO TEXT IN THE REPLY, ONLY JSON AND USING VIETNAMESE AND COMBINE TWO PLAN JSON STRINGS INTO A SINGLE JSON STRING`;
 
-// The model sometimes wraps the JSON in text / code fences: keep the outer object.
-const parsePlans = (text) => {
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}") + 1;
-    if (start === -1 || end === 0) {
-        return undefined;
-    }
-    try {
-        return JSON.parse(text.substring(start, end));
-    } catch {
-        return undefined;
-    }
-};
-
 // Ask Gemini for (at least) two plans. Nothing is saved yet.
 const generatePlans = async (userId, body) => {
     const { startDate, endDate } = body;
@@ -73,7 +60,7 @@ const generatePlans = async (userId, body) => {
     if (text === null) {
         return { message: "An error occurred while creating the trip plan, try again" };
     }
-    const data = parsePlans(text);
+    const data = parseJsonObject(text);
     if (!data) {
         console.log("No valid JSON found in the return data.", text);
         throw new HttpError(502, "An error occurred while creating the trip plan, try again");

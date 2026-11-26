@@ -253,6 +253,19 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1/notes/n1');
   });
 
+  it('AI edit: propose unwraps the proposal, apply sends only its id, reject deletes it', async () => {
+    const proposal = {id: 'p1', days: [{title: 'x'}]};
+    post.mockResolvedValueOnce(reply({proposal})).mockResolvedValueOnce(reply({message: 'ok'}));
+    del.mockResolvedValue(reply({message: 'gone'}));
+
+    await expect(tripsApi.proposeAiEdit('t1', 'more food')).resolves.toEqual(proposal);
+    await expect(tripsApi.applyAiEdit('t1', 'p1')).resolves.toEqual({message: 'ok'});
+    await expect(tripsApi.rejectAiEdit('t1', 'p1')).resolves.toEqual({message: 'gone'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/ai-edit', {instruction: 'more food'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/ai-edit/apply', {proposalId: 'p1'});
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/ai-edit/p1');
+  });
+
   it('getShared reads the public endpoint and unwraps the trip', async () => {
     get.mockResolvedValue(reply({tripDatas: {location: 'Đà Lạt'}}));
 

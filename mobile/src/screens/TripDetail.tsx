@@ -12,6 +12,7 @@ import ActivityRow from '../components/ActivityRow';
 import DayCard from '../components/DayCard';
 import {PleaseWait} from '../components/GenerateStatus';
 import TripHero from '../components/TripHero';
+import AiEditPanel from '../components/AiEditPanel';
 import TripNotes from '../components/TripNotes';
 import {queryKeys, useTrip, useTripVisibility} from '../hooks/queries';
 import {tripsApi, TripVisibility} from '../api';
@@ -170,7 +171,12 @@ export default function TripDetail() {
             onMap={() => navigation.navigate('TripMap', {id})}
           />
         }
-        ListFooterComponent={<TripNotes tripId={id} />}
+        ListFooterComponent={
+          <>
+            <AiEditPanel tripId={id} days={trip.data?.dataTripDays ?? []} />
+            <TripNotes tripId={id} />
+          </>
+        }
         data={trip.data?.dataTripDays ?? []}
         keyExtractor={(_, i) => String(i)}
         renderItem={({item, index}) => (
