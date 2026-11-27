@@ -180,16 +180,16 @@ describe("tripDayRepository", () => {
 });
 
 describe("challengeRepository", () => {
-    it("creates and finds challenges", () => {
+    it("creates and finds challenges", async () => {
+        Challenge.find.mockResolvedValue([]);
         challengeRepository.create({ points: 10 });
         challengeRepository.findById("c1");
-        challengeRepository.findByTripDayId("d1");
-        challengeRepository.findFirstByTripDayId("d1");
+        await challengeRepository.findByTripDayId("d1");
+        await challengeRepository.findFirstByTripDayId("d1");
 
         expect(Challenge.create).toHaveBeenCalledWith({ points: 10 });
         expect(Challenge.findById).toHaveBeenCalledWith("c1");
         expect(Challenge.find).toHaveBeenCalledWith({ tripDayId: "d1" });
-        expect(Challenge.findOne).toHaveBeenCalledWith({ tripDayId: "d1" });
     });
 
     it("sets the photo and returns only id + points", () => {

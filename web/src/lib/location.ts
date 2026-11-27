@@ -140,3 +140,9 @@ export const saveUserLocation = async (coords?: Coords) => {
     storage.setItem(StorageKeys.userLocation, data.province);
   }
 };
+
+// "12 min" / "1 h 05 min" from seconds
+export const formatDuration = (seconds: number) => {
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`;
+};

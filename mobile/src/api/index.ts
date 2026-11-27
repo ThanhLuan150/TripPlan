@@ -208,6 +208,15 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+  // AI route optimization of one day (owner only): propose an order (nothing saved), then apply it
+  proposeRoute: async (id: string, dayId: string) =>
+    (await api.post<RouteProposal>(`/trip-plan/${id}/route-optimization`, {dayId})).data,
+  // Accept: the server saves the order it stored (the client sends only the proposal id)
+  applyRoute: async (id: string, proposalId: string) =>
+    (await api.post(`/trip-plan/${id}/route-optimization/apply`, {proposalId})).data,
+  // Reject: the server forgets the proposal
+  rejectRoute: async (id: string, proposalId: string) =>
+    (await api.delete(`/trip-plan/${id}/route-optimization/${proposalId}`)).data,
   // AI budget estimate (owner only): an estimate, never an expense. null when none was made yet
   budgetEstimate: async (id: string) =>
     (await api.get<{estimate: BudgetEstimate | null}>(`/trip-plan/${id}/budget-estimate`)).data.estimate,
@@ -353,6 +362,32 @@ export const MAX_NOTE_LENGTH = 2000;
 
 export const MAX_AI_EDIT_LENGTH = 500;
 // A day of an AI proposal for a trip (only a preview until the user accepts it)
+// AI route optimization of one day: the current visiting order and the proposed one, with the distances
+// and times given by the routing service ("road") or measured on the map ("straight-line": no time)
+export interface RoutePlace {
+  id: string;
+  name: string;
+  location: string | null;
+}
+export interface RouteTotals {
+  distance: number;
+  // seconds; null when only straight-line distances are known
+  duration: number | null;
+}
+export interface RouteProposal {
+  dayId: string;
+  source: 'road' | 'straight-line';
+  // places of the day without a position: they are not moved and have no distance
+  missingCoordinates: RoutePlace[];
+  current: RouteTotals;
+  proposed: RouteTotals;
+  currentOrder: RoutePlace[];
+  proposedOrder: RoutePlace[];
+  // false: the current order is already the shortest, there is nothing to accept
+  improved: boolean;
+  proposalId: string | null;
+}
+
 // What the AI proposed: kept on the server under this id until the user accepts or rejects it
 export interface AiEditProposal {
   id: string;

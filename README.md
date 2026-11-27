@@ -406,6 +406,19 @@ Form **tạo kế hoạch** và form **gợi ý AI** tự lưu khi người dùn
 - Không dùng AI và không đổi các địa điểm khác của chuyến đi.
 - **UX (web `AddToTripDialog`, mobile `AddToTripModal`):** nút "Thêm vào chuyến đi có sẵn" trên mỗi gợi ý mở hộp thoại từng bước: 1) chọn chuyến đi (chuyến cùng tỉnh lên đầu, có nhãn "Cùng tỉnh"; chưa có chuyến đi thì gợi ý tạo mới), 2) chọn ngày (hiện số địa điểm; ngày đã đầy bị khóa), rồi một câu tóm tắt "Thêm X vào Ngày N của chuyến Y" (kèm cảnh báo nếu là gợi ý AI chưa xác minh). Chỉ khi bấm "Thêm vào chuyến đi" mới ghi. Thành công thì hiện màn kết quả với nút "Xem chuyến đi"; lỗi hiển thị ngay trong hộp thoại và giữ nguyên lựa chọn.
 
+### Tối ưu tuyến đường (AI Route Optimization, AI-004)
+
+Sắp xếp lại thứ tự tham quan của **một ngày**. Không gợi ý địa điểm mới, không thêm hay bớt địa điểm nào, chỉ đổi thứ tự.
+
+- `POST /trip-plan/:id/route-optimization` body `{ dayId }` (chủ chuyến đi): trả thứ tự hiện tại (`currentOrder`) và thứ tự đề xuất (`proposedOrder`), tổng quãng đường / thời gian của từng thứ tự (`current`, `proposed`, kèm `legs`), `improved`, `proposalId`, `source`, `missingCoordinates`. **Không ghi lịch trình**, chỉ lưu đề xuất trên server (tự xóa sau 1 giờ).
+- `POST /trip-plan/:id/route-optimization/apply` body `{ proposalId }` = **Chấp nhận**: server áp dụng đúng đề xuất đã lưu (không tin dữ liệu client gửi lên), chỉ ghi vị trí `order` của từng địa điểm. Trả 409 `ROUTE_DAY_CHANGED` nếu ngày đã thêm/bớt địa điểm kể từ lúc đề xuất (không bao giờ làm mất địa điểm), 404 `ROUTE_PROPOSAL_NOT_FOUND` nếu đề xuất không có / hết hạn.
+- `DELETE /trip-plan/:id/route-optimization/:proposalId` = **Từ chối**: server bỏ đề xuất, lịch trình giữ nguyên.
+- **Thuật toán, không dùng LLM** (để không bịa số): lấy tọa độ lưu trên từng địa điểm, hỏi OSRM (`/table`, cùng dịch vụ đang dùng cho bản đồ) ma trận quãng đường và thời gian đi xe thật, rồi tìm đường đi ngắn nhất theo **thời gian** (chính xác với ≤ 12 địa điểm, ngược lại gần nhất + 2-opt). Địa điểm đầu tiên có tọa độ giữ làm điểm xuất phát. Chỉ khi có thứ tự **ngắn hơn hẳn** mới tạo đề xuất; nếu không, `improved: false`, `proposalId: null` và không có gì để chấp nhận.
+- Nếu OSRM lỗi: `source: "straight-line"`, khoảng cách là đường chim bay tính từ tọa độ và **không hiển thị thời gian** (`duration: null`); giao diện ghi rõ điều này.
+- Địa điểm thiếu hoặc sai tọa độ (rỗng, không phải số, ngoài miền, hoặc 0,0) không được sắp xếp: giữ nguyên vị trí trong danh sách và được liệt kê ở `missingCoordinates`. Cần ít nhất 3 địa điểm có tọa độ, nếu không trả 400 `ROUTE_NOT_ENOUGH_COORDINATES`. Tối đa 25 địa điểm mỗi ngày (400 `ROUTE_TOO_MANY_PLACES`).
+- Dữ liệu: thêm `Challenge.order` (số, tùy chọn). Địa điểm có `order` xếp trước theo `order`, địa điểm chưa có xếp sau theo thời điểm tạo, nên chuyến đi cũ và địa điểm thêm sau vẫn đúng thứ tự.
+- **UX (web `RouteOptimizePanel`, mobile `RouteOptimizePanel`):** thẻ "Tối ưu tuyến đường" trong chi tiết chuyến đi: chọn ngày, bấm "Tối ưu tuyến đường", xem hai danh sách (hiện tại / đề xuất) với tổng quãng đường và thời gian, rồi **Chấp nhận** hoặc **Từ chối**.
+
 ### Quy ước khi triển khai một ticket mới
 
 Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:

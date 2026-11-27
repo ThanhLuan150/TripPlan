@@ -377,6 +377,89 @@ describe('trip detail', () => {
     });
   });
 
+  describe('AI route optimization', () => {
+    const place = (n: number, name: string) => ({_id: `r${n}`, challengeSummary: name, nameLocation: name, points: 10});
+    const routeTrip = {
+      ...tripDetail,
+      dataTripDays: [
+        {...tripDetail.dataTripDays[0], _id: 'd1', challenges: [place(1, 'Chợ Bến Thành'), place(2, 'Dinh Độc Lập'), place(3, 'Nhà thờ Đức Bà')]},
+        {...tripDetail.dataTripDays[1], _id: 'd2'},
+      ],
+    };
+    const pl = (id: string, name: string) => ({id, name, location: null});
+    const proposal = {
+      dayId: 'd1',
+      source: 'road',
+      missingCoordinates: [],
+      current: {distance: 5000, duration: 3600},
+      proposed: {distance: 3000, duration: 1800},
+      currentOrder: [pl('r1', 'Chợ Bến Thành'), pl('r2', 'Dinh Độc Lập'), pl('r3', 'Nhà thờ Đức Bà')],
+      proposedOrder: [pl('r1', 'Chợ Bến Thành'), pl('r3', 'Nhà thờ Đức Bà'), pl('r2', 'Dinh Độc Lập')],
+      improved: true,
+      proposalId: 'rp1',
+    };
+    const base = {
+      ...api,
+      'GET /trip-plan/get-trip/t1': {tripDatas: routeTrip},
+      'GET /trip-plan/t1/notes': {notes: []},
+      'GET /trip-plan/t1/budget-estimate': {estimate: null},
+    };
+
+    it('shows the current and the suggested order with distances, and saves nothing until Accept', () => {
+      const calls = mockApi({...base, 'POST /trip-plan/t1/route-optimization': proposal});
+      visit('/assistant/trips/t1');
+
+      cy.findByRole('button', {name: t('trips.route.optimize')}).click();
+      expectCall(calls, 'POST', '/trip-plan/t1/route-optimization').its('body').should('deep.eq', {dayId: 'd1'});
+
+      cy.findByText(t('trips.route.proposed')).should('be.visible');
+      cy.findByText(t('trips.route.current')).should('be.visible');
+      cy.contains('5 km').should('be.visible');
+      cy.contains('3 km').should('be.visible');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/route-optimization/apply'));
+    });
+
+    it('Accept sends only the proposal id and confirms', () => {
+      const calls = mockApi({
+        ...base,
+        'POST /trip-plan/t1/route-optimization': proposal,
+        'POST /trip-plan/t1/route-optimization/apply': {message: 'ok'},
+      });
+      visit('/assistant/trips/t1');
+
+      cy.findByRole('button', {name: t('trips.route.optimize')}).click();
+      cy.findByRole('button', {name: t('trips.route.accept')}).click();
+
+      expectCall(calls, 'POST', '/trip-plan/t1/route-optimization/apply').its('body').should('deep.eq', {proposalId: 'rp1'});
+      cy.findByText(t('trips.route.applied')).should('be.visible');
+    });
+
+    it('Reject keeps the itinerary and never applies', () => {
+      const calls = mockApi({
+        ...base,
+        'POST /trip-plan/t1/route-optimization': proposal,
+        'DELETE /trip-plan/t1/route-optimization/rp1': {message: 'gone'},
+      });
+      visit('/assistant/trips/t1');
+
+      cy.findByRole('button', {name: t('trips.route.optimize')}).click();
+      cy.findByRole('button', {name: t('trips.route.reject')}).click();
+
+      expectCall(calls, 'DELETE', '/trip-plan/t1/route-optimization/rp1');
+      cy.findByText(t('trips.route.rejected')).should('be.visible');
+      cy.findByText(t('trips.route.proposed')).should('not.exist');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/route-optimization/apply'));
+    });
+
+    it('tells the user when too few places have a position', () => {
+      mockApi({...base, 'POST /trip-plan/t1/route-optimization': reply(400, {message: 'x', code: 'ROUTE_NOT_ENOUGH_COORDINATES'})});
+      visit('/assistant/trips/t1');
+
+      cy.findByRole('button', {name: t('trips.route.optimize')}).click();
+      cy.findByText(t('trips.route.notEnough')).should('be.visible');
+    });
+  });
+
   it('tells the user when the PDF cannot be created', () => {
     mockApi({...api, 'GET /trip-plan/t1/export-pdf': reply(500)});
     visit('/assistant/trips/t1');

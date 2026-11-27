@@ -9,6 +9,8 @@ const ChallengeSchema = mongoose.Schema({
     longitude: String,
     points: Number,
     imageUrl: String,
+    // position inside its day, set when the owner accepts a route optimization (older places have none)
+    order: Number,
 })
 
 const Challenge = mongoose.model("Challenge", ChallengeSchema);
