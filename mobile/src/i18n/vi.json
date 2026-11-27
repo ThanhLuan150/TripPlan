@@ -580,7 +580,34 @@
     },
     "notificationsTitle": "Thông báo của bạn",
     "noNotifications": "Bạn chưa có thông báo nào.",
-    "notificationsFailed": "Không tải được thông báo. Vui lòng thử lại."
+    "notificationsFailed": "Không tải được thông báo. Vui lòng thử lại.",
+    "preferences": {
+      "link": "Sở thích du lịch cho AI",
+      "title": "Sở thích du lịch",
+      "intro": "Cho AI biết bạn thích gì để cá nhân hóa gợi ý và lịch trình. Không bắt buộc: AI vẫn hoạt động bình thường nếu bạn không thiết lập.",
+      "categories": "Bạn thích gì?",
+      "category": {
+        "nature": "Thiên nhiên",
+        "food": "Ẩm thực",
+        "culture": "Văn hóa",
+        "shopping": "Mua sắm",
+        "discovery": "Khám phá"
+      },
+      "notes": "Ghi chú thêm (không bắt buộc)",
+      "notesPlaceholder": "Ví dụ: nơi yên tĩnh, món địa phương, không quá đông",
+      "delete": "Xóa sở thích",
+      "deleteTitle": "Xóa sở thích của bạn?",
+      "deleteText": "AI sẽ không dùng chúng nữa. Bạn có thể thiết lập lại bất cứ lúc nào.",
+      "saved": "Đã lưu sở thích của bạn",
+      "deleted": "Đã xóa sở thích của bạn",
+      "saveFailed": "Không lưu được sở thích",
+      "deleteFailed": "Không xóa được sở thích",
+      "loadFailed": "Không tải được sở thích.",
+      "errors": {
+        "empty": "Chọn ít nhất một nhóm hoặc nhập ghi chú",
+        "notesLong": "Ghi chú quá dài (tối đa 300 ký tự)"
+      }
+    }
   },
   "common": {
     "success": "Thành công",

@@ -25,6 +25,7 @@ import SharedTripPage from '@/features/trips/pages/SharedTripPage';
 import RankingPage from '@/features/ranking/pages/RankingPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import EditProfilePage from '@/features/profile/pages/EditProfilePage';
+import PreferencesPage from '@/features/profile/pages/PreferencesPage';
 import NotificationsPage from '@/features/profile/pages/NotificationsPage';
 import VideosPage from '@/features/videos/pages/VideosPage';
 import WhatAlocaPage from '@/features/about/pages/WhatAlocaPage';
@@ -70,6 +71,7 @@ export default function AppRouter() {
             <Route path={routes.Profile} element={<ProfilePage />} />
           </Route>
           <Route path={routes.Editprofile} element={<EditProfilePage />} />
+          <Route path={routes.Preferences} element={<PreferencesPage />} />
           <Route path={routes.Notification} element={<NotificationsPage />} />
           <Route path={routes.VideoTravel} element={<VideosPage />} />
           <Route path={routes.WhatAloca} element={<WhatAlocaPage />} />

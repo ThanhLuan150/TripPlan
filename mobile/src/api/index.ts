@@ -528,6 +528,16 @@ export interface Announcement {
   publishAt?: string;
 }
 
+// Travel preferences the AI personalizes with (same groups and limits as the backend)
+export const PREFERENCE_CATEGORIES = ['nature', 'food', 'culture', 'shopping', 'discovery'] as const;
+export type PreferenceCategory = (typeof PREFERENCE_CATEGORIES)[number];
+export const MAX_PREFERENCE_NOTES = 300;
+export interface TravelPreferences {
+  categories: PreferenceCategory[];
+  notes: string;
+  updatedAt: string | null;
+}
+
 export const profileApi = {
   update: async (data: {
     fullname: string;
@@ -536,6 +546,12 @@ export const profileApi = {
     address: string;
     image: string;
   }) => (await api.post('/user/profile', data)).data,
+  preferences: async () =>
+    (await api.get<{preferences: TravelPreferences}>('/user/preferences')).data.preferences,
+  savePreferences: async (data: {categories: PreferenceCategory[]; notes: string}) =>
+    (await api.put<{message: string; preferences: TravelPreferences}>('/user/preferences', data)).data,
+  deletePreferences: async () =>
+    (await api.delete<{message: string; preferences: TravelPreferences}>('/user/preferences')).data,
   notifications: async () =>
     (await api.get<Announcement[]>('/announcements')).data ?? [],
 };

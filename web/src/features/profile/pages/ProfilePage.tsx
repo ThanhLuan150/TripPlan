@@ -13,6 +13,7 @@ import {
   IoLanguageOutline,
   IoLogOutOutline,
   IoNotificationsOutline,
+  IoSparklesOutline,
   IoShieldCheckmarkOutline,
   IoStar,
 } from 'react-icons/io5';
@@ -95,6 +96,15 @@ export default function ProfilePage() {
             <IoAirplaneOutline size={22} />
           </span>
           <span className="font-semibold text-slate-800">{t('profile.plans')}</span>
+        </Link>
+        <Link
+          to={routes.Preferences}
+          className="card col-span-2 flex items-center gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-md">
+          <span className="grid size-11 place-items-center rounded-xl bg-violet-50 text-violet-600">
+            <IoSparklesOutline size={22} />
+          </span>
+          <span className="font-semibold text-slate-800">{t('profile.preferences.link')}</span>
+          <IoChevronForward size={16} className="ml-auto text-slate-400" />
         </Link>
         {/* only admins: the way back to the admin panel */}
         {user?.role === 'admin' && (

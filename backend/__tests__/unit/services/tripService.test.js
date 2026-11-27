@@ -4,6 +4,7 @@ import tripPlanRepository from "../../../src/repositories/tripPlanRepository.js"
 import tripDayRepository from "../../../src/repositories/tripDayRepository.js";
 import challengeRepository from "../../../src/repositories/challengeRepository.js";
 import challengeProgressRepository from "../../../src/repositories/challengeProgressRepository.js";
+import travelPreferenceService from "../../../src/services/travelPreferenceService.js";
 import { getResponseText, startChat } from "../../../src/utils/gemini.js";
 import { getLocationFromNameLocation } from "../../../src/utils/geocode.js";
 import { doc } from "../../helpers/http.js";
@@ -25,6 +26,7 @@ vi.mock("../../../src/repositories/challengeRepository.js", () => ({
 vi.mock("../../../src/repositories/challengeProgressRepository.js", () => ({
     default: { create: vi.fn(), findByUserAndChallenges: vi.fn() },
 }));
+vi.mock("../../../src/services/travelPreferenceService.js", () => ({ default: { promptSection: vi.fn() } }));
 vi.mock("../../../src/utils/gemini.js", () => ({ startChat: vi.fn(), getResponseText: vi.fn() }));
 vi.mock("../../../src/utils/geocode.js", () => ({ getLocationFromNameLocation: vi.fn() }));
 
@@ -45,6 +47,7 @@ beforeEach(() => {
     startChat.mockReturnValue({ sendMessage });
     sendMessage.mockResolvedValue({});
     tripPlanRepository.findOverlapping.mockResolvedValue([]);
+    travelPreferenceService.promptSection.mockResolvedValue("");
 });
 
 describe("generatePlans", () => {
@@ -77,6 +80,16 @@ describe("generatePlans", () => {
         expect(prompt).toContain("Ngân sách: 5.000.000 VND");
         expect(prompt).toContain("ĐẦY ĐỦ 2 ngày");
         expect(prompt).not.toContain("Ghi chú");
+    });
+
+    it("adds the saved travel preferences of the caller to the prompt", async () => {
+        getResponseText.mockReturnValue("{}");
+        travelPreferenceService.promptSection.mockResolvedValue("\n        - Sở thích du lịch đã lưu: thiên nhiên");
+
+        await tripService.generatePlans(USER, form);
+
+        expect(travelPreferenceService.promptSection).toHaveBeenCalledWith(USER);
+        expect(sendMessage.mock.calls[0][0]).toContain("Sở thích du lịch đã lưu: thiên nhiên");
     });
 
     it("adds the user's note, trimmed, capped and without breaking the quotes", async () => {

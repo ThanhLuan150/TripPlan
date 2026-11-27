@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import destinationRecommendService from "../../../src/services/destinationRecommendService.js";
 import contentService from "../../../src/services/contentService.js";
 import HttpError from "../../../src/utils/HttpError.js";
+import travelPreferenceService from "../../../src/services/travelPreferenceService.js";
 import destinationSearchRepository from "../../../src/repositories/destinationSearchRepository.js";
 import { getResponseText, startChat } from "../../../src/utils/gemini.js";
 
 vi.mock("../../../src/services/contentService.js", () => ({ default: { getPublicHome: vi.fn(), listPublicVideos: vi.fn() } }));
 vi.mock("../../../src/repositories/destinationSearchRepository.js", () => ({ default: { create: vi.fn(), trim: vi.fn() } }));
+vi.mock("../../../src/services/travelPreferenceService.js", () => ({ default: { promptSection: vi.fn() } }));
 vi.mock("../../../src/utils/gemini.js", () => ({ startChat: vi.fn(), getResponseText: vi.fn() }));
 
 const USER = "64b000000000000000000001";
@@ -18,6 +20,7 @@ beforeEach(() => {
     vi.resetAllMocks();
     startChat.mockReturnValue({ sendMessage });
     sendMessage.mockResolvedValue({});
+    travelPreferenceService.promptSection.mockResolvedValue("");
     destinationSearchRepository.create.mockResolvedValue({ _id: "h1" });
     contentService.getPublicHome.mockResolvedValue({
         suggestions: [{ id: "s1", title: "Hồ Xuân Hương, Đà Lạt", location: "Lâm Đồng", imageUrl: "https://img/x.jpg" }],
@@ -58,6 +61,16 @@ describe("normalizeInput", () => {
 });
 
 describe("recommend", () => {
+    it("adds the saved travel preferences of the caller to the prompt", async () => {
+        answer({ recommendations: [] });
+        travelPreferenceService.promptSection.mockResolvedValue("\n        - Sở thích du lịch đã lưu: ẩm thực");
+
+        await destinationRecommendService.recommend(USER, { query: "Nơi ăn ngon" });
+
+        expect(travelPreferenceService.promptSection).toHaveBeenCalledWith(USER);
+        expect(sendMessage.mock.calls[0][0]).toContain("Sở thích du lịch đã lưu: ẩm thực");
+    });
+
     it("sends the needs to the AI and returns complete suggestions, linking only places the app knows", async () => {
         answer("```json\n" + JSON.stringify({ recommendations: [item("Hồ Xuân Hương"), item("Thác Datanla", { province: "Lâm Đồng" })] }) + "\n```");
 

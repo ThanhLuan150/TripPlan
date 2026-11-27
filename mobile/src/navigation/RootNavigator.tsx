@@ -23,6 +23,7 @@ import Landing from '../screens/Landing';
 import Login from '../screens/Login';
 import NewPassword from '../screens/NewPassword';
 import Notifications from '../screens/Notifications';
+import Preferences from '../screens/Preferences';
 import Profile from '../screens/Profile';
 import Ranking from '../screens/Ranking';
 import Register from '../screens/Register';
@@ -55,6 +56,7 @@ export type RootStackParams = {
   PublicTripDetail: {id: string};
   Notifications: undefined;
   EditProfile: undefined;
+  Preferences: undefined;
   Videos: undefined;
   WhatAloca: undefined;
   Benefit: undefined;
@@ -145,6 +147,7 @@ export default function RootNavigator() {
           <Stack.Screen name="PublicTripDetail" component={PublicTripDetail} />
           <Stack.Screen name="Notifications" component={Notifications} />
           <Stack.Screen name="EditProfile" component={EditProfile} />
+          <Stack.Screen name="Preferences" component={Preferences} />
           <Stack.Screen name="Videos" component={Videos} />
           <Stack.Screen name="WhatAloca" component={WhatAloca} />
           <Stack.Screen name="Benefit" component={Benefit} />

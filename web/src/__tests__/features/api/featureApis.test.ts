@@ -121,6 +121,20 @@ describe('profileApi', () => {
     expect(post).toHaveBeenCalledWith('/user/profile', data);
   });
 
+  it('reads, saves and deletes the travel preferences', async () => {
+    const preferences = {categories: ['food'], notes: 'x', updatedAt: null};
+    const put = vi.spyOn(api, 'put').mockResolvedValue(reply({message: 'ok', preferences}));
+    get.mockResolvedValue(reply({preferences}));
+    del.mockResolvedValue(reply({message: 'ok', preferences: {categories: [], notes: '', updatedAt: null}}));
+
+    await expect(profileApi.preferences()).resolves.toEqual(preferences);
+    expect(get).toHaveBeenCalledWith('/user/preferences');
+    await profileApi.savePreferences({categories: ['food'], notes: 'x'});
+    expect(put).toHaveBeenCalledWith('/user/preferences', {categories: ['food'], notes: 'x'});
+    await profileApi.deletePreferences();
+    expect(del).toHaveBeenCalledWith('/user/preferences');
+  });
+
   it('notifications are the announcements the admin published', async () => {
     get.mockResolvedValue(reply([{id: 'a1', title: 'Bảo trì', message: 'Tối nay 22h', publishAt: '2026-01-01'}]));
 

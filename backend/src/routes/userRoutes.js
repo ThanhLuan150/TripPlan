@@ -11,6 +11,9 @@ const router = Router();
 router.use(apiLimiter);
 
 router.post("/profile", authenticate, requireRole("user", "admin"), logActivity("updateProfile"), userController.updateProfile); // role: user|admin — own profile
+router.get("/preferences", authenticate, requireRole("user", "admin"), userController.getPreferences);       // role: user|admin — own AI travel preferences
+router.put("/preferences", authenticate, requireRole("user", "admin"), logActivity("updateProfile"), userController.savePreferences); // role: user|admin — { categories?, notes? }, own only
+router.delete("/preferences", authenticate, requireRole("user", "admin"), logActivity("updateProfile"), userController.clearPreferences); // role: user|admin — clears own preferences
 router.post("/:id", authenticate, requireRole("user", "admin"), userController.deleteAccount);    // role: user (own account) | admin (any :id) — soft delete
 
 export default router;
