@@ -406,6 +406,18 @@ Form **tạo kế hoạch** và form **gợi ý AI** tự lưu khi người dùn
 - Không dùng AI và không đổi các địa điểm khác của chuyến đi.
 - **UX (web `AddToTripDialog`, mobile `AddToTripModal`):** nút "Thêm vào chuyến đi có sẵn" trên mỗi gợi ý mở hộp thoại từng bước: 1) chọn chuyến đi (chuyến cùng tỉnh lên đầu, có nhãn "Cùng tỉnh"; chưa có chuyến đi thì gợi ý tạo mới), 2) chọn ngày (hiện số địa điểm; ngày đã đầy bị khóa), rồi một câu tóm tắt "Thêm X vào Ngày N của chuyến Y" (kèm cảnh báo nếu là gợi ý AI chưa xác minh). Chỉ khi bấm "Thêm vào chuyến đi" mới ghi. Thành công thì hiện màn kết quả với nút "Xem chuyến đi"; lỗi hiển thị ngay trong hộp thoại và giữ nguyên lựa chọn.
 
+### Tạo lại lịch trình một ngày (AI Itinerary Regeneration, AI-005)
+
+AI viết lại **một ngày** của chuyến đi; các ngày còn lại không bị đụng tới. Không phải chỉnh sửa cả chuyến đi (việc đó là `ai-edit`).
+
+- `POST /trip-plan/:id/day-regeneration` body `{ dayId, instruction? }` (chủ chuyến đi; `instruction` tùy chọn, tối đa 500 ký tự): chỉ gửi **ngày được chọn** cho AI. Trả `{ proposal: { id, dayId, day }, current }` (ngày đề xuất và ngày hiện tại). **Không ghi lịch trình**, chỉ lưu đề xuất trên server (tự xóa sau 1 giờ).
+- `POST /trip-plan/:id/day-regeneration/apply` body `{ proposalId }` = **Chấp nhận**: server ghi đúng đề xuất đã lưu (không tin dữ liệu client gửi lên) vào đúng ngày đó: tiêu đề, chi phí và các địa điểm của ngày, rồi tính lại tổng chi phí chuyến đi từ ngày mới + các ngày khác giữ nguyên. Địa điểm còn lại giữ thử thách (tiến độ, ảnh); địa điểm mới có thử thách và tiến độ mới; địa điểm bị bỏ bị xóa, **trừ địa điểm đã hoàn thành** (luôn được giữ lại và đánh dấu `kept` trong bản xem trước).
+- `DELETE /trip-plan/:id/day-regeneration/:proposalId` = **Từ chối**: server bỏ đề xuất, lịch trình giữ nguyên.
+- Lỗi (lịch trình luôn giữ nguyên): 404 `DAY_NOT_FOUND` (ngày không thuộc chuyến đi), 400 (yêu cầu quá dài), 502 `AI_INVALID_RESPONSE` (AI trả về không đọc được / thiếu tiêu đề, chi phí âm, quá 10 hoạt động), 502 `AI_EMPTY_DAY` (AI trả về ngày không có hoạt động), 503 (AI không khả dụng), 404 `AI_PROPOSAL_NOT_FOUND` khi chấp nhận (đề xuất không có / hết hạn / của người khác), 409 `DAY_CHANGED` (ngày đã thêm/bớt địa điểm kể từ lúc đề xuất).
+- Quyền: chỉ chủ chuyến đi (middleware `ownTrip`), đề xuất gắn với chuyến đi và người dùng đã tạo.
+- Dữ liệu: model `TripDayProposal` (`tripId`, `userId`, `dayId`, `baseIds`, `day`, TTL 1 giờ).
+- **UX (web `DayRegeneratePanel`, mobile `DayRegeneratePanel`):** thẻ "Tạo lại một ngày" trong chi tiết chuyến đi: chọn ngày, nhập yêu cầu (tùy chọn), xem ngày hiện tại và ngày đề xuất cạnh nhau (địa điểm mới / đã hoàn thành được đánh dấu), rồi **Chấp nhận** hoặc **Từ chối**.
+
 ### Tối ưu tuyến đường (AI Route Optimization, AI-004)
 
 Sắp xếp lại thứ tự tham quan của **một ngày**. Không gợi ý địa điểm mới, không thêm hay bớt địa điểm nào, chỉ đổi thứ tự.

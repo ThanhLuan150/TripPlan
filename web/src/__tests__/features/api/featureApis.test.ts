@@ -266,6 +266,21 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1/ai-edit/p1');
   });
 
+  it('day regeneration: propose posts the day (and the request when given), apply sends only the proposal id, reject deletes it', async () => {
+    const result = {proposal: {id: 'p1', dayId: 'd1'}};
+    post.mockResolvedValueOnce(reply(result)).mockResolvedValueOnce(reply(result)).mockResolvedValueOnce(reply({message: 'ok'}));
+    del.mockResolvedValue(reply({message: 'gone'}));
+
+    await expect(tripsApi.proposeDayRegeneration('t1', 'd1')).resolves.toEqual(result);
+    await expect(tripsApi.proposeDayRegeneration('t1', 'd1', 'more food')).resolves.toEqual(result);
+    await expect(tripsApi.applyDayRegeneration('t1', 'p1')).resolves.toEqual({message: 'ok'});
+    await expect(tripsApi.rejectDayRegeneration('t1', 'p1')).resolves.toEqual({message: 'gone'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/day-regeneration', {dayId: 'd1'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/day-regeneration', {dayId: 'd1', instruction: 'more food'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/day-regeneration/apply', {proposalId: 'p1'});
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/day-regeneration/p1');
+  });
+
   it('route optimization: propose posts the day, apply sends only the proposal id, reject deletes it', async () => {
     const result = {proposalId: 'p1', improved: true};
     post.mockResolvedValueOnce(reply(result)).mockResolvedValueOnce(reply({message: 'ok'}));

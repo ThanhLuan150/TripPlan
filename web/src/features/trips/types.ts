@@ -152,6 +152,13 @@ export interface AiEditDay {
   otherCost: number;
 }
 
+// AI regeneration of ONE day: the replacement proposed for the day and the day as it is now. Kept on the
+// server under proposal.id until the user accepts or rejects it; the other days are never part of it.
+export interface DayRegeneration {
+  proposal: {id: string; dayId: string; day: AiEditDay};
+  current: AiEditDay & {id: string; day?: number};
+}
+
 // One place added to a day of an existing trip (e.g. a destination the AI recommended)
 export interface AddPlaceBody {
   name: string;

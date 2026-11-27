@@ -208,6 +208,15 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+  // AI regeneration of one day (owner only): propose a replacement (nothing saved), then apply it
+  proposeDayRegeneration: async (id: string, dayId: string, instruction?: string) =>
+    (await api.post<DayRegeneration>(`/trip-plan/${id}/day-regeneration`, {dayId, ...(instruction ? {instruction} : {})})).data,
+  // Accept: the server saves the day it stored (the client sends only the proposal id)
+  applyDayRegeneration: async (id: string, proposalId: string) =>
+    (await api.post(`/trip-plan/${id}/day-regeneration/apply`, {proposalId})).data,
+  // Reject: the server forgets the proposal
+  rejectDayRegeneration: async (id: string, proposalId: string) =>
+    (await api.delete(`/trip-plan/${id}/day-regeneration/${proposalId}`)).data,
   // AI route optimization of one day (owner only): propose an order (nothing saved), then apply it
   proposeRoute: async (id: string, dayId: string) =>
     (await api.post<RouteProposal>(`/trip-plan/${id}/route-optimization`, {dayId})).data,
@@ -400,6 +409,13 @@ export interface AiEditDay {
   transportCost: number;
   foodCost: number;
   otherCost: number;
+}
+
+// AI regeneration of ONE day: the replacement proposed for the day and the day as it is now. Kept on the
+// server under proposal.id until the user accepts or rejects it; the other days are never part of it.
+export interface DayRegeneration {
+  proposal: {id: string; dayId: string; day: AiEditDay};
+  current: AiEditDay & {id: string; day?: number};
 }
 
 // A private note of the signed-in user on one of their trips
