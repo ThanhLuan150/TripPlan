@@ -9,6 +9,8 @@ export const external = (globalThis.__aloca ??= {
     prompts: [],
     // answer of the route service: an object, null (no route) or { error: "message" }
     route: null,
+    // answer of the place-to-place table of a day: { distances, durations }, null (no road) or { error: "message" }
+    routeMatrix: null,
     // answer of the province lookup
     province: null,
     // where every challenge is: the Han river bridge, Da Nang

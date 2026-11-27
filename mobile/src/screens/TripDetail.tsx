@@ -14,6 +14,7 @@ import {PleaseWait} from '../components/GenerateStatus';
 import TripHero from '../components/TripHero';
 import AiEditPanel from '../components/AiEditPanel';
 import BudgetEstimatePanel from '../components/BudgetEstimatePanel';
+import RouteOptimizePanel from '../components/RouteOptimizePanel';
 import TripNotes from '../components/TripNotes';
 import {queryKeys, useTrip, useTripVisibility} from '../hooks/queries';
 import {tripsApi, TripVisibility} from '../api';
@@ -175,6 +176,7 @@ export default function TripDetail() {
         ListFooterComponent={
           <>
             <AiEditPanel tripId={id} days={trip.data?.dataTripDays ?? []} />
+            <RouteOptimizePanel tripId={id} days={trip.data?.dataTripDays ?? []} />
             <BudgetEstimatePanel tripId={id} days={trip.data?.dataTripDays ?? []} />
             <TripNotes tripId={id} />
           </>

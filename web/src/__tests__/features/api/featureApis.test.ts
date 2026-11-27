@@ -266,6 +266,19 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1/ai-edit/p1');
   });
 
+  it('route optimization: propose posts the day, apply sends only the proposal id, reject deletes it', async () => {
+    const result = {proposalId: 'p1', improved: true};
+    post.mockResolvedValueOnce(reply(result)).mockResolvedValueOnce(reply({message: 'ok'}));
+    del.mockResolvedValue(reply({message: 'gone'}));
+
+    await expect(tripsApi.proposeRoute('t1', 'd1')).resolves.toEqual(result);
+    await expect(tripsApi.applyRoute('t1', 'p1')).resolves.toEqual({message: 'ok'});
+    await expect(tripsApi.rejectRoute('t1', 'p1')).resolves.toEqual({message: 'gone'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/route-optimization', {dayId: 'd1'});
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/route-optimization/apply', {proposalId: 'p1'});
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/route-optimization/p1');
+  });
+
   it('budget estimate: get/estimate/update unwrap the estimate and hit the budget-estimate endpoint', async () => {
     const put = vi.spyOn(api, 'put');
     const estimate = {id: 'e1', isEstimate: true, total: 10};

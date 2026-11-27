@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AddPlaceBody, AddPlaceResult, AiEditProposal, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -47,6 +47,18 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+
+  // AI route optimization of one day (owner only): propose an order (nothing saved), then apply it
+  proposeRoute: async (id: string, dayId: string) =>
+    (await api.post<RouteProposal>(`/trip-plan/${id}/route-optimization`, {dayId})).data,
+
+  // Accept: the server saves the order it stored (the client sends only the proposal id)
+  applyRoute: async (id: string, proposalId: string) =>
+    (await api.post(`/trip-plan/${id}/route-optimization/apply`, {proposalId})).data,
+
+  // Reject: the server forgets the proposal
+  rejectRoute: async (id: string, proposalId: string) =>
+    (await api.delete(`/trip-plan/${id}/route-optimization/${proposalId}`)).data,
 
   // AI budget estimate (owner only): an estimate, never an expense. null when none was made yet
   budgetEstimate: async (id: string) =>

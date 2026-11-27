@@ -65,8 +65,16 @@ export const pdfFileName = (nameTrip, lang) => {
     return `${clean || pdfLabels(lang).unnamed}.pdf`;
 };
 
-// Activities keep the order they were saved in (ids grow in creation order).
-const byCreation = (a, b) => String(a._id).localeCompare(String(b._id));
+// Activities keep the visiting order: the `order` the owner accepted from a route optimization first,
+// then the places without one in the order they were saved (ids grow in creation order).
+const byCreation = (a, b) => {
+    const hasA = typeof a.order === "number";
+    const hasB = typeof b.order === "number";
+    if (hasA && hasB) {
+        return a.order - b.order;
+    }
+    return hasA === hasB ? String(a._id).localeCompare(String(b._id)) : hasA ? -1 : 1;
+};
 
 // PDF (Buffer) of a trip as returned by tripService.getTripDetail().tripDatas.
 // Only reads the data it is given.

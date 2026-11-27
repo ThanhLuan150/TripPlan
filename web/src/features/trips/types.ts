@@ -191,3 +191,29 @@ export interface BudgetEstimate {
   source: 'ai' | 'manual';
   updatedAt: string;
 }
+
+// AI route optimization of one day: the current visiting order and the proposed one, with the distances
+// and times given by the routing service ("road") or measured on the map ("straight-line": no time)
+export interface RoutePlace {
+  id: string;
+  name: string;
+  location: string | null;
+}
+export interface RouteTotals {
+  distance: number;
+  // seconds; null when only straight-line distances are known
+  duration: number | null;
+}
+export interface RouteProposal {
+  dayId: string;
+  source: 'road' | 'straight-line';
+  // places of the day without a position: they are not moved and have no distance
+  missingCoordinates: RoutePlace[];
+  current: RouteTotals;
+  proposed: RouteTotals;
+  currentOrder: RoutePlace[];
+  proposedOrder: RoutePlace[];
+  // false: the current order is already the shortest, there is nothing to accept
+  improved: boolean;
+  proposalId: string | null;
+}

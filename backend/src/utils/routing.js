@@ -29,3 +29,20 @@ export const getRoute = async (from, to) => {
             })),
     };
 };
+
+// Driving distances (m) and durations (s) between every pair of positions ({ lat, lng }) from the OSRM
+// table service. Returns { distances, durations } (matrices) or undefined when a pair has no road.
+export const getRouteMatrix = async (points) => {
+    const coords = points.map((p) => `${p.lng},${p.lat}`).join(";");
+    const res = await axios.get(`https://router.project-osrm.org/table/v1/driving/${coords}`, {
+        params: { annotations: "duration,distance" },
+        timeout: 10000,
+    });
+    const { durations, distances } = res.data ?? {};
+    const complete = (m) => Array.isArray(m) && m.length === points.length
+        && m.every((row) => Array.isArray(row) && row.length === points.length && row.every(Number.isFinite));
+    if (res.data?.code !== "Ok" || !complete(durations) || !complete(distances)) {
+        return undefined;
+    }
+    return { distances, durations };
+};

@@ -71,6 +71,29 @@ describe("buildTripPdf", () => {
         expect(lines).toContain("Trang 1/1");
     });
 
+    it("follows the visiting order accepted from a route optimization, places without one after", async () => {
+        const lines = captureText();
+        const trip = {
+            ...fullTrip,
+            dataTripDays: [{
+                _id: "d0",
+                day: 0,
+                title: "Ngày route",
+                challenges: [
+                    { _id: "a1", challengeSummary: "Cuối", nameLocation: "Cuối", points: 10, order: 1 },
+                    { _id: "a2", challengeSummary: "Mới thêm", nameLocation: "Mới thêm", points: 10 },
+                    { _id: "a3", challengeSummary: "Đầu", nameLocation: "Đầu", points: 10, order: 0 },
+                ],
+            }],
+        };
+
+        await buildTripPdf(trip);
+
+        expect(lines.indexOf("1. Đầu")).toBeGreaterThan(-1);
+        expect(lines.indexOf("2. Cuối")).toBeGreaterThan(-1);
+        expect(lines.indexOf("3. Mới thêm")).toBeGreaterThan(-1);
+    });
+
     it("does not change the data it is given", async () => {
         const copy = structuredClone(fullTrip);
 

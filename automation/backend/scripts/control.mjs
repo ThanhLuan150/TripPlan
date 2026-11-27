@@ -60,7 +60,7 @@ export async function createControl({ mongoUri, dbName }) {
     router.post("/external", (req, res) => {
         const { reset, ...next } = req.body;
         if (reset) {
-            Object.assign(external, { ai: { text: "OK" }, aiQueue: [], prompts: [], route: null, province: null });
+            Object.assign(external, { ai: { text: "OK" }, aiQueue: [], prompts: [], route: null, routeMatrix: null, province: null });
         }
         Object.assign(external, next);
         res.json({ ok: true });
