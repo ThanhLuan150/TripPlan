@@ -94,6 +94,23 @@ describe('BudgetEstimatePanel', () => {
     expect(tripsApi.estimateBudget).not.toHaveBeenCalled();
   });
 
+  it('keeps the people field reachable by its label after an error, so the user can correct it and ask again', async () => {
+    vi.mocked(tripsApi.estimateBudget).mockResolvedValue(estimate);
+    render();
+
+    await userEvent.clear(screen.getByLabelText(t('trips.budget.travelers')));
+    await userEvent.type(screen.getByLabelText(t('trips.budget.travelers')), '0');
+    await clickEstimate();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+
+    // the error is not part of the label
+    await userEvent.clear(screen.getByLabelText(t('trips.budget.travelers')));
+    await userEvent.type(screen.getByLabelText(t('trips.budget.travelers')), '3');
+    await clickEstimate();
+
+    expect(tripsApi.estimateBudget).toHaveBeenCalledWith('t1', {travelers: 3, spendingLevel: 'moderate'});
+  });
+
   it('sends the people and the level and shows the new estimate', async () => {
     vi.mocked(tripsApi.estimateBudget).mockResolvedValue(estimate);
     render();

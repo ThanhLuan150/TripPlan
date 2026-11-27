@@ -104,9 +104,10 @@ export default function BudgetEstimatePanel({tripId, days = []}: {tripId: string
           event.preventDefault();
           submit();
         }}>
-        <label className="text-sm text-slate-700">
-          {t('trips.budget.travelers')}
+        <div className="max-w-56 text-sm text-slate-700">
+          <label htmlFor="budget-travelers">{t('trips.budget.travelers')}</label>
           <input
+            id="budget-travelers"
             type="number"
             min={1}
             max={MAX_TRAVELERS}
@@ -116,7 +117,7 @@ export default function BudgetEstimatePanel({tripId, days = []}: {tripId: string
             className="field mt-1 block h-10 w-32 py-0"
           />
           <FieldError role="alert">{travelersError ? String(t(travelersError, {max: MAX_TRAVELERS})) : undefined}</FieldError>
-        </label>
+        </div>
         <div className="text-sm text-slate-700">
           <span id="budget-level-label">{t('trips.budget.level')}</span>
           <div role="radiogroup" aria-labelledby="budget-level-label" className="mt-1 flex gap-2">
