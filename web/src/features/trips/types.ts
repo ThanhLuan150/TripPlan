@@ -168,3 +168,26 @@ export interface AddPlaceResult {
 }
 
 export const MAX_PLACES_PER_DAY = 10;
+
+// AI budget estimation: an ESTIMATE of the cost of the trip, never an expense or money actually spent
+export const BUDGET_CATEGORIES = ['accommodation', 'food', 'transport', 'activities', 'other'] as const;
+export type BudgetCategoryKey = (typeof BUDGET_CATEGORIES)[number];
+export const SPENDING_LEVELS = ['budget', 'moderate', 'premium'] as const;
+export type SpendingLevel = (typeof SPENDING_LEVELS)[number];
+export const MAX_TRAVELERS = 1000;
+
+export interface BudgetEstimate {
+  id: string;
+  // always true: lets the UI tell an estimate from a real expense
+  isEstimate: true;
+  currency: string;
+  travelers: number;
+  spendingLevel: SpendingLevel;
+  categories: {key: BudgetCategoryKey; amount: number; note: string}[];
+  // the sum of the categories, computed by the server
+  total: number;
+  assumptions: string[];
+  // "manual": the user adjusted the amounts after the AI answered
+  source: 'ai' | 'manual';
+  updatedAt: string;
+}

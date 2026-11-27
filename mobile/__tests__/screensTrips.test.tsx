@@ -35,7 +35,7 @@ jest.mock('../src/api', () => ({
   contentApi: {home: jest.fn(), videos: jest.fn()},
   rankingApi: {get: jest.fn()},
   profileApi: {notifications: jest.fn(), update: jest.fn()},
-  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), visibility: jest.fn(), setVisibility: jest.fn(), notes: jest.fn(), addNote: jest.fn(), updateNote: jest.fn(), removeNote: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn()},
+  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), visibility: jest.fn(), setVisibility: jest.fn(), notes: jest.fn(), budgetEstimate: jest.fn().mockResolvedValue(null), addNote: jest.fn(), updateNote: jest.fn(), removeNote: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;

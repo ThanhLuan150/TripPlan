@@ -297,6 +297,86 @@ describe('trip detail', () => {
     });
   });
 
+  describe('AI budget estimate', () => {
+    const estimate = {
+      id: 'e1',
+      isEstimate: true,
+      currency: 'VND',
+      travelers: 2,
+      spendingLevel: 'moderate',
+      categories: [
+        {key: 'accommodation', amount: 1000000, note: 'Khách sạn 3 sao'},
+        {key: 'food', amount: 500000, note: ''},
+        {key: 'transport', amount: 300000, note: ''},
+        {key: 'activities', amount: 200000, note: ''},
+        {key: 'other', amount: 100000, note: ''},
+      ],
+      total: 2100000,
+      assumptions: ['Ăn quán địa phương'],
+      source: 'ai',
+      updatedAt: '2026-03-01T00:00:00.000Z',
+    };
+    const base = {...api, 'GET /trip-plan/t1/notes': {notes: []}};
+
+    it('is labelled as an estimate, asks the AI and shows categories, total and assumptions', () => {
+      const calls = mockApi({
+        ...base,
+        'GET /trip-plan/t1/budget-estimate': {estimate: null},
+        'POST /trip-plan/t1/budget-estimate': {estimate},
+      });
+      visit('/assistant/trips/t1');
+
+      cy.findByText(t('trips.budget.notExpense')).should('be.visible');
+      cy.findByText(t('trips.budget.empty')).should('be.visible');
+
+      cy.findByLabelText(t('trips.budget.travelers')).clear().type('2');
+      cy.findByRole('radio', {name: t('trips.budget.levels.premium')}).click();
+      cy.findByRole('button', {name: t('trips.budget.estimate')}).click();
+      expectCall(calls, 'POST', '/trip-plan/t1/budget-estimate').its('body').should('deep.eq', {travelers: 2, spendingLevel: 'premium'});
+
+      cy.findByText(t('trips.budget.categories.accommodation')).should('be.visible');
+      cy.findByText('Ăn quán địa phương').should('be.visible');
+      cy.findByTestId('budget-total').should('have.text', '2.100.000 VND');
+    });
+
+    it('lets the user adjust the amounts and saves the new total', () => {
+      const calls = mockApi({
+        ...base,
+        'GET /trip-plan/t1/budget-estimate': {estimate},
+        'PUT /trip-plan/t1/budget-estimate': {estimate: {...estimate, total: 2600000, source: 'manual'}},
+      });
+      visit('/assistant/trips/t1');
+
+      cy.findByRole('button', {name: t('trips.budget.edit')}).click();
+      cy.findByLabelText(t('trips.budget.categories.food')).clear().type('1000000');
+      cy.findByTestId('budget-total').should('have.text', '2.600.000 VND');
+      cy.findByRole('button', {name: t('trips.budget.save')}).click();
+
+      expectCall(calls, 'PUT', '/trip-plan/t1/budget-estimate');
+      cy.findByText(t('trips.budget.updated')).should('be.visible');
+      cy.findByText(t('trips.budget.edited')).should('be.visible');
+    });
+
+    it('does not ask the AI for an invalid number of people, and tells the user when the AI answers badly', () => {
+      const calls = mockApi({
+        ...base,
+        'GET /trip-plan/t1/budget-estimate': {estimate: null},
+        'POST /trip-plan/t1/budget-estimate': reply(502, {message: 'bad', code: 'AI_INVALID_RESPONSE'}),
+      });
+      visit('/assistant/trips/t1');
+
+      cy.findByLabelText(t('trips.budget.travelers')).clear().type('0');
+      cy.findByRole('button', {name: t('trips.budget.estimate')}).click();
+      cy.findByText(t('trips.budget.travelersInvalid', {max: 1000})).should('be.visible');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/budget-estimate'));
+
+      cy.findByLabelText(t('trips.budget.travelers')).clear().type('2');
+      cy.findByRole('button', {name: t('trips.budget.estimate')}).click();
+      cy.findByText(t('trips.budget.invalid')).should('be.visible');
+      cy.findByTestId('budget-total').should('not.exist');
+    });
+  });
+
   it('tells the user when the PDF cannot be created', () => {
     mockApi({...api, 'GET /trip-plan/t1/export-pdf': reply(500)});
     visit('/assistant/trips/t1');

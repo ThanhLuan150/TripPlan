@@ -266,6 +266,22 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1/ai-edit/p1');
   });
 
+  it('budget estimate: get/estimate/update unwrap the estimate and hit the budget-estimate endpoint', async () => {
+    const put = vi.spyOn(api, 'put');
+    const estimate = {id: 'e1', isEstimate: true, total: 10};
+    get.mockResolvedValueOnce(reply({estimate})).mockResolvedValueOnce(reply({estimate: null}));
+    post.mockResolvedValue(reply({estimate}));
+    put.mockResolvedValue(reply({estimate: {...estimate, total: 20}}));
+
+    await expect(tripsApi.budgetEstimate('t1')).resolves.toEqual(estimate);
+    await expect(tripsApi.budgetEstimate('t1')).resolves.toBeNull();
+    await expect(tripsApi.estimateBudget('t1', {travelers: 2, spendingLevel: 'budget'})).resolves.toEqual(estimate);
+    await expect(tripsApi.updateBudgetEstimate('t1', [{key: 'food', amount: 5}])).resolves.toMatchObject({total: 20});
+    expect(get).toHaveBeenCalledWith('/trip-plan/t1/budget-estimate');
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/budget-estimate', {travelers: 2, spendingLevel: 'budget'});
+    expect(put).toHaveBeenCalledWith('/trip-plan/t1/budget-estimate', {categories: [{key: 'food', amount: 5}]});
+  });
+
   it('getShared reads the public endpoint and unwraps the trip', async () => {
     get.mockResolvedValue(reply({tripDatas: {location: 'Đà Lạt'}}));
 

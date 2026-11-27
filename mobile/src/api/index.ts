@@ -208,6 +208,14 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+  // AI budget estimate (owner only): an estimate, never an expense. null when none was made yet
+  budgetEstimate: async (id: string) =>
+    (await api.get<{estimate: BudgetEstimate | null}>(`/trip-plan/${id}/budget-estimate`)).data.estimate,
+  estimateBudget: async (id: string, body: {travelers: number; spendingLevel: SpendingLevel}) =>
+    (await api.post<{estimate: BudgetEstimate}>(`/trip-plan/${id}/budget-estimate`, body)).data.estimate,
+  // the user corrects amounts; the server recomputes the total
+  updateBudgetEstimate: async (id: string, amounts: {key: BudgetCategoryKey; amount: number}[]) =>
+    (await api.put<{estimate: BudgetEstimate}>(`/trip-plan/${id}/budget-estimate`, {categories: amounts})).data.estimate,
   // add one place to a day of the trip (owner only)
   addPlace: async (id: string, body: AddPlaceBody) =>
     (await api.post<AddPlaceResult>(`/trip-plan/${id}/places`, body)).data,
@@ -223,6 +231,28 @@ export const tripsApi = {
 };
 
 export type TripVisibility = 'public' | 'private';
+
+// AI budget estimation: an ESTIMATE of the cost of the trip, never an expense or money actually spent
+export const BUDGET_CATEGORIES = ['accommodation', 'food', 'transport', 'activities', 'other'] as const;
+export type BudgetCategoryKey = (typeof BUDGET_CATEGORIES)[number];
+export const SPENDING_LEVELS = ['budget', 'moderate', 'premium'] as const;
+export type SpendingLevel = (typeof SPENDING_LEVELS)[number];
+export const MAX_TRAVELERS = 1000;
+export interface BudgetEstimate {
+  id: string;
+  // always true: lets the UI tell an estimate from a real expense
+  isEstimate: true;
+  currency: string;
+  travelers: number;
+  spendingLevel: SpendingLevel;
+  categories: {key: BudgetCategoryKey; amount: number; note: string}[];
+  // the sum of the categories, computed by the server
+  total: number;
+  assumptions: string[];
+  // "manual": the user adjusted the amounts after the AI answered
+  source: 'ai' | 'manual';
+  updatedAt: string;
+}
 
 export const MAX_PLACES_PER_DAY = 10;
 // One place added to a day of an existing trip (e.g. a destination the AI recommended)
