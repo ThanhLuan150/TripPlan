@@ -67,6 +67,7 @@ beforeEach(() => {
   vi.mocked(tripsApi.visibility).mockResolvedValue({visibility: 'private'});
   // the notes block under the days loads its own list
   vi.mocked(tripsApi.notes).mockResolvedValue([]);
+  vi.mocked(tripsApi.budgetEstimate).mockResolvedValue(null);
   vi.mocked(tripsApi.addFavorite).mockResolvedValue({});
   vi.mocked(tripsApi.removeFavorite).mockResolvedValue({});
 });

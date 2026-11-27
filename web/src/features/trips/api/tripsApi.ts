@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AddPlaceBody, AddPlaceResult, AiEditProposal, GenerateTripParams, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -47,6 +47,17 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+
+  // AI budget estimate (owner only): an estimate, never an expense. null when none was made yet
+  budgetEstimate: async (id: string) =>
+    (await api.get<{estimate: BudgetEstimate | null}>(`/trip-plan/${id}/budget-estimate`)).data.estimate,
+
+  estimateBudget: async (id: string, body: {travelers: number; spendingLevel: SpendingLevel}) =>
+    (await api.post<{estimate: BudgetEstimate}>(`/trip-plan/${id}/budget-estimate`, body)).data.estimate,
+
+  // the user corrects amounts; the server recomputes the total
+  updateBudgetEstimate: async (id: string, amounts: {key: BudgetCategoryKey; amount: number}[]) =>
+    (await api.put<{estimate: BudgetEstimate}>(`/trip-plan/${id}/budget-estimate`, {categories: amounts})).data.estimate,
 
   // add one place to a day of the trip (owner only)
   addPlace: async (id: string, body: AddPlaceBody) =>
