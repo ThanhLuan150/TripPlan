@@ -3,6 +3,7 @@ import tripPlanController from "../controllers/tripPlanController.js";
 import tripNoteController from "../controllers/tripNoteController.js";
 import tripBudgetController from "../controllers/tripBudgetController.js";
 import tripRouteController from "../controllers/tripRouteController.js";
+import tripDayRegenerateController from "../controllers/tripDayRegenerateController.js";
 import authenticate from "../middleware/auth.js";
 import requireRole from "../middleware/requireRole.js";
 import logActivity from "../middleware/logActivity.js";
@@ -41,6 +42,9 @@ router.delete("/:id/ai-edit/:proposalId", ownTrip, tripPlanController.discardAiE
 router.post("/:id/route-optimization", ownTrip, tripRouteController.propose);          // role: user|admin + owner of the trip — { dayId }; proposed visiting order of one day, NOTHING is saved
 router.post("/:id/route-optimization/apply", ownTrip, tripRouteController.apply);      // role: user|admin + owner of the trip — { proposalId }; saves the stored order the user accepted
 router.delete("/:id/route-optimization/:proposalId", ownTrip, tripRouteController.discard); // role: user|admin + owner of the trip — Reject: forgets the proposal
+router.post("/:id/day-regeneration", ownTrip, tripDayRegenerateController.propose);          // role: user|admin + owner of the trip — { dayId, instruction? }; AI replacement of ONE day, NOTHING is saved
+router.post("/:id/day-regeneration/apply", ownTrip, tripDayRegenerateController.apply);      // role: user|admin + owner of the trip — { proposalId }; saves the stored day the user accepted (that day only)
+router.delete("/:id/day-regeneration/:proposalId", ownTrip, tripDayRegenerateController.discard); // role: user|admin + owner of the trip — Reject: forgets the proposal
 router.get("/:id/budget-estimate", ownTrip, tripBudgetController.getEstimate);  // role: user|admin + owner of the trip — the saved AI estimate or null
 router.post("/:id/budget-estimate", ownTrip, tripBudgetController.estimate);     // role: user|admin + owner of the trip — { travelers?, spendingLevel? }; AI estimate, saved as an estimate (never an expense)
 router.put("/:id/budget-estimate", ownTrip, tripBudgetController.updateEstimate); // role: user|admin + owner of the trip — { categories: [{ key, amount }] }; total recomputed

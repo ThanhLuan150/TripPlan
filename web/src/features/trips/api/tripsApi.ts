@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AddPlaceBody, AddPlaceResult, AiEditProposal, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -47,6 +47,18 @@ export const tripsApi = {
   // Reject: the server forgets the proposal
   rejectAiEdit: async (id: string, proposalId: string) =>
     (await api.delete(`/trip-plan/${id}/ai-edit/${proposalId}`)).data,
+
+  // AI regeneration of one day (owner only): propose a replacement (nothing saved), then apply it
+  proposeDayRegeneration: async (id: string, dayId: string, instruction?: string) =>
+    (await api.post<DayRegeneration>(`/trip-plan/${id}/day-regeneration`, {dayId, ...(instruction ? {instruction} : {})})).data,
+
+  // Accept: the server saves the day it stored (the client sends only the proposal id)
+  applyDayRegeneration: async (id: string, proposalId: string) =>
+    (await api.post(`/trip-plan/${id}/day-regeneration/apply`, {proposalId})).data,
+
+  // Reject: the server forgets the proposal
+  rejectDayRegeneration: async (id: string, proposalId: string) =>
+    (await api.delete(`/trip-plan/${id}/day-regeneration/${proposalId}`)).data,
 
   // AI route optimization of one day (owner only): propose an order (nothing saved), then apply it
   proposeRoute: async (id: string, dayId: string) =>

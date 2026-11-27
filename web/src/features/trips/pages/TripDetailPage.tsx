@@ -26,6 +26,7 @@ import {uploadErrorKey, uploadImage} from '@/lib/upload';
 import {safeFileName, saveBlob} from '@/lib/download';
 import {challengeApi, tripsApi} from '../api/tripsApi';
 import AiEditPanel from '../components/AiEditPanel';
+import DayRegeneratePanel from '../components/DayRegeneratePanel';
 import RouteOptimizePanel from '../components/RouteOptimizePanel';
 import BudgetEstimatePanel from '../components/BudgetEstimatePanel';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
@@ -364,6 +365,8 @@ export default function TripDetailPage() {
       })}
 
       {idTrip && <AiEditPanel tripId={idTrip} days={result.dataTripDays} />}
+
+      {idTrip && <DayRegeneratePanel tripId={idTrip} days={result.dataTripDays} />}
 
       {idTrip && <RouteOptimizePanel tripId={idTrip} days={result.dataTripDays} />}
 

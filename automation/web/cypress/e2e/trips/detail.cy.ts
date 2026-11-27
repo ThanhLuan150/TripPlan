@@ -377,6 +377,89 @@ describe('trip detail', () => {
     });
   });
 
+  describe('AI regeneration of one day', () => {
+    const act = (name: string, extra = {}) => ({name_location: name, challenge_summary: 'Mô tả', level_of_difficult: 20, ...extra});
+    const regen = {
+      proposal: {
+        id: 'dp1',
+        dayId: 'd1',
+        day: {title: 'Ngày mới', activities: [act('Chợ Bến Thành'), act('Bảo tàng Mỹ thuật')], transportCost: 1, foodCost: 2, otherCost: 0},
+      },
+      current: {id: 'd1', day: 1, title: 'Ngày cũ', activities: [act('Chợ Bến Thành')], transportCost: 1, foodCost: 1, otherCost: 0},
+    };
+    const dayTrip = {
+      ...tripDetail,
+      dataTripDays: [
+        {...tripDetail.dataTripDays[0], _id: 'd1', challenges: [{_id: 'g1', challengeSummary: 'x', nameLocation: 'Chợ Bến Thành', points: 10}]},
+        {...tripDetail.dataTripDays[1], _id: 'd2'},
+      ],
+    };
+    const base = {
+      ...api,
+      'GET /trip-plan/get-trip/t1': {tripDatas: dayTrip},
+      'GET /trip-plan/t1/notes': {notes: []},
+      'GET /trip-plan/t1/budget-estimate': {estimate: null},
+    };
+    const start = () => cy.findByRole('button', {name: t('trips.dayRegen.regenerate')}).click();
+
+    it('shows the current and the proposed day, and saves nothing until Accept', () => {
+      const calls = mockApi({...base, 'POST /trip-plan/t1/day-regeneration': regen});
+      visit('/assistant/trips/t1');
+
+      cy.findByRole('textbox', {name: t('trips.dayRegen.placeholder')}).type('more food');
+      start();
+      expectCall(calls, 'POST', '/trip-plan/t1/day-regeneration').its('body').should('deep.eq', {dayId: 'd1', instruction: 'more food'});
+
+      cy.findByText(t('trips.dayRegen.previewTitle')).should('be.visible');
+      cy.findByText('Ngày cũ').should('be.visible');
+      cy.findByText('Ngày mới').should('be.visible');
+      cy.findByText('Bảo tàng Mỹ thuật').should('be.visible');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/day-regeneration/apply'));
+    });
+
+    it('Accept sends only the proposal id and confirms', () => {
+      const calls = mockApi({
+        ...base,
+        'POST /trip-plan/t1/day-regeneration': regen,
+        'POST /trip-plan/t1/day-regeneration/apply': {message: 'ok'},
+      });
+      visit('/assistant/trips/t1');
+
+      start();
+      cy.findByRole('button', {name: t('trips.dayRegen.accept')}).click();
+
+      expectCall(calls, 'POST', '/trip-plan/t1/day-regeneration/apply').its('body').should('deep.eq', {proposalId: 'dp1'});
+      cy.findByText(t('trips.dayRegen.applied')).should('be.visible');
+    });
+
+    it('Reject keeps the itinerary and never applies', () => {
+      const calls = mockApi({
+        ...base,
+        'POST /trip-plan/t1/day-regeneration': regen,
+        'DELETE /trip-plan/t1/day-regeneration/dp1': {message: 'gone'},
+      });
+      visit('/assistant/trips/t1');
+
+      start();
+      cy.findByRole('button', {name: t('trips.dayRegen.reject')}).click();
+
+      expectCall(calls, 'DELETE', '/trip-plan/t1/day-regeneration/dp1');
+      cy.findByText(t('trips.dayRegen.rejected')).should('be.visible');
+      cy.findByText(t('trips.dayRegen.previewTitle')).should('not.exist');
+      cy.then(() => expectNoCall(calls, 'POST', '/trip-plan/t1/day-regeneration/apply'));
+    });
+
+    it('tells the user when the AI returns an empty day, and shows no preview', () => {
+      mockApi({...base, 'POST /trip-plan/t1/day-regeneration': reply(502, {message: 'x', code: 'AI_EMPTY_DAY'})});
+      visit('/assistant/trips/t1');
+
+      start();
+
+      cy.findByText(t('trips.dayRegen.empty')).should('be.visible');
+      cy.findByText(t('trips.dayRegen.previewTitle')).should('not.exist');
+    });
+  });
+
   describe('AI route optimization', () => {
     const place = (n: number, name: string) => ({_id: `r${n}`, challengeSummary: name, nameLocation: name, points: 10});
     const routeTrip = {
