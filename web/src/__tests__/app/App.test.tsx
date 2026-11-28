@@ -23,6 +23,7 @@ vi.mock('@/features/trips/pages/CreateTripPage', () => stub('CreateTripPage'));
 vi.mock('@/features/trips/pages/GenerateTripsPage', () => stub('GenerateTripsPage'));
 vi.mock('@/features/trips/pages/TripDetailPage', () => stub('TripDetailPage'));
 vi.mock('@/features/trips/pages/TripMapPage', () => stub('TripMapPage'));
+vi.mock('@/features/trips/pages/ExplorePage', () => stub('ExplorePage'));
 vi.mock('@/features/ranking/pages/RankingPage', () => stub('RankingPage'));
 vi.mock('@/features/profile/pages/ProfilePage', () => stub('ProfilePage'));
 vi.mock('@/features/profile/pages/EditProfilePage', () => stub('EditProfilePage'));
@@ -118,6 +119,17 @@ describe('signed-in routes', () => {
     open('/videos');
     await screen.findByText('VideosPage');
     expect(screen.queryByRole('navigation')).toBeNull();
+  });
+
+  it('/explore is a main tab, and the old /assistant/explore address redirects to it', async () => {
+    signIn();
+    const {unmount} = open('/explore');
+    expect(await screen.findByText('ExplorePage')).toBeInTheDocument();
+    unmount();
+
+    open('/assistant/explore');
+    expect(await screen.findByText('ExplorePage')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/explore');
   });
 
   it('/assistant opens the chat', async () => {

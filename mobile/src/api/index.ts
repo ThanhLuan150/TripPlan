@@ -189,8 +189,18 @@ export const tripsApi = {
   listPublic: async (page: number) =>
     (await api.get<PublicTripsPage>('/public-trip', {params: {page}})).data,
   // one public trip, read only (404: private, deleted or unknown)
-  getPublic: async (id: string) =>
-    (await api.get<{tripDatas: PublicTrip}>(`/public-trip/${id}`)).data.tripDatas,
+  // (carries the like state of the post: likesCount and liked)
+  getPublic: async (id: string): Promise<PublicTrip> => {
+    const {tripDatas, likesCount, liked} = (
+      await api.get<{tripDatas: PublicTrip} & Partial<LikeState>>(`/public-trip/${id}`)
+    ).data;
+    return {...tripDatas, likesCount, liked};
+  },
+  // like / unlike a public post; both answer with the real state
+  likePublic: async (id: string) =>
+    (await api.post<LikeState>(`/public-trip/${id}/like`)).data,
+  unlikePublic: async (id: string) =>
+    (await api.delete<LikeState>(`/public-trip/${id}/like`)).data,
   // keep a private copy of a public trip (signed in)
   copyPublic: async (id: string) =>
     (await api.post<{tripId: string; nameTrip: string}>(`/public-trip/${id}/copy`)).data,
@@ -427,8 +437,16 @@ export interface TripNote {
   updatedAt: string;
 }
 
+// What like / unlike answers: the real state after the change
+export interface LikeState {
+  liked: boolean;
+  likesCount: number;
+}
 export interface PublicTripCard {
   _id: string;
+  // likes of the post and whether the signed-in user liked it
+  likesCount?: number;
+  liked?: boolean;
   nameTrip?: string;
   location: string;
   startDate: string;

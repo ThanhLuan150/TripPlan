@@ -1,3 +1,4 @@
+import {TouchableOpacity} from 'react-native';
 import i18n from '../src/i18n';
 import {tripsApi} from '../src/api';
 import {subscribeAlert} from '../src/lib/alert';
@@ -17,6 +18,8 @@ jest.mock('../src/api', () => ({
     listPublic: jest.fn(),
     getPublic: jest.fn(),
     copyPublic: jest.fn(),
+    likePublic: jest.fn(),
+    unlikePublic: jest.fn(),
   },
 }));
 
@@ -31,7 +34,16 @@ const card = (id: string, nameTrip: string) => ({
   transportCostTotal: 100000,
   foodCostTotal: 200000,
   otherCostTotal: 50000,
+  likesCount: 0,
+  liked: false,
 });
+
+const likeButtons = (tree: ReturnType<typeof renderApp>) =>
+  tree.root
+    .findAllByType(TouchableOpacity)
+    .filter(n =>
+      [t('trips.like'), t('trips.unlike')].includes(n.props.accessibilityLabel),
+    );
 
 let alerts: any[] = [];
 let off: () => void;
@@ -52,15 +64,13 @@ describe('money', () => {
 });
 
 describe('Trips: explore entry', () => {
-  it('opens the public plans', async () => {
+  it('no longer has an Explore button (Explore is a tab of its own)', async () => {
     (tripsApi.list as jest.Mock).mockResolvedValue([]);
     (tripsApi.favorites as jest.Mock).mockResolvedValue([]);
     const tree = renderApp(<Trips />);
     await flush();
 
-    pressText(tree, t('trips.exploreOpen'));
-
-    expect(nav.navigate).toHaveBeenCalledWith('PublicTrips');
+    expect(allText(tree)).not.toContain(t('trips.exploreOpen'));
   });
 });
 
@@ -91,6 +101,74 @@ describe('PublicTrips', () => {
     expect(allText(tree)).toContain('First plan');
     expect(allText(tree)).toContain('Second plan');
     expect(allText(tree)).not.toContain(t('trips.exploreMore'));
+  });
+
+  describe('likes', () => {
+    const page = {
+      page: 1,
+      limit: 12,
+      total: 2,
+      items: [{...card('a1', 'Đà Lạt 3 ngày'), likesCount: 5, liked: true}, card('b2', 'Huế 2 ngày')],
+    };
+
+    it('shows the total and the state of every plan', async () => {
+      (tripsApi.listPublic as jest.Mock).mockResolvedValue(page);
+      const tree = renderApp(<PublicTrips />);
+      await flush();
+
+      const buttons = likeButtons(tree);
+      expect(buttons.map(b => b.props.accessibilityLabel)).toEqual([t('trips.unlike'), t('trips.like')]);
+      expect(allText(tree)).toContain('5');
+    });
+
+    it('likes and unlikes a plan with the count the server answered', async () => {
+      (tripsApi.listPublic as jest.Mock).mockResolvedValue(page);
+      (tripsApi.likePublic as jest.Mock).mockResolvedValue({liked: true, likesCount: 1});
+      (tripsApi.unlikePublic as jest.Mock).mockResolvedValue({liked: false, likesCount: 4});
+      const tree = renderApp(<PublicTrips />);
+      await flush();
+
+      press(likeButtons(tree)[1]);
+      await flush();
+      expect(tripsApi.likePublic).toHaveBeenCalledWith('b2');
+      press(likeButtons(tree)[0]);
+      await flush();
+      expect(tripsApi.unlikePublic).toHaveBeenCalledWith('a1');
+
+      expect(likeButtons(tree).map(b => b.props.accessibilityLabel)).toEqual([t('trips.like'), t('trips.unlike')]);
+      expect(allText(tree)).toContain('4');
+      expect(nav.navigate).not.toHaveBeenCalled();
+    });
+
+    it('ignores a second tap while the request is running (no duplicate like)', async () => {
+      (tripsApi.listPublic as jest.Mock).mockResolvedValue(page);
+      let finish: (v: unknown) => void = () => {};
+      (tripsApi.likePublic as jest.Mock).mockReturnValue(new Promise(resolve => (finish = resolve)));
+      const tree = renderApp(<PublicTrips />);
+      await flush();
+
+      press(likeButtons(tree)[1]);
+      await flush();
+      expect(likeButtons(tree)[1].props.disabled).toBe(true);
+      expect(tripsApi.likePublic).toHaveBeenCalledTimes(1);
+
+      finish({liked: true, likesCount: 1});
+      await flush();
+      expect(likeButtons(tree)[1].props.accessibilityLabel).toBe(t('trips.unlike'));
+    });
+
+    it('keeps the old state and tells the user when liking fails', async () => {
+      (tripsApi.listPublic as jest.Mock).mockResolvedValue(page);
+      (tripsApi.likePublic as jest.Mock).mockRejectedValue({response: {status: 404, data: {message: 'Post not found'}}});
+      const tree = renderApp(<PublicTrips />);
+      await flush();
+
+      press(likeButtons(tree)[1]);
+      await flush();
+
+      expect(alerts.some(a => a.title === t('trips.likeFailed'))).toBe(true);
+      expect(likeButtons(tree)[1].props.accessibilityLabel).toBe(t('trips.like'));
+    });
   });
 
   it('says so when there is nothing public, or when loading fails', async () => {
@@ -130,6 +208,21 @@ describe('PublicTripDetail', () => {
     expect(tripsApi.getPublic).toHaveBeenCalledWith('p1');
     expect(allText(tree)).toContain(t('trips.publicReadOnly'));
     expect(allText(tree)).toContain('Chụp ảnh Hồ Xuân Hương');
+  });
+
+  it('shows the like state of the plan and likes it', async () => {
+    (tripsApi.getPublic as jest.Mock).mockResolvedValue({...trip, likesCount: 2, liked: false});
+    (tripsApi.likePublic as jest.Mock).mockResolvedValue({liked: true, likesCount: 3});
+    const tree = renderApp(<PublicTripDetail />);
+    await flush();
+
+    expect(likeButtons(tree)[0].props.accessibilityLabel).toBe(t('trips.like'));
+    press(likeButtons(tree)[0]);
+    await flush();
+
+    expect(tripsApi.likePublic).toHaveBeenCalledWith('p1');
+    expect(likeButtons(tree)[0].props.accessibilityLabel).toBe(t('trips.unlike'));
+    expect(allText(tree)).toContain('3');
   });
 
   it('keeps a private copy and opens it', async () => {

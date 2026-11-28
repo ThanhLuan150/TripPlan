@@ -94,14 +94,6 @@ export default function Trips() {
       </View>
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel={t('trips.exploreOpen')}
-        style={styles.explore}
-        onPress={() => navigation.navigate('PublicTrips')}>
-        <Ionicons name="compass-outline" size={18} color={colors.primaryDark} />
-        <Text style={styles.exploreText}>{t('trips.exploreOpen')}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        accessibilityRole="button"
         accessibilityLabel={t('recommend.open')}
         style={styles.explore}
         onPress={() => navigation.navigate('Recommend')}>

@@ -8,6 +8,7 @@ import Spinner from '@/components/ui/Spinner';
 import {connectionErrorKey} from '@/lib/apiClient';
 import {addCommas, formatDate} from '@/lib/date';
 import {tripsApi} from '../api/tripsApi';
+import LikeButton from '../components/LikeButton';
 
 // Trips other people made public: browse them, open one, keep a private copy.
 // Only the plan is listed (no owner, progress or photos).
@@ -55,10 +56,8 @@ export default function ExplorePage() {
         <>
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map(item => (
-              <li key={item._id}>
-                <Link
-                  to={routes.PublicTrip(item._id)}
-                  className="card group block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg">
+              <li key={item._id} className="card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg">
+                <Link to={routes.PublicTrip(item._id)} className="group block">
                   <div className="relative h-28 bg-gradient-to-br from-brand-300 to-brand-700">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <span className="absolute bottom-3 left-3 flex max-w-[80%] items-center gap-1 text-sm font-semibold text-white">
@@ -81,6 +80,9 @@ export default function ExplorePage() {
                     </p>
                   </div>
                 </Link>
+                <div className="flex border-t border-slate-100 px-2 py-1.5">
+                  <LikeButton tripId={item._id} liked={item.liked} likesCount={item.likesCount} />
+                </div>
               </li>
             ))}
           </ul>

@@ -238,7 +238,7 @@ services/        logic nghiệp vụ (đăng ký/đăng nhập, gọi Gemini, l�
                  adminService: người dùng + số liệu, contentService: video / thông báo / cài đặt / báo cáo nội dung, activityLogService)
 repositories/    toàn bộ truy vấn Mongoose
 models/          schema Mongoose (User, TripPlan, TripDay, Challenge, UserChallengeProgress, ChatAi, Question, Response, Notification,
-                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow)
+                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow, PostLike)
 middleware/      auth (JWT + tự cấp lại access token), requireRole, ownership (chủ sở hữu trip/chat/challenge), logActivity (ghi nhật ký), errorHandler
 seed/            seedAdmin, seedSampleData, index.js (chạy bằng npm run seed / seed:sample)
 utils/           jwt, mailer, gemini, geocode (HERE), HttpError, asyncHandler, ...
@@ -265,7 +265,7 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 | `POST /destinations/recommend`, `GET|PATCH|DELETE /destinations/history[/:id]` | user, admin; chỉ đọc / sửa / xóa gợi ý của chính mình (người khác 404) |
 | `POST /trip-plan/:id/places` | user, admin; `:id` phải là kế hoạch của mình (thêm một địa điểm vào một ngày) |
 | `GET /public-trip`, `GET /public-trip/:id`, `GET /shared/:token` | public, chỉ đọc |
-| `POST /public-trip/:id/copy` | user, admin |
+| `POST /public-trip/:id/copy`, `POST|DELETE /public-trip/:id/like` | user, admin; like / unlike bằng chính tài khoản đăng nhập (bài riêng tư / đã xóa -> 404) |
 | `/challenge/*` | user, admin; `chaId` phải thuộc kế hoạch của mình |
 
 ### Sao chép chuyến đi (Duplicate Trip)
@@ -325,12 +325,13 @@ Mỗi kế hoạch có `visibility`: `private` (mặc định, chỉ chủ sở 
 | --- | --- |
 | `GET /trip-plan/:id/visibility` | Trạng thái hiện tại. Chỉ chủ sở hữu (`ownTrip`) |
 | `PUT /trip-plan/:id/visibility` | `{ visibility: "public" \| "private" }`. Chỉ chủ sở hữu |
-| `GET /public-trip?page&limit` | **Công khai**, danh sách thẻ kế hoạch công khai (tối đa 50 mỗi trang) |
-| `GET /public-trip/:id` | **Công khai**, chỉ đọc. Kế hoạch riêng tư / đã xoá / không tồn tại đều trả 404 |
+| `GET /public-trip?page&limit` | **Công khai**, danh sách thẻ kế hoạch công khai (tối đa 50 mỗi trang), mỗi thẻ có `likesCount` và `liked` (`liked` chỉ đúng khi gửi token hợp lệ) |
+| `GET /public-trip/:id` | **Công khai**, chỉ đọc, kèm `likesCount` và `liked`. Kế hoạch riêng tư / đã xoá / không tồn tại đều trả 404 |
 | `POST /public-trip/:id/copy` | user, admin: lưu bản sao riêng của một kế hoạch công khai (ghi nhật ký `createTrip`) |
+| `POST /public-trip/:id/like`, `DELETE /public-trip/:id/like` | user, admin: thích / bỏ thích một bài công khai (idempotent, không trùng). Xem mục Like Post |
 
 - Người xem chỉ thấy kế hoạch (qua whitelist trường): không thấy chủ sở hữu, tiến độ, ảnh check-in hay ghi chú.
-- Web: nút đổi chế độ ở trang chi tiết, tab "Khám phá" (`/assistant/explore`) và trang `/trip/:id`. Mobile: nút ở màn chi tiết, màn "Kế hoạch công khai" mở từ tab "Kế hoạch".
+- Web: nút đổi chế độ ở trang chi tiết, mục "Khám phá" trên thanh điều hướng chính, giữa Trợ lý và Xếp hạng (`/explore`; địa chỉ cũ `/assistant/explore` tự chuyển sang), và trang `/trip/:id`. Mobile: nút ở màn chi tiết, tab "Khám phá" (giữa Trợ lý và Xếp hạng) là danh sách kế hoạch công khai.
 
 ### Ghi chú cá nhân (Trip Notes)
 
@@ -465,6 +466,18 @@ Dùng lại model `Follow` và route `DELETE /user/:id/follow` của COMMUNITY-0
 - **Lỗi:** `:id` sai định dạng hoặc tài khoản không tồn tại -> **404** (quan hệ treo tới tài khoản đã mất vẫn được dọn); chưa đăng nhập -> **401**. Tài khoản bị khóa / đã xóa / chưa kích hoạt **vẫn bỏ theo dõi được** (không bị kẹt quan hệ).
 - **UX:** nút **Bỏ theo dõi** hiện khi đang theo dõi (web `UserProfilePage`, mobile `UserProfile`); sau khi bấm nút đổi lại thành **Theo dõi**, số Followers lấy theo server, và số Following ở trang Tài khoản của bạn được tải lại. Lỗi giữ nguyên trạng thái và hiện thông báo.
 
+### Thích bài viết (Like Post, COMMUNITY-003)
+
+Trong cộng đồng, **bài viết = kế hoạch công khai** (`visibility: "public"`, xem ở Khám phá); app chưa có model Post riêng nên like gắn vào kế hoạch công khai. Ticket này **chưa có Comment / Share Post**.
+
+- Dữ liệu: model `PostLike` = `{ tripId, userId, createdAt }`, **mỗi lượt thích một dòng**. Chỉ mục **unique** `(tripId, userId)` nên không thể có like trùng, kể cả khi nhiều request chạy song song (`postLikeRepository.add` dùng upsert và coi lỗi trùng khóa E11000 là "đã thích"). Chỉ mục `userId` cho tra cứu theo người dùng.
+- **Số lượt Like được đếm từ các dòng `PostLike`** (không lưu bộ đếm trên kế hoạch) nên không bao giờ lệch; trang danh sách lấy số của cả trang bằng một truy vấn aggregate.
+- `POST /public-trip/:id/like`: thích bài, trả `{ message, liked: true, likesCount }`. Thích lần nữa vẫn 200 và không tạo dòng mới.
+- `DELETE /public-trip/:id/like`: bỏ thích (idempotent), trả `{ message, liked: false, likesCount }`. Chỉ xóa like của chính mình (`userId` luôn lấy từ token, bỏ qua `userId` do client gửi).
+- `GET /public-trip` (mỗi thẻ) và `GET /public-trip/:id` có thêm `likesCount` và `liked`. Hai route này vẫn **công khai**: khách chưa đăng nhập (hoặc token sai / hết hạn, middleware `optionalAuth`) thấy `likesCount` và `liked: false`, không bao giờ bị lỗi.
+- **Phân quyền / lỗi:** chỉ user / admin đã đăng nhập mới Like / Unlike (chưa đăng nhập hoặc tài khoản bị khóa -> **401**). Bài riêng tư, đã xóa, không tồn tại hoặc `:id` sai định dạng -> **404**, không ghi gì. Bỏ thích một bài đã bị xóa / chuyển riêng tư vẫn xóa dòng like (dọn dữ liệu) rồi trả 404.
+- **UX (web `LikeButton` trong `ExplorePage` và `PublicTripPage`, mobile `LikeButton` trong `PublicTrips` và `PublicTripDetail`):** nút trái tim hiện trạng thái hiện tại (`aria-pressed`) và tổng lượt Like; sau khi bấm hiển thị đúng số server trả về; nút bị khóa trong lúc request chạy nên không gửi trùng; khách chưa đăng nhập thấy tổng và đường dẫn đăng nhập; lỗi (bài không còn, mất mạng) giữ nguyên trạng thái và hiện thông báo.
+
 ### Quy ước khi triển khai một ticket mới
 
 Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:
@@ -476,7 +489,7 @@ Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, 
 5. **Trước khi báo xong:** chạy `npx vitest run` (backend và web, web thêm `npx tsc -b` và `npx eslint src`), `npx jest` (mobile). Lỗi `tsc` / eslint có sẵn ở mobile `RootNavigator.tsx` và `TripDetail.tsx` không thuộc ticket.
 6. **Cập nhật README này:** thêm mục mô tả tính năng (endpoint, quyền, giới hạn, hành vi khi lỗi, nơi hiển thị trên web / mobile) và cập nhật danh sách model / bảng phân quyền.
 
-Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002).
+Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002), Like Post (COMMUNITY-003).
 
 ### API quản trị — `/admin/*` (role admin)
 

@@ -136,6 +136,18 @@ describe('tripsApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/7/favorite');
   });
 
+  it('public posts: detail carries the like state, like / unlike use the like route', async () => {
+    get.mockResolvedValue(reply({tripDatas: {location: 'x'}, likesCount: 3, liked: true}));
+    post.mockResolvedValue(reply({liked: true, likesCount: 4}));
+    del.mockResolvedValue(reply({liked: false, likesCount: 3}));
+    await expect(tripsApi.getPublic('7')).resolves.toEqual({location: 'x', likesCount: 3, liked: true});
+    await expect(tripsApi.likePublic('7')).resolves.toEqual({liked: true, likesCount: 4});
+    await expect(tripsApi.unlikePublic('7')).resolves.toEqual({liked: false, likesCount: 3});
+    expect(get).toHaveBeenCalledWith('/public-trip/7');
+    expect(post).toHaveBeenCalledWith('/public-trip/7/like');
+    expect(del).toHaveBeenCalledWith('/public-trip/7/like');
+  });
+
   it('share: status, enable and disable use the share route', async () => {
     const on = {isShared: true, permission: 'view', shareToken: 'tok', shareUrl: null, sharedAt: null};
     get.mockResolvedValue(reply(on));

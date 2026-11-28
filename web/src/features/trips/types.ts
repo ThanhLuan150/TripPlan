@@ -39,6 +39,9 @@ export interface TripDetail {
 
 export interface PublicTripCard {
   _id: string;
+  // likes of the post and whether the signed-in viewer liked it
+  likesCount?: number;
+  liked?: boolean;
   nameTrip?: string;
   location: string;
   startDate: string;
@@ -66,6 +69,12 @@ export interface TripNote {
   updatedAt: string;
 }
 
+// What like / unlike answers: the real state after the change
+export interface LikeState {
+  liked: boolean;
+  likesCount: number;
+}
+
 export type TripVisibility = 'public' | 'private';
 
 export interface ShareStatus {
@@ -77,6 +86,9 @@ export interface ShareStatus {
 
 // What a share link shows: the plan only (no progress, photos or owner)
 export interface SharedTrip {
+  // like state of a public post (not present on a share link)
+  likesCount?: number;
+  liked?: boolean;
   nameTrip?: string;
   location: string;
   startDate: string;

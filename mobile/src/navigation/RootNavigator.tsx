@@ -52,7 +52,6 @@ export type RootStackParams = {
   GenerateTrips: {params: GenerateParams};
   TripDetail: {id: string};
   TripMap: {id: string};
-  PublicTrips: undefined;
   Recommend: undefined;
   PublicTripDetail: {id: string};
   Notifications: undefined;
@@ -81,6 +80,12 @@ const tabs = [
     component: Assistant,
     icon: (focused: boolean) => (focused ? 'aliwangwang' : 'aliwangwang-o1'),
     ant: true,
+  },
+  {
+    name: 'Explore',
+    label: 'nav.explore',
+    component: PublicTrips,
+    icon: (focused: boolean) => (focused ? 'compass' : 'compass-outline'),
   },
   {
     name: 'Ranking',
@@ -144,7 +149,6 @@ export default function RootNavigator() {
           <Stack.Screen name="GenerateTrips" component={GenerateTrips} />
           <Stack.Screen name="TripDetail" component={TripDetail} />
           <Stack.Screen name="TripMap" component={TripMap} />
-          <Stack.Screen name="PublicTrips" component={PublicTrips} />
           <Stack.Screen name="Recommend" component={Recommend} />
           <Stack.Screen name="PublicTripDetail" component={PublicTripDetail} />
           <Stack.Screen name="Notifications" component={Notifications} />

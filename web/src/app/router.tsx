@@ -61,13 +61,15 @@ export default function AppRouter() {
               {/* the chat is rendered by AssistantLayout so it stays mounted */}
               <Route path="chat" element={null} />
               <Route path="trips" element={<TripListPage />} />
-              <Route path="explore" element={<ExplorePage />} />
               <Route path="recommend" element={<RecommendPage />} />
               <Route path="trips/new" element={<CreateTripPage />} />
               <Route path="trips/generate" element={<GenerateTripsPage />} />
               <Route path="trips/:idTrip" element={<TripDetailPage />} />
               <Route path="trips/:idTrip/map" element={<TripMapPage />} />
             </Route>
+            {/* public plans of everyone: a main tab (the old address still works) */}
+            <Route path={routes.Explore} element={<ExplorePage />} />
+            <Route path="/assistant/explore" element={<Navigate to={routes.Explore} replace />} />
             <Route path={routes.Ranking} element={<RankingPage />} />
             <Route path={routes.Profile} element={<ProfilePage />} />
             <Route path="/user/:id" element={<UserProfilePage />} />

@@ -461,6 +461,13 @@
       "next": "Next",
       "page": "Page {{page}} / {{pages}}"
     },
+    "like": {
+      "like": "Like",
+      "unlike": "Unlike",
+      "signIn": "Sign in to like this plan",
+      "failed": "Could not update your like",
+      "unavailable": "This plan is no longer available"
+    },
     "publicTrip": {
       "saveCopy": "Save to my plans",
       "saving": "Saving...",

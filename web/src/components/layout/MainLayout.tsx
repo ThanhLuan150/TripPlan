@@ -1,6 +1,8 @@
 import {Link, NavLink, Outlet} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {
+  IoCompass,
+  IoCompassOutline,
   IoHome,
   IoHomeOutline,
   IoPerson,
@@ -30,6 +32,7 @@ const tabs: {
     activeIcon: AiFillAliwangwang,
     icon: AiOutlineAliwangwang,
   },
+  {route: routes.Explore, labelKey: 'nav.explore', activeIcon: IoCompass, icon: IoCompassOutline},
   {route: routes.Ranking, labelKey: 'nav.ranking', activeIcon: IoPodium, icon: IoPodiumOutline},
   {route: routes.Profile, labelKey: 'nav.account', activeIcon: IoPerson, icon: IoPersonOutline},
 ];
@@ -108,7 +111,7 @@ export default function MainLayout() {
       <nav
         aria-label={t('nav.main')}
         className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
-        <div className="grid h-16 grid-cols-4">
+        <div className="grid h-16 grid-cols-5">
           {tabs.map(item => (
             <NavLink
               key={item.route}

@@ -305,6 +305,9 @@
     "publicNotAvailable": "Không xem được kế hoạch này. Kế hoạch không tồn tại hoặc chủ sở hữu đã chuyển sang riêng tư.",
     "publicSave": "Lưu về kế hoạch của tôi",
     "publicSaved": "Đã lưu vào kế hoạch của bạn",
+    "like": "Thích",
+    "unlike": "Bỏ thích",
+    "likeFailed": "Không cập nhật được lượt thích",
     "publicSaveFailed": "Không lưu được kế hoạch này"
   },
   "recommend": {
@@ -405,7 +408,8 @@
     "ranking": "Xếp hạng",
     "account": "Tài khoản",
     "chat": "Chat",
-    "plans": "Kế hoạch"
+    "plans": "Kế hoạch",
+    "explore": "Khám phá"
   },
   "auth": {
     "showPassword": "Hiện mật khẩu",

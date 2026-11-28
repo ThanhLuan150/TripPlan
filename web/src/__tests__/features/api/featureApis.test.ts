@@ -239,6 +239,20 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/trip-plan/t1/favorite');
   });
 
+  it('public posts: detail carries the like state, like / unlike use the like route', async () => {
+    get.mockResolvedValue(reply({tripDatas: {location: 'x'}, likesCount: 3, liked: true}));
+    post.mockResolvedValue(reply({liked: true, likesCount: 4}));
+    del.mockResolvedValue(reply({liked: false, likesCount: 3}));
+
+    await expect(tripsApi.getPublic('t1')).resolves.toEqual({location: 'x', likesCount: 3, liked: true});
+    await expect(tripsApi.likePublic('t1')).resolves.toEqual({liked: true, likesCount: 4});
+    await expect(tripsApi.unlikePublic('t1')).resolves.toEqual({liked: false, likesCount: 3});
+
+    expect(get).toHaveBeenCalledWith('/public-trip/t1');
+    expect(post).toHaveBeenCalledWith('/public-trip/t1/like');
+    expect(del).toHaveBeenCalledWith('/public-trip/t1/like');
+  });
+
   it('duplicate posts to the duplicate route', async () => {
     post.mockResolvedValue(reply({tripId: 't2', nameTrip: 'x (bản sao)'}));
 
