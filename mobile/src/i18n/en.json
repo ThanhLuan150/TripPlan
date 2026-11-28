@@ -680,7 +680,7 @@
     "followers": "followers",
     "following": "following",
     "follow": "Follow",
-    "followingButton": "Following",
+    "unfollow": "Unfollow",
     "loadFailed": "Could not load this profile."
   }
 }

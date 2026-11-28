@@ -74,10 +74,46 @@ describe("unfollow", () => {
         expect(result).toMatchObject({ following: false, followersCount: 0 });
     });
 
-    it("checks the target too", async () => {
+    it("is idempotent when the relation does not exist", async () => {
+        followRepository.remove.mockResolvedValue({ deletedCount: 0 });
+
+        const result = await followService.unfollow(actor, OTHER);
+
+        expect(result).toMatchObject({ message: "Unfollowed", following: false });
+    });
+
+    it("only ever removes the relation of the caller", async () => {
+        await followService.unfollow(actor, OTHER);
+
+        expect(followRepository.remove).toHaveBeenCalledTimes(1);
+        expect(followRepository.remove).toHaveBeenCalledWith(ME, OTHER);
+    });
+
+    it("returns the updated followers and following counts", async () => {
+        followRepository.countFollowers.mockResolvedValue(2);
+        followRepository.countFollowing.mockResolvedValue(7);
+
+        expect(await followService.unfollow(actor, OTHER)).toMatchObject({ followersCount: 2, followingCount: 7 });
+    });
+
+    it.each(["suspended", "delete", "notActive"])("still unfollows an account that is %s", async (isActive) => {
+        userRepository.findById.mockResolvedValue(account({ isActive }));
+
+        const result = await followService.unfollow(actor, OTHER);
+
+        expect(followRepository.remove).toHaveBeenCalledWith(ME, OTHER);
+        expect(result.following).toBe(false);
+    });
+
+    it("answers 404 for a missing account but cleans a dangling relation", async () => {
         userRepository.findById.mockResolvedValue(null);
 
         await expect(followService.unfollow(actor, OTHER)).rejects.toMatchObject({ status: 404 });
+        expect(followRepository.remove).toHaveBeenCalledWith(ME, OTHER);
+    });
+
+    it.each([["malformed id", "abc"], ["undefined id", undefined]])("answers 404 for a %s", async (_name, id) => {
+        await expect(followService.unfollow(actor, id)).rejects.toMatchObject({ status: 404 });
         expect(followRepository.remove).not.toHaveBeenCalled();
     });
 });

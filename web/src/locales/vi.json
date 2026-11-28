@@ -1459,7 +1459,7 @@
     "followers": "người theo dõi",
     "following": "đang theo dõi",
     "follow": "Theo dõi",
-    "followingButton": "Đang theo dõi",
+    "unfollow": "Bỏ theo dõi",
     "notFound": "Tài khoản này không tồn tại.",
     "blocked": "Tài khoản này hiện không khả dụng.",
     "loadFailed": "Không tải được hồ sơ này.",

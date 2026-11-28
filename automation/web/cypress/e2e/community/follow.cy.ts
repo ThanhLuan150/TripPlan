@@ -40,7 +40,7 @@ describe('follow a user', () => {
     cy.findByRole('button', {name: t('community.follow')}).click();
 
     expectCall(calls, 'POST', '/user/u2/follow');
-    cy.findByRole('button', {name: t('community.followingButton')}).should('be.visible');
+    cy.findByRole('button', {name: t('community.unfollow')}).should('be.visible');
     cy.findByRole('button', {name: t('community.follow')}).should('not.exist');
     followersCount().should('contain.text', '5');
   });
@@ -52,7 +52,7 @@ describe('follow a user', () => {
     });
     visit('/user/u2');
 
-    cy.findByRole('button', {name: t('community.followingButton')}).click();
+    cy.findByRole('button', {name: t('community.unfollow')}).click();
 
     expectCall(calls, 'DELETE', '/user/u2/follow');
     cy.findByRole('button', {name: t('community.follow')}).should('be.visible');

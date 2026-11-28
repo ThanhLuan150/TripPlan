@@ -2,7 +2,7 @@ import {communityApi} from '../src/api';
 import UserProfile from '../src/screens/UserProfile';
 import i18n from '../src/i18n';
 import {nav, resetNav, route} from './helpers/nav';
-import {act, allText, flush, press, pressText, renderApp} from './helpers/render';
+import {act, allText, flush, press, pressText, queryClient, renderApp} from './helpers/render';
 import {TouchableOpacity} from 'react-native';
 
 jest.mock('@react-navigation/native', () => require('./helpers/nav').navModule);
@@ -47,7 +47,7 @@ describe('UserProfile screen', () => {
     expect(tree.root.findByProps({testID: 'followers-count'})).toBeTruthy();
     expect(followers(tree)).toContain('4');
     expect(allText(tree)).toContain(t('community.follow'));
-    expect(allText(tree)).not.toContain(t('community.followingButton'));
+    expect(allText(tree)).not.toContain(t('community.unfollow'));
   });
 
   it('follows, then shows Following and the new followers count', async () => {
@@ -58,22 +58,22 @@ describe('UserProfile screen', () => {
     await flush();
 
     expect(communityApi.follow).toHaveBeenCalledWith('u2');
-    expect(allText(tree)).toContain(t('community.followingButton'));
-    expect(allText(tree)).not.toContain(t('community.follow') + t('community.followingButton'));
+    expect(allText(tree)).toContain(t('community.unfollow'));
+    expect(allText(tree)).not.toContain(t('community.follow') + t('community.unfollow'));
     expect(followers(tree)).toContain('5');
   });
 
   it('shows Following for a followed account and unfollows', async () => {
     (communityApi.unfollow as jest.Mock).mockResolvedValue({message: 'ok', following: false, followersCount: 4, followingCount: 1});
     const tree = await mount(user({following: true, followersCount: 5}));
-    expect(allText(tree)).toContain(t('community.followingButton'));
+    expect(allText(tree)).toContain(t('community.unfollow'));
 
-    await act(async () => pressText(tree, t('community.followingButton')));
+    await act(async () => pressText(tree, t('community.unfollow')));
     await flush();
 
     expect(communityApi.unfollow).toHaveBeenCalledWith('u2');
     expect(allText(tree)).toContain(t('community.follow'));
-    expect(allText(tree)).not.toContain(t('community.followingButton'));
+    expect(allText(tree)).not.toContain(t('community.unfollow'));
   });
 
   it('sends you to your own Profile tab when the profile is yours', async () => {
@@ -101,6 +101,32 @@ describe('UserProfile screen', () => {
     expect(allText(tree)).toContain('This account is suspended');
     expect(allText(tree)).toContain(t('community.follow'));
     expect(followers(tree)).toContain('4');
+  });
+
+  it('keeps Unfollow and the counts when unfollowing fails', async () => {
+    (communityApi.unfollow as jest.Mock).mockRejectedValue(httpError(404, 'User not found'));
+    const tree = await mount(user({following: true, followersCount: 5}));
+
+    await act(async () => pressText(tree, t('community.unfollow')));
+    await flush();
+
+    expect(allText(tree)).toContain('User not found');
+    expect(allText(tree)).toContain(t('community.unfollow'));
+    expect(followers(tree)).toContain('5');
+  });
+
+  it('refreshes your own Profile counts after unfollowing', async () => {
+    (communityApi.unfollow as jest.Mock).mockResolvedValue({message: 'ok', following: false, followersCount: 4, followingCount: 1});
+    (communityApi.profile as jest.Mock).mockResolvedValue(user({following: true, followersCount: 5}));
+    const client = queryClient();
+    const spy = jest.spyOn(client, 'invalidateQueries');
+    const tree = renderApp(<UserProfile />, {client});
+    await flush();
+
+    await act(async () => pressText(tree, t('community.unfollow')));
+    await flush();
+
+    expect(spy).toHaveBeenCalledWith({queryKey: ['communityUser', 'me']});
   });
 
   it('says so and offers a retry when the profile cannot be loaded', async () => {

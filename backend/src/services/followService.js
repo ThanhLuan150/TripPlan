@@ -56,10 +56,20 @@ const follow = async (actor, targetId) => {
     return { message: "Followed", ...(await state(actor._id, target._id)) };
 };
 
-// Idempotent: unfollowing someone you do not follow is a no-op.
+// Idempotent: unfollowing someone you do not follow is a no-op (200, following: false).
+// Only the caller's own relation (followerId = token user) is ever deleted, so another
+// account's follow can never be removed. A suspended / deleted account can still be
+// unfollowed, otherwise a relation to it could never be cleaned up.
 const unfollow = async (actor, targetId) => {
-    const target = await findTarget(targetId);
-    await followRepository.remove(actor._id, target._id);
+    if (!mongoose.isValidObjectId(targetId)) {
+        throw new HttpError(404, "User not found");
+    }
+    const target = await userRepository.findById(targetId);
+    await followRepository.remove(actor._id, targetId);
+    if (!target) {
+        // the account is gone: the dangling relation is cleaned above
+        throw new HttpError(404, "User not found");
+    }
     return { message: "Unfollowed", ...(await state(actor._id, target._id)) };
 };
 

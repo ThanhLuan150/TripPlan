@@ -679,7 +679,7 @@
     "followers": "người theo dõi",
     "following": "đang theo dõi",
     "follow": "Theo dõi",
-    "followingButton": "Đang theo dõi",
+    "unfollow": "Bỏ theo dõi",
     "loadFailed": "Không tải được hồ sơ này."
   }
 }
