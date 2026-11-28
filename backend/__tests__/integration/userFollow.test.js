@@ -89,6 +89,62 @@ describe("follow endpoints", () => {
         expect(res.body).toMatchObject({ following: false, followersCount: 0 });
     });
 
+    it("unfollow twice is idempotent and never errors", async () => {
+        await request(app).post(`/user/${OTHER}/follow`).set("Authorization", auth);
+        await request(app).delete(`/user/${OTHER}/follow`).set("Authorization", auth);
+        const res = await request(app).delete(`/user/${OTHER}/follow`).set("Authorization", auth);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ following: false, followersCount: 0 });
+    });
+
+    it("unfollowing someone you never followed changes nothing", async () => {
+        relations.add(`${OTHER}>${USER}`);
+        const res = await request(app).delete(`/user/${OTHER}/follow`).set("Authorization", auth);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ following: false, followersCount: 0, followingCount: 1 });
+        expect(relations.has(`${OTHER}>${USER}`)).toBe(true);
+    });
+
+    it("unfollow keeps the other relations and updates both counts", async () => {
+        const THIRD = "64b000000000000000000003";
+        accounts[THIRD] = { _id: THIRD, username: "third", isActive: "active", role: "user" };
+        relations.add(`${USER}>${OTHER}`);
+        relations.add(`${USER}>${THIRD}`);
+        relations.add(`${THIRD}>${OTHER}`);
+
+        const res = await request(app).delete(`/user/${OTHER}/follow`).set("Authorization", auth);
+
+        expect(res.body).toMatchObject({ following: false, followersCount: 1 });
+        expect([...relations].sort()).toEqual([`${THIRD}>${OTHER}`, `${USER}>${THIRD}`].sort());
+        const mine = await request(app).get("/user/me/profile").set("Authorization", auth);
+        expect(mine.body.user.followingCount).toBe(1);
+    });
+
+    it("never removes another account's relation, whatever the client sends", async () => {
+        relations.add(`${OTHER}>${USER}`);
+        await request(app).delete(`/user/${OTHER}/follow`).set("Authorization", auth).send({ followerId: OTHER, userId: OTHER });
+
+        expect(followRepository.remove).toHaveBeenCalledWith(USER, OTHER);
+        expect(relations.has(`${OTHER}>${USER}`)).toBe(true);
+    });
+
+    it("answers 404 when unfollowing a missing account or a malformed id", async () => {
+        expect((await request(app).delete("/user/64b0000000000000000000ff/follow").set("Authorization", auth)).status).toBe(404);
+        expect((await request(app).delete("/user/abc/follow").set("Authorization", auth)).status).toBe(404);
+    });
+
+    it("can still unfollow a suspended account", async () => {
+        relations.add(`${USER}>${OTHER}`);
+        accounts[OTHER].isActive = "suspended";
+
+        const res = await request(app).delete(`/user/${OTHER}/follow`).set("Authorization", auth);
+
+        expect(res.status).toBe(200);
+        expect(relations.size).toBe(0);
+    });
+
     it("returns your own profile with your followers at /user/me/profile", async () => {
         relations.add(`${OTHER}>${USER}`);
         relations.add(`${USER}>${OTHER}`);

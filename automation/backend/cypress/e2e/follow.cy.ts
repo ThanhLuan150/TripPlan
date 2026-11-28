@@ -76,6 +76,47 @@ describe('Follow user', () => {
     });
   });
 
+  it('unfollow keeps the other relations and updates both counts', () => {
+    signIn().then(({token, user}) => {
+      signIn().then(({user: target}) => {
+        signIn().then(({user: third}) => {
+          follow(target.id, token);
+          follow(third.id, token);
+          unfollow(target.id, token).its('body').should('include', {following: false, followersCount: 0});
+          profile(third.id, token).its('body.user').should('include', {following: true, followersCount: 1});
+          profile('me', token).its('body.user').should('include', {id: user.id, followingCount: 1});
+        });
+      });
+    });
+  });
+
+  it('never removes the relation of another account', () => {
+    signIn().then(({token: fan, user: fanUser}) => {
+      signIn().then(({token: caller}) => {
+        follow(fanUser.id, fan);
+        signIn().then(({user: target}) => {
+          follow(target.id, fan);
+          // the caller never followed target: the call is harmless and fan keeps the relation
+          unfollow(target.id, caller).its('status').should('eq', 200);
+          profile(target.id, fan).its('body.user').should('include', {following: true});
+        });
+      });
+    });
+  });
+
+  it('unfollow answers 404 for a missing account or malformed id, and works for a suspended account', () => {
+    signIn().then(({token}) => {
+      [MISSING, 'not-an-id'].forEach(id => unfollow(id, token).its('status').should('eq', 404));
+      signIn().then(({user: blocked}) => {
+        follow(blocked.id, token);
+        update(blocked.id, {isActive: 'suspended'});
+        unfollow(blocked.id, token).its('status').should('eq', 200);
+        update(blocked.id, {isActive: 'active'});
+        profile(blocked.id, token).its('body.user').should('include', {following: false, followersCount: 0});
+      });
+    });
+  });
+
   it('returns your own profile with your followers at /user/me/profile', () => {
     signIn().then(({token, user}) => {
       signIn().then(({token: fan}) => {

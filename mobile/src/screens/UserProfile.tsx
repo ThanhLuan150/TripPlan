@@ -20,7 +20,7 @@ export default function UserProfile() {
   const query = useCommunityUser(id);
   const user = query.data;
 
-  const apply = (state: FollowState) =>
+  const apply = (state: FollowState) => {
     qc.setQueryData<CommunityUser>(
       queryKeys.communityUser(id),
       current =>
@@ -30,6 +30,9 @@ export default function UserProfile() {
           followersCount: state.followersCount,
         },
     );
+    // your own Following count (Profile tab) changed too
+    qc.invalidateQueries({queryKey: queryKeys.communityUser('me')});
+  };
   const follow = useApiMutation(() => communityApi.follow(id), {onSuccess: apply});
   const unfollow = useApiMutation(() => communityApi.unfollow(id), {onSuccess: apply});
   // your own profile is the Profile tab (with your followers), not this screen
@@ -88,7 +91,7 @@ export default function UserProfile() {
               <View style={styles.action}>
                 {user.following ? (
                   <Button
-                    title={t('community.followingButton')}
+                    title={t('community.unfollow')}
                     variant="outline"
                     loading={busy}
                     onPress={() => unfollow.mutate()}

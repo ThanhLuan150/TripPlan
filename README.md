@@ -454,7 +454,16 @@ Người dùng theo dõi tài khoản khác trong cộng đồng. Ticket này **
 - `DELETE /user/:id/follow`: bỏ theo dõi (idempotent), trả cùng dạng trên với `following: false`.
 - **Validation:** `:id` sai định dạng, tài khoản không tồn tại / đã xóa / chưa kích hoạt -> **404**; tài khoản bị khóa (`suspended`) -> **403**; tự theo dõi chính mình -> **400**; chưa đăng nhập -> **401**.
 - **Chỉ theo dõi bằng chính tài khoản đăng nhập**: người theo dõi luôn lấy từ token, bỏ qua `followerId` / `userId` do client gửi.
-- **UX (web `UserProfilePage` ở `/user/:id`, mobile `UserProfile`):** bấm tên một người trong **Xếp hạng** để mở hồ sơ; có nút **Theo dõi** / **Đang theo dõi** (bấm để bỏ theo dõi), số người theo dõi cập nhật ngay theo số mà server trả về; hồ sơ của chính mình không có nút; lỗi (khóa, không tồn tại, mất mạng) hiện thông báo và giữ nguyên trạng thái.
+- **UX (web `UserProfilePage` ở `/user/:id`, mobile `UserProfile`):** bấm tên một người trong **Xếp hạng** để mở hồ sơ; có nút **Theo dõi** / **Bỏ theo dõi** (hiện khi đang theo dõi), số người theo dõi cập nhật ngay theo số mà server trả về; hồ sơ của chính mình không có nút; lỗi (khóa, không tồn tại, mất mạng) hiện thông báo và giữ nguyên trạng thái.
+
+### Bỏ theo dõi người dùng (Unfollow User, COMMUNITY-002)
+
+Dùng lại model `Follow` và route `DELETE /user/:id/follow` của COMMUNITY-001 (ticket này bổ sung hành vi, test và giao diện).
+
+- **Chỉ xóa quan hệ của chính mình:** `followerId` luôn lấy từ token, nên không thể xóa quan hệ Follow của tài khoản khác (kể cả khi client gửi `followerId` / `userId`). Các quan hệ khác của bạn và của người khác không bị ảnh hưởng.
+- **Idempotent:** bỏ theo dõi người chưa theo dõi (hoặc bỏ lần nữa) vẫn 200, `following: false`, không đổi gì. Trả `{ message, following: false, followersCount, followingCount }` (số liệu của tài khoản đích).
+- **Lỗi:** `:id` sai định dạng hoặc tài khoản không tồn tại -> **404** (quan hệ treo tới tài khoản đã mất vẫn được dọn); chưa đăng nhập -> **401**. Tài khoản bị khóa / đã xóa / chưa kích hoạt **vẫn bỏ theo dõi được** (không bị kẹt quan hệ).
+- **UX:** nút **Bỏ theo dõi** hiện khi đang theo dõi (web `UserProfilePage`, mobile `UserProfile`); sau khi bấm nút đổi lại thành **Theo dõi**, số Followers lấy theo server, và số Following ở trang Tài khoản của bạn được tải lại. Lỗi giữ nguyên trạng thái và hiện thông báo.
 
 ### Quy ước khi triển khai một ticket mới
 
@@ -467,7 +476,7 @@ Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, 
 5. **Trước khi báo xong:** chạy `npx vitest run` (backend và web, web thêm `npx tsc -b` và `npx eslint src`), `npx jest` (mobile). Lỗi `tsc` / eslint có sẵn ở mobile `RootNavigator.tsx` và `TripDetail.tsx` không thuộc ticket.
 6. **Cập nhật README này:** thêm mục mô tả tính năng (endpoint, quyền, giới hạn, hành vi khi lỗi, nơi hiển thị trên web / mobile) và cập nhật danh sách model / bảng phân quyền.
 
-Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001).
+Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002).
 
 ### API quản trị — `/admin/*` (role admin)
 

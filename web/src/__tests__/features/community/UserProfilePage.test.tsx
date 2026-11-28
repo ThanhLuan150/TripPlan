@@ -46,7 +46,7 @@ describe('UserProfilePage', () => {
     await userEvent.click(await followButton());
 
     expect(communityApi.follow).toHaveBeenCalledWith('u2');
-    expect(await screen.findByRole('button', {name: t('community.followingButton')})).toBeInTheDocument();
+    expect(await screen.findByRole('button', {name: t('community.unfollow')})).toBeInTheDocument();
     expect(screen.queryByRole('button', {name: t('community.follow')})).not.toBeInTheDocument();
     expect(screen.getByTestId('followers-count')).toHaveTextContent('5');
   });
@@ -56,11 +56,44 @@ describe('UserProfilePage', () => {
     vi.mocked(communityApi.unfollow).mockResolvedValue({message: 'ok', following: false, followersCount: 4, followingCount: 1});
     open();
 
-    await userEvent.click(await screen.findByRole('button', {name: t('community.followingButton')}));
+    await userEvent.click(await screen.findByRole('button', {name: t('community.unfollow')}));
 
     expect(communityApi.unfollow).toHaveBeenCalledWith('u2');
     expect(await followButton()).toBeInTheDocument();
     expect(screen.getByTestId('followers-count')).toHaveTextContent('4');
+  });
+
+  it('keeps Unfollow and the counts when unfollowing fails', async () => {
+    vi.mocked(communityApi.profile).mockResolvedValue(user({following: true, followersCount: 5}));
+    vi.mocked(communityApi.unfollow).mockRejectedValue(httpError(500, {message: 'boom'}));
+    open();
+
+    await userEvent.click(await screen.findByRole('button', {name: t('community.unfollow')}));
+
+    expect(await screen.findByText(t('community.failed'))).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: t('community.unfollow')})).toBeEnabled();
+    expect(screen.getByTestId('followers-count')).toHaveTextContent('5');
+  });
+
+  it('explains a missing account when unfollowing', async () => {
+    vi.mocked(communityApi.profile).mockResolvedValue(user({following: true}));
+    vi.mocked(communityApi.unfollow).mockRejectedValue(httpError(404, {message: 'User not found'}));
+    open();
+
+    await userEvent.click(await screen.findByRole('button', {name: t('community.unfollow')}));
+
+    expect(await screen.findByText(t('community.notFound'))).toBeInTheDocument();
+  });
+
+  it('refreshes your own Profile counts after unfollowing', async () => {
+    vi.mocked(communityApi.profile).mockResolvedValue(user({following: true, followersCount: 5}));
+    vi.mocked(communityApi.unfollow).mockResolvedValue({message: 'ok', following: false, followersCount: 4, followingCount: 1});
+    const {client} = open();
+    const spy = vi.spyOn(client, 'invalidateQueries');
+
+    await userEvent.click(await screen.findByRole('button', {name: t('community.unfollow')}));
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith({queryKey: ['community-user', 'me']}));
   });
 
   it('disables the button while the request is pending (no double follow)', async () => {

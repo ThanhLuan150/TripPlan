@@ -31,11 +31,14 @@ export default function UserProfilePage() {
   const query = useQuery({queryKey: key, queryFn: () => communityApi.profile(id), retry: false});
   const user = query.data;
 
-  const apply = (state: FollowState) =>
+  const apply = (state: FollowState) => {
     queryClient.setQueryData<CommunityUser>(
       key,
       current => current && {...current, following: state.following, followersCount: state.followersCount},
     );
+    // your own Following count (Profile page) changed too
+    queryClient.invalidateQueries({queryKey: ['community-user', 'me']});
+  };
   const failed = (error: unknown) =>
     Toast.show({type: 'error', text1: t('common.failed'), text2: t(errorKeyOf(error, 'community.failed'))});
   const follow = useMutation({mutationFn: () => communityApi.follow(id), onSuccess: apply, onError: failed});
@@ -107,7 +110,7 @@ export default function UserProfilePage() {
                   disabled={busy}
                   onClick={() => unfollow.mutate()}>
                   <IoPersonRemoveOutline size={18} />
-                  {t('community.followingButton')}
+                  {t('community.unfollow')}
                 </button>
               ) : (
                 <button
