@@ -192,27 +192,38 @@ export default function HomePage() {
             <p className="py-4 text-center text-sm text-slate-500">{t('home.rankingEmpty')}</p>
           )}
           <div className="no-scrollbar flex gap-4 overflow-x-auto px-1 pt-2 pb-1">
-            {ranks.map((item, index) => (
-              <div
-                key={item._id ?? index}
-                className="flex w-24 shrink-0 flex-col items-center gap-1.5 text-center ">
-                <div className="relative">
-                  <RankAvatar
-                    name={item.fullname}
-                    src={item.image}
-                    ring={rankRing[index] ?? 'ring-slate-100'}
-                  />
-                  <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-slate-900 text-[10px] font-bold text-white ring-2 ring-white">
-                    {index + 1}
+            {ranks.map((item, index) => {
+              const itemClass = 'flex w-24 shrink-0 flex-col items-center gap-1.5 text-center';
+              const content = (
+                <>
+                  <div className="relative">
+                    <RankAvatar
+                      name={item.fullname}
+                      src={item.image}
+                      ring={rankRing[index] ?? 'ring-slate-100'}
+                    />
+                    <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-slate-900 text-[10px] font-bold text-white ring-2 ring-white">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <span
+                    title={item.fullname}
+                    className="w-full truncate text-xs font-medium text-slate-700">
+                    {item.fullname}
                   </span>
+                </>
+              );
+              // avatar and name together open the public profile
+              return item._id ? (
+                <Link key={item._id} to={routes.UserProfile(item._id)} className={itemClass}>
+                  {content}
+                </Link>
+              ) : (
+                <div key={index} className={itemClass}>
+                  {content}
                 </div>
-                <span
-                  title={item.fullname}
-                  className="w-full truncate text-xs font-medium text-slate-700">
-                  {item.fullname}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

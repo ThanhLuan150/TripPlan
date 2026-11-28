@@ -5,6 +5,7 @@ import BenefitPage from '@/features/about/pages/BenefitPage';
 import WhatAlocaPage from '@/features/about/pages/WhatAlocaPage';
 import {chatCache, initialMessages} from '@/features/assistant/store/chatCache';
 import {getSession, getUser, saveSession} from '@/features/auth/store/session';
+import {communityApi} from '@/features/community/api/communityApi';
 import {profileApi} from '@/features/profile/api/profileApi';
 import EditProfilePage from '@/features/profile/pages/EditProfilePage';
 import NotificationsPage from '@/features/profile/pages/NotificationsPage';
@@ -15,6 +16,7 @@ import {uploadImage} from '@/lib/upload';
 import {currentPath, httpError, networkError, pending, renderWithProviders, t} from '../../utils/render';
 
 vi.mock('@/features/profile/api/profileApi');
+vi.mock('@/features/community/api/communityApi');
 vi.mock('@/features/videos/api');
 vi.mock('@/lib/upload', async importOriginal => ({
   ...(await importOriginal<typeof import('@/lib/upload')>()),
@@ -33,9 +35,36 @@ const user = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(communityApi.profile).mockResolvedValue({
+    id: 'me',
+    fullname: 'Lan Nguyễn',
+    experience: 40,
+    isSelf: true,
+    following: false,
+    followersCount: 7,
+    followingCount: 3,
+  });
 });
 
 describe('ProfilePage', () => {
+  it('shows how many people follow the user and how many they follow', async () => {
+    saveSession({accessToken: 't', data: user});
+    renderWithProviders(<ProfilePage />, {route: '/profile'});
+
+    expect(await screen.findByTestId('followers-count')).toHaveTextContent('7');
+    expect(screen.getByTestId('following-count')).toHaveTextContent('3');
+    expect(communityApi.profile).toHaveBeenCalledWith('me');
+  });
+
+  it('hides the counts when they cannot be loaded', async () => {
+    saveSession({accessToken: 't', data: user});
+    vi.mocked(communityApi.profile).mockRejectedValue(networkError());
+    renderWithProviders(<ProfilePage />, {route: '/profile'});
+
+    expect(await screen.findByRole('heading', {name: 'Lan Nguyễn'})).toBeInTheDocument();
+    expect(screen.queryByTestId('followers-count')).not.toBeInTheDocument();
+  });
+
   it("shows the user's name, email, photo and points", async () => {
     saveSession({accessToken: 't', data: user});
     const {container} = renderWithProviders(<ProfilePage />, {route: '/profile'});

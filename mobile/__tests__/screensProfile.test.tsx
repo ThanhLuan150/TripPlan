@@ -2,7 +2,7 @@ import React from 'react';
 import {Image, Linking, TextInput, TouchableOpacity} from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import i18n from '../src/i18n';
-import {profileApi} from '../src/api';
+import {communityApi, profileApi} from '../src/api';
 import {alert, subscribeAlert} from '../src/lib/alert';
 import {uploadImage} from '../src/lib/upload';
 import EditProfile from '../src/screens/EditProfile';
@@ -16,6 +16,7 @@ jest.mock('../src/lib/upload', () => ({uploadImage: jest.fn()}));
 jest.mock('../src/api', () => ({
   ...jest.requireActual('../src/api'),
   profileApi: {update: jest.fn(), notifications: jest.fn()},
+  communityApi: {profile: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;
@@ -27,6 +28,7 @@ let alerts: any[] = [];
 let off: () => void;
 beforeEach(async () => {
   jest.clearAllMocks();
+  (communityApi.profile as jest.Mock).mockResolvedValue({id: 'me', fullname: 'L', experience: 1, isSelf: true, following: false, followersCount: 7, followingCount: 3});
   resetNav();
   alerts = [];
   off = subscribeAlert(a => alerts.push(a));
@@ -35,6 +37,24 @@ beforeEach(async () => {
 afterEach(() => off());
 
 describe('Profile', () => {
+  it('shows how many people follow the user and how many they follow', async () => {
+    const tree = renderApp(<Profile />, {auth: makeAuth({user: {username: 'luan'}})});
+    await flush();
+
+    expect(communityApi.profile).toHaveBeenCalledWith('me');
+    expect(tree.root.findByProps({testID: 'followers-count'})).toBeTruthy();
+    expect(allText(tree)).toContain('7');
+    expect(allText(tree)).toContain(t('community.following'));
+  });
+
+  it('hides the counts when they cannot be loaded', async () => {
+    (communityApi.profile as jest.Mock).mockRejectedValue(new Error('x'));
+    const tree = renderApp(<Profile />, {auth: makeAuth({user: {username: 'luan'}})});
+    await flush();
+
+    expect(tree.root.findAllByProps({testID: 'followers-count'})).toHaveLength(0);
+  });
+
   const user = {username: 'luan', fullname: 'Luan Le', email: 'luan@example.com', image: '/files/a', experience: 120};
 
   it('shows the account and navigates from every entry', () => {

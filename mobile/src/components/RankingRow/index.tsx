@@ -1,5 +1,5 @@
 import {useTranslation} from 'react-i18next';
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {RankItem} from '../../api';
 import {imageSource} from '../../lib/imageSource';
 
@@ -26,14 +26,21 @@ const rankTitleKey = (xp: number) => {
 export default function RankingRow({
   item,
   index,
+  onPress,
 }: {
   item: RankItem;
   index: number;
+  // opens the public profile of the user
+  onPress?: () => void;
 }) {
   const {t} = useTranslation();
   const titleKey = rankTitleKey(item.experience);
   return (
-    <View style={styles.row}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      disabled={!onPress}
+      onPress={onPress}
+      style={styles.row}>
       <Text
         style={[
           styles.position,
@@ -58,7 +65,7 @@ export default function RankingRow({
       <Text style={styles.points}>
         {t('ranking.points', {count: item.experience})}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 

@@ -7,6 +7,7 @@ import {CHAT_ERROR, CHAT_SUCCESS, chatApi} from '@/features/assistant/api/chatAp
 import {profileApi} from '@/features/profile/api/profileApi';
 import {homeApi} from '@/features/home/api';
 import {videosApi} from '@/features/videos/api';
+import {communityApi} from '@/features/community/api/communityApi';
 import {rankingApi} from '@/features/ranking/api/rankingApi';
 import {challengeApi, tripsApi} from '@/features/trips/api/tripsApi';
 import type {GenerateTripParams} from '@/features/trips/types';
@@ -109,6 +110,23 @@ describe('chatApi', () => {
 
     await expect(chatApi.remove('c1')).resolves.toEqual({message: 'deleted'});
     expect(del).toHaveBeenCalledWith('/chat/c1');
+  });
+});
+
+describe('communityApi', () => {
+  it('reads a public profile, follows and unfollows', async () => {
+    const user = {id: 'u2', following: false, followersCount: 1};
+    const state = {message: 'ok', following: true, followersCount: 2, followingCount: 0};
+    get.mockResolvedValue(reply({user}));
+    post.mockResolvedValue(reply(state));
+    del.mockResolvedValue(reply({...state, following: false}));
+
+    await expect(communityApi.profile('u2')).resolves.toEqual(user);
+    expect(get).toHaveBeenCalledWith('/user/u2/profile');
+    await expect(communityApi.follow('u2')).resolves.toEqual(state);
+    expect(post).toHaveBeenCalledWith('/user/u2/follow');
+    await expect(communityApi.unfollow('u2')).resolves.toMatchObject({following: false});
+    expect(del).toHaveBeenCalledWith('/user/u2/follow');
   });
 });
 

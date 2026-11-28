@@ -13,6 +13,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
+import {useCommunityUser} from '../hooks/queries';
 import {imageSource} from '../lib/imageSource';
 import {colors, gradient, radius, shadow, shadowLift} from '../lib/theme';
 import {useAuth} from '../store/session';
@@ -45,6 +46,8 @@ export default function Profile() {
   const {user, signOut} = useAuth();
   const navigation = useNavigation<any>();
   const name = user?.fullname || user?.username;
+  // followers / following of the signed-in user ("me"); hidden until loaded
+  const community = useCommunityUser('me').data;
 
   return (
     <ScrollView
@@ -70,6 +73,18 @@ export default function Profile() {
             <View style={styles.points}>
               <Text style={styles.pointsText}>
                 ⭐ {t('profile.points', {count: user.experience})}
+              </Text>
+            </View>
+          )}
+          {community && (
+            <View style={styles.counts}>
+              <Text style={styles.count} testID="followers-count">
+                <Text style={styles.countValue}>{community.followersCount}</Text>{' '}
+                {t('community.followers')}
+              </Text>
+              <Text style={styles.count} testID="following-count">
+                <Text style={styles.countValue}>{community.followingCount}</Text>{' '}
+                {t('community.following')}
               </Text>
             </View>
           )}
@@ -188,6 +203,9 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
+  counts: {flexDirection: 'row', gap: 20, marginTop: 8},
+  count: {color: colors.body, fontSize: 13},
+  countValue: {color: colors.text, fontWeight: '800'},
   container: {flex: 1, backgroundColor: colors.bg},
   content: {paddingHorizontal: 16, paddingTop: 48, paddingBottom: 110, gap: 14},
   headerCard: {

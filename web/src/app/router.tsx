@@ -25,6 +25,7 @@ import SharedTripPage from '@/features/trips/pages/SharedTripPage';
 import RankingPage from '@/features/ranking/pages/RankingPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import EditProfilePage from '@/features/profile/pages/EditProfilePage';
+import UserProfilePage from '@/features/community/pages/UserProfilePage';
 import PreferencesPage from '@/features/profile/pages/PreferencesPage';
 import NotificationsPage from '@/features/profile/pages/NotificationsPage';
 import VideosPage from '@/features/videos/pages/VideosPage';
@@ -69,6 +70,7 @@ export default function AppRouter() {
             </Route>
             <Route path={routes.Ranking} element={<RankingPage />} />
             <Route path={routes.Profile} element={<ProfilePage />} />
+            <Route path="/user/:id" element={<UserProfilePage />} />
           </Route>
           <Route path={routes.Editprofile} element={<EditProfilePage />} />
           <Route path={routes.Preferences} element={<PreferencesPage />} />

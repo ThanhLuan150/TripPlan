@@ -274,6 +274,23 @@ describe('Ranking', () => {
     expect(rankingApi.get).toHaveBeenCalledWith('weekly');
   });
 
+  it('opens the public profile of a ranked user', async () => {
+    (rankingApi.get as jest.Mock).mockResolvedValue([{_id: 'a', fullname: 'Alice', experience: 300}]);
+    const tree = renderApp(<Ranking />);
+    await flush();
+    pressText(tree, 'Alice');
+    expect(nav.navigate).toHaveBeenCalledWith('UserProfile', {id: 'a'});
+  });
+
+  it('does not open a profile for a row without an id', async () => {
+    (rankingApi.get as jest.Mock).mockResolvedValue([{fullname: 'Ghost', experience: 3}]);
+    const tree = renderApp(<Ranking />);
+    await flush();
+    expect(allText(tree)).toContain('Ghost');
+    expect(tree.root.findAllByType(TouchableOpacity).some(n => n.props.disabled)).toBe(true);
+    expect(nav.navigate).not.toHaveBeenCalled();
+  });
+
   it('shows the empty text', async () => {
     (rankingApi.get as jest.Mock).mockResolvedValue([]);
     const tree = renderApp(<Ranking />);

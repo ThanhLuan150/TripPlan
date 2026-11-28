@@ -292,6 +292,12 @@ describe('Ranking components', () => {
     const avatars = tree.root.findByType(FlatList).props.data.map((r: any) => r.fullname);
     expect(avatars).toEqual(['mid', 'best', 'low']);
     expect(render(<RankingHeader ranks={[]} />).toJSON()).toBeTruthy();
+
+    // tapping an avatar opens that user
+    const onPressUser = jest.fn();
+    const withId = render(<RankingHeader ranks={[{_id: 'a', fullname: 'A', experience: 5}] as any} onPressUser={onPressUser} />);
+    press(withId.root.findAllByType(TouchableOpacity)[0]);
+    expect(onPressUser).toHaveBeenCalledWith(expect.objectContaining({_id: 'a'}));
     expect(render(<RankingHeader ranks={[{experience: 1}] as any} />).toJSON()).toBeTruthy();
   });
 });

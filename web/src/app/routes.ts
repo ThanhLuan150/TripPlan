@@ -22,6 +22,7 @@ export const routes = {
   SharedTrip: (token: string) => `/shared/${token}`, // public, read only
   Ranking: '/ranking', // 'Xếp hạng'
   Profile: '/profile', // 'Tài khoản'
+  UserProfile: (id: string) => `/user/${id}`, // public profile of another account (Follow)
   // stack screens without the tab bar
   Editprofile: '/profile/edit',
   Preferences: '/profile/preferences', // AI travel preferences
