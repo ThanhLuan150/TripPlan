@@ -674,5 +674,13 @@
     "savedAt": "Saved {{time}}",
     "continue": "Continue",
     "startNew": "Start new"
+  },
+  "community": {
+    "title": "Profile",
+    "followers": "followers",
+    "following": "following",
+    "follow": "Follow",
+    "followingButton": "Following",
+    "loadFailed": "Could not load this profile."
   }
 }

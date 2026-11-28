@@ -4,6 +4,7 @@ import {
   authApi,
   challengeApi,
   chatApi,
+  communityApi,
   contentApi,
   profileApi,
   rankingApi,
@@ -171,6 +172,22 @@ describe('rankingApi', () => {
   it('returns [] without ranks', async () => {
     get.mockResolvedValue(reply({}));
     await expect(rankingApi.get('weekly')).resolves.toEqual([]);
+  });
+});
+
+describe('communityApi', () => {
+  it('reads a public profile, follows and unfollows', async () => {
+    const user = {id: 'u2', following: false, followersCount: 1};
+    const state = {message: 'ok', following: true, followersCount: 2, followingCount: 0};
+    get.mockResolvedValue(reply({user}));
+    post.mockResolvedValue(reply(state));
+    del.mockResolvedValue(reply({...state, following: false}));
+    await expect(communityApi.profile('u2')).resolves.toEqual(user);
+    expect(get).toHaveBeenCalledWith('/user/u2/profile');
+    await expect(communityApi.follow('u2')).resolves.toEqual(state);
+    expect(post).toHaveBeenCalledWith('/user/u2/follow');
+    await expect(communityApi.unfollow('u2')).resolves.toMatchObject({following: false});
+    expect(del).toHaveBeenCalledWith('/user/u2/follow');
   });
 });
 

@@ -7,6 +7,7 @@ export const nav = {
   goBack: jest.fn(),
   push: jest.fn(),
   reset: jest.fn(),
+  popToTop: jest.fn(),
   setParams: jest.fn(),
 };
 export const route: {params: Record<string, unknown>; name: string} = {

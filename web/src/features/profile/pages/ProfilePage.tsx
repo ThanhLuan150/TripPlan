@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import {useQuery} from '@tanstack/react-query';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {
@@ -18,6 +19,7 @@ import {
   IoStar,
 } from 'react-icons/io5';
 import {adminRoutes, routes} from '@/app/routes';
+import {communityApi} from '@/features/community/api/communityApi';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import {useProfile} from '@/hooks/useProfile';
 import {useLogout} from '@/hooks/useLogout';
@@ -44,6 +46,12 @@ export default function ProfilePage() {
   const {t} = useTranslation();
   const {user, name} = useProfile();
   const handleLogout = useLogout();
+  // followers / following of the signed-in user ("me"); hidden until loaded
+  const {data: community} = useQuery({
+    queryKey: ['community-user', 'me'],
+    queryFn: () => communityApi.profile('me'),
+    enabled: Boolean(user),
+  });
 
   return (
     <div className="space-y-5 px-4 py-5 md:px-6 md:py-8">
@@ -70,6 +78,16 @@ export default function ProfilePage() {
                 <IoStar size={12} />
                 {t('profile.points', {count: user.experience})}
               </span>
+            )}
+            {community && (
+              <p className="mt-2 flex justify-center gap-4 text-sm text-slate-600 sm:justify-start">
+                <span data-testid="followers-count">
+                  <strong className="text-slate-900">{community.followersCount}</strong> {t('community.followers')}
+                </span>
+                <span data-testid="following-count">
+                  <strong className="text-slate-900">{community.followingCount}</strong> {t('community.following')}
+                </span>
+              </p>
             )}
           </div>
           <Link to={routes.Editprofile} className="btn btn-outline">

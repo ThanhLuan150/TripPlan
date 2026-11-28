@@ -52,6 +52,20 @@ describe('RankingPage', () => {
     expect(within(rows[4]).queryByText(/./, {selector: '.rounded-full.bg-brand-50'})).toBeNull(); // 2500: no title
   });
 
+  it('links every ranked user to their public profile', async () => {
+    renderWithProviders(<RankingPage />, {route: '/ranking'});
+    await screen.findAllByText('Bảo');
+
+    const links = within(screen.getAllByRole('listitem')[1]).getAllByRole('link', {name: 'Bảo'});
+    // the avatar and the name
+    expect(links).toHaveLength(2);
+    links.forEach(link => expect(link).toHaveAttribute('href', '/user/u1'));
+    // the avatar opens it too, in the list and on the podium
+    const avatarLinks = screen.getAllByRole('link', {name: 'Bảo'}).map(a => a.getAttribute('href'));
+    expect(avatarLinks.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(avatarLinks)).toEqual(new Set(['/user/u1']));
+  });
+
   it('switches period and shows an empty podium / list', async () => {
     const user = userEvent.setup();
     renderWithProviders(<RankingPage />, {route: '/ranking'});

@@ -138,6 +138,16 @@ describe('small presentational components', () => {
     expect(allText(tree)).toContain('N0');
     expect(allText(tree)).toContain('4');
   });
+
+  it('RankingPreview opens the user on press, but not a row without an id', () => {
+    const onPressUser = jest.fn();
+    const ranks = [{_id: 'u1', fullname: 'A', experience: 1}, {fullname: 'B', experience: 0}];
+    const tree = render(<RankingPreview ranks={ranks as any} onPressUser={onPressUser} />);
+    const rows = tree.root.findAllByType(TouchableOpacity);
+    press(rows[0]);
+    expect(onPressUser).toHaveBeenCalledWith(expect.objectContaining({_id: 'u1'}));
+    expect(rows[1].props.disabled).toBe(true);
+  });
 });
 
 describe('ChatText', () => {

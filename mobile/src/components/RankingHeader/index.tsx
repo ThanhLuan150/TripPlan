@@ -6,6 +6,7 @@ import {
   ImageBackground,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {RankItem} from '../../api';
@@ -13,7 +14,14 @@ import {colors} from '../../lib/theme';
 import {imageSource} from '../../lib/imageSource';
 
 // Teal podium picture with the top three users on it (best one in the middle, bigger).
-export default function RankingHeader({ranks}: {ranks: RankItem[]}) {
+export default function RankingHeader({
+  ranks,
+  onPressUser,
+}: {
+  ranks: RankItem[];
+  // opens the public profile of a user (tap on the avatar)
+  onPressUser?: (item: RankItem) => void;
+}) {
   const {t} = useTranslation();
   const topThree = useMemo(() => {
     const top = [...ranks]
@@ -50,12 +58,16 @@ export default function RankingHeader({ranks}: {ranks: RankItem[]}) {
           horizontal
           keyExtractor={(_, i) => String(i)}
           renderItem={({item, index}) => (
-            <View style={styles.item}>
+            <TouchableOpacity
+              style={styles.item}
+              activeOpacity={0.8}
+              disabled={!onPressUser || !item._id}
+              onPress={() => onPressUser?.(item)}>
               <Image
                 source={imageSource(item.image)}
                 style={[styles.avatar, index === 1 && styles.avatarFirst]}
               />
-            </View>
+            </TouchableOpacity>
           )}
         />
       </View>

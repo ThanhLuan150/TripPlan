@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {FlatList, StyleSheet, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import RankingHeader from '../components/RankingHeader';
 import RankingRow from '../components/RankingRow';
 import RankingTabs from '../components/RankingTabs';
@@ -9,13 +10,19 @@ import {colors, shadow} from '../lib/theme';
 
 export default function Ranking() {
   const {t} = useTranslation();
+  const navigation = useNavigation<any>();
   const [period, setPeriod] = useState<RankingPeriod>('highest');
   const ranks = useRanking(period);
   const list = ranks.data ?? [];
 
   return (
     <View style={styles.container}>
-      <RankingHeader ranks={list} />
+      <RankingHeader
+        ranks={list}
+        onPressUser={item =>
+          navigation.navigate('UserProfile', {id: item._id})
+        }
+      />
       <RankingTabs<RankingPeriod>
         value={period}
         onChange={setPeriod}
@@ -35,7 +42,15 @@ export default function Ranking() {
             <Text style={styles.empty}>{t('ranking.empty')}</Text>
           }
           renderItem={({item, index}) => (
-            <RankingRow item={item} index={index} />
+            <RankingRow
+              item={item}
+              index={index}
+              onPress={
+                item._id
+                  ? () => navigation.navigate('UserProfile', {id: item._id})
+                  : undefined
+              }
+            />
           )}
         />
       </View>

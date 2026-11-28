@@ -2,6 +2,7 @@ import {useInfiniteQuery, useQuery} from '@tanstack/react-query';
 import {
   GenerateParams,
   chatApi,
+  communityApi,
   contentApi,
   profileApi,
   rankingApi,
@@ -27,6 +28,7 @@ export const queryKeys = {
   publicTrip: (id: string) => ['publicTrip', id] as const,
   notifications: ['notifications'] as const,
   preferences: ['travelPreferences'] as const,
+  communityUser: (id: string) => ['communityUser', id] as const,
   chats: ['chats'] as const,
   generate: (params: GenerateParams) => ['generate', params] as const,
 };
@@ -41,6 +43,13 @@ export const useRanking = (period: RankingPeriod) =>
   useQuery({
     queryKey: queryKeys.ranking(period),
     queryFn: () => rankingApi.get(period),
+  });
+
+export const useCommunityUser = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.communityUser(id),
+    queryFn: () => communityApi.profile(id),
+    retry: false,
   });
 
 export const useTrips = () =>

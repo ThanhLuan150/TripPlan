@@ -556,6 +556,33 @@ export const profileApi = {
     (await api.get<Announcement[]>('/announcements')).data ?? [],
 };
 
+// Public profile of another account and the follow state of the signed-in user
+export interface CommunityUser {
+  id: string;
+  fullname: string;
+  image?: string;
+  experience: number;
+  isSelf: boolean;
+  following: boolean;
+  followersCount: number;
+  followingCount: number;
+}
+export interface FollowState {
+  message: string;
+  following: boolean;
+  followersCount: number;
+  followingCount: number;
+}
+
+export const communityApi = {
+  profile: async (id: string) =>
+    (await api.get<{user: CommunityUser}>(`/user/${id}/profile`)).data.user,
+  follow: async (id: string) =>
+    (await api.post<FollowState>(`/user/${id}/follow`)).data,
+  unfollow: async (id: string) =>
+    (await api.delete<FollowState>(`/user/${id}/follow`)).data,
+};
+
 export const challengeApi = {
   checkProgress: async (chaId: string, lat: number, lng: number) =>
     (

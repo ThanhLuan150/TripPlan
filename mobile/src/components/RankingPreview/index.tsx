@@ -1,4 +1,11 @@
-import {FlatList, Image, StyleSheet, Text, View} from 'react-native';
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {RankItem} from '../../api';
 import {colors} from '../../lib/theme';
 import {imageSource} from '../../lib/imageSource';
@@ -6,7 +13,14 @@ import {imageSource} from '../../lib/imageSource';
 const ring = ['#FBBF24', '#CBD5E1', '#FDBA74'];
 
 // Round pictures of the top users, each with a coloured ring and its position, on the home screen.
-export default function RankingPreview({ranks}: {ranks: RankItem[]}) {
+export default function RankingPreview({
+  ranks,
+  onPressUser,
+}: {
+  ranks: RankItem[];
+  // opens the public profile of a user (tap on the avatar or the name)
+  onPressUser?: (item: RankItem) => void;
+}) {
   return (
     <FlatList
       data={ranks}
@@ -14,7 +28,11 @@ export default function RankingPreview({ranks}: {ranks: RankItem[]}) {
       showsHorizontalScrollIndicator={false}
       keyExtractor={(item, i) => item._id ?? String(i)}
       renderItem={({item, index}) => (
-        <View style={styles.item}>
+        <TouchableOpacity
+          style={styles.item}
+          activeOpacity={0.8}
+          disabled={!onPressUser || !item._id}
+          onPress={() => onPressUser?.(item)}>
           <View>
             <Image
               source={imageSource(item.image)}
@@ -30,7 +48,7 @@ export default function RankingPreview({ranks}: {ranks: RankItem[]}) {
           <Text numberOfLines={1} style={styles.name}>
             {item.fullname}
           </Text>
-        </View>
+        </TouchableOpacity>
       )}
     />
   );

@@ -1,6 +1,8 @@
 import {useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {Link} from 'react-router-dom';
 import {IoStar, IoTrophy} from 'react-icons/io5';
+import {routes} from '@/app/routes';
 import {rankTitleKey, useRanking} from '../hooks/useRanking';
 import type {RankingPeriod} from '../types';
 
@@ -55,10 +57,19 @@ export default function RankingPage() {
                     className="absolute -top-7 left-1/2 -translate-x-1/2 text-amber-300 drop-shadow"
                   />
                 )}
-                <Avatar
-                  src={item?.image}
-                  className={`${size} ring-4 ${rank === 1 ? 'ring-amber-300' : 'ring-white/60'}`}
-                />
+                {item?._id ? (
+                  <Link to={routes.UserProfile(item._id)} aria-label={item.fullname}>
+                    <Avatar
+                      src={item.image}
+                      className={`${size} ring-4 ${rank === 1 ? 'ring-amber-300' : 'ring-white/60'}`}
+                    />
+                  </Link>
+                ) : (
+                  <Avatar
+                    src={item?.image}
+                    className={`${size} ring-4 ${rank === 1 ? 'ring-amber-300' : 'ring-white/60'}`}
+                  />
+                )}
               </div>
               <p className="mt-2 w-full truncate text-center text-sm font-semibold">
                 {item?.fullname ?? '—'}
@@ -124,13 +135,27 @@ export default function RankingPage() {
                 className={`w-7 text-center text-lg font-bold ${medal[index] ?? 'text-slate-400'}`}>
                 {index + 1}
               </span>
-              <img
-                src={item.image}
-                alt=""
-                className="size-12 shrink-0 rounded-full bg-slate-100 object-cover"
-              />
+              {item._id ? (
+                <Link to={routes.UserProfile(item._id)} aria-label={item.fullname} className="shrink-0">
+                  <img src={item.image} alt="" className="size-12 rounded-full bg-slate-100 object-cover" />
+                </Link>
+              ) : (
+                <img
+                  src={item.image}
+                  alt=""
+                  className="size-12 shrink-0 rounded-full bg-slate-100 object-cover"
+                />
+              )}
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-slate-900">{item.fullname}</p>
+                {item._id ? (
+                  <Link
+                    to={routes.UserProfile(item._id)}
+                    className="block truncate font-semibold text-slate-900 hover:text-brand-600">
+                    {item.fullname}
+                  </Link>
+                ) : (
+                  <p className="truncate font-semibold text-slate-900">{item.fullname}</p>
+                )}
                 {titleKey && (
                   <span className="mt-0.5 inline-block max-w-full truncate rounded-full bg-brand-50 px-2 py-0.5 align-top text-xs font-medium text-brand-700">
                     {t(titleKey)}

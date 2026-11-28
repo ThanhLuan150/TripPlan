@@ -238,7 +238,7 @@ services/        logic nghiệp vụ (đăng ký/đăng nhập, gọi Gemini, l�
                  adminService: người dùng + số liệu, contentService: video / thông báo / cài đặt / báo cáo nội dung, activityLogService)
 repositories/    toàn bộ truy vấn Mongoose
 models/          schema Mongoose (User, TripPlan, TripDay, Challenge, UserChallengeProgress, ChatAi, Question, Response, Notification,
-                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal)
+                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow)
 middleware/      auth (JWT + tự cấp lại access token), requireRole, ownership (chủ sở hữu trip/chat/challenge), logActivity (ghi nhật ký), errorHandler
 seed/            seedAdmin, seedSampleData, index.js (chạy bằng npm run seed / seed:sample)
 utils/           jwt, mailer, gemini, geocode (HERE), HttpError, asyncHandler, ...
@@ -258,6 +258,7 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 | `GET /announcements`, `POST /reports` | user, admin |
 | `/admin/*` | **admin** |
 | `POST /user/profile` | user, admin |
+| `GET /user/:id/profile`, `POST|DELETE /user/:id/follow` | user, admin; theo dõi bằng chính tài khoản đăng nhập (không tự theo dõi mình) |
 | `POST /user/:id` (xoá tài khoản) | user: chỉ tài khoản của mình · admin: bất kỳ `:id` |
 | `/chat/*` | user, admin; `/:id` phải là cuộc trò chuyện của mình |
 | `/trip-plan/*` | user, admin; `/:id` phải là kế hoạch của mình |
@@ -443,6 +444,18 @@ Người dùng tự thiết lập sở thích để AI cá nhân hóa gợi ý. 
 - **Dùng trong AI**: `travelPreferenceService.promptSection(userId)` thêm một đoạn vào prompt của **gợi ý địa điểm** (`POST /destinations/recommend`) và **tạo lịch trình** (`POST /trip-plan`). Sở thích chỉ là dữ liệu để cá nhân hóa (ghi chú được bọc trong dấu nháy, không phải lệnh) và **không thắng yêu cầu trực tiếp** của người dùng trong cùng request. Không có sở thích, hoặc không đọc được, thì prompt giữ nguyên và request vẫn chạy bình thường. Không có hệ thống recommendation riêng nào trong ticket này.
 - **UX (web `PreferencesPage`, mobile `Preferences`):** mục "Sở thích du lịch cho AI" trong trang Tài khoản: chọn các nhóm bằng chip, nhập ghi chú, **Lưu**; nút **Xóa sở thích** (chỉ hiện khi đã có) hỏi xác nhận bằng hộp thoại của ứng dụng trước khi xóa.
 
+### Theo dõi người dùng (Follow User, COMMUNITY-001)
+
+Người dùng theo dõi tài khoản khác trong cộng đồng. Ticket này **chưa có News Feed**: chỉ lưu quan hệ, hiển thị trạng thái và số lượng.
+
+- Dữ liệu: model `Follow` = `{ followerId, followingId, createdAt }`, **mỗi quan hệ một dòng**, tách khỏi `User` để đếm rẻ và document User không phình theo số người theo dõi. Chỉ mục **unique** `(followerId, followingId)` nên không thể trùng (kể cả khi hai request chạy song song; `followRepository.add` dùng upsert nên theo dõi lại là no-op), chỉ mục `followingId` cho việc đếm followers.
+- `GET /user/:id/profile`: hồ sơ công khai `{ user: { id, fullname, image, backgroundImage, experience, isSelf, following, followersCount, followingCount } }`. **Không** trả email / số điện thoại / địa chỉ.
+- `POST /user/:id/follow`: theo dõi `:id`, trả `{ message, following: true, followersCount, followingCount }`. Theo dõi lần nữa vẫn 200 và không tạo dòng mới.
+- `DELETE /user/:id/follow`: bỏ theo dõi (idempotent), trả cùng dạng trên với `following: false`.
+- **Validation:** `:id` sai định dạng, tài khoản không tồn tại / đã xóa / chưa kích hoạt -> **404**; tài khoản bị khóa (`suspended`) -> **403**; tự theo dõi chính mình -> **400**; chưa đăng nhập -> **401**.
+- **Chỉ theo dõi bằng chính tài khoản đăng nhập**: người theo dõi luôn lấy từ token, bỏ qua `followerId` / `userId` do client gửi.
+- **UX (web `UserProfilePage` ở `/user/:id`, mobile `UserProfile`):** bấm tên một người trong **Xếp hạng** để mở hồ sơ; có nút **Theo dõi** / **Đang theo dõi** (bấm để bỏ theo dõi), số người theo dõi cập nhật ngay theo số mà server trả về; hồ sơ của chính mình không có nút; lỗi (khóa, không tồn tại, mất mạng) hiện thông báo và giữ nguyên trạng thái.
+
 ### Quy ước khi triển khai một ticket mới
 
 Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:
@@ -454,7 +467,7 @@ Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, 
 5. **Trước khi báo xong:** chạy `npx vitest run` (backend và web, web thêm `npx tsc -b` và `npx eslint src`), `npx jest` (mobile). Lỗi `tsc` / eslint có sẵn ở mobile `RootNavigator.tsx` và `TripDetail.tsx` không thuộc ticket.
 6. **Cập nhật README này:** thêm mục mô tả tính năng (endpoint, quyền, giới hạn, hành vi khi lỗi, nơi hiển thị trên web / mobile) và cập nhật danh sách model / bảng phân quyền.
 
-Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp).
+Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001).
 
 ### API quản trị — `/admin/*` (role admin)
 

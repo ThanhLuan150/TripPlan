@@ -246,6 +246,18 @@ describe('HomePage', () => {
     expect(rankingApi.get).toHaveBeenCalledWith('highest');
   });
 
+  it('opens the profile from the avatar or the name of a top player (not for one without an id)', async () => {
+    vi.mocked(rankingApi.get).mockResolvedValue([
+      {_id: 'u1', fullname: 'Bảo', experience: 900, image: 'http://img/1'},
+      {fullname: 'Duy', experience: 300},
+    ]);
+    renderWithProviders(<HomePage />, {route: '/home'});
+
+    const name = await screen.findByText('Bảo');
+    expect(name.closest('a')).toHaveAttribute('href', '/user/u1');
+    expect(screen.getByText('Duy').closest('a')).toBeNull();
+  });
+
   it('shows placeholders while loading, then the empty message', async () => {
     let resolve: (v: never[]) => void = () => undefined;
     vi.mocked(rankingApi.get).mockReturnValue(new Promise(r => (resolve = r)));

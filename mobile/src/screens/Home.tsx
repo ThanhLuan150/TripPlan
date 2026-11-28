@@ -128,7 +128,12 @@ export default function Home() {
         onMore={() => navigation.navigate('Ranking')}
       />
       <View style={styles.ranking}>
-        <RankingPreview ranks={ranks.data ?? []} />
+        <RankingPreview
+          ranks={ranks.data ?? []}
+          onPressUser={item =>
+            navigation.navigate('UserProfile', {id: item._id})
+          }
+        />
       </View>
     </ScrollView>
   );
