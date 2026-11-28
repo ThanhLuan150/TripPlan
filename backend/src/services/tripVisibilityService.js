@@ -4,6 +4,7 @@ import { buildPublicTripView } from "./tripShareService.js";
 import env from "../config/env.js";
 import tripService from "./tripService.js";
 import postLikeService from "./postLikeService.js";
+import savedPostService from "./savedPostService.js";
 import HttpError from "../utils/HttpError.js";
 
 export const VISIBILITIES = ["private", "public"];
@@ -50,6 +51,7 @@ const getPublicTrip = async (id, viewer = null) => {
         message: "Get public trip successfully",
         tripDatas: await buildPublicTripView(trip),
         ...(await postLikeService.getState(viewer, trip._id)),
+        ...(await savedPostService.getState(viewer, trip._id)),
     };
 };
 
@@ -70,7 +72,7 @@ const listPublicTrips = async ({ page, limit } = {}, viewer = null) => {
         tripPlanRepository.listPublic((current - 1) * size, size),
         tripPlanRepository.countPublic(),
     ]);
-    return { message: "Get public trips successfully", page: current, limit: size, total, items: await postLikeService.decorate(viewer, items) };
+    return { message: "Get public trips successfully", page: current, limit: size, total, items: await savedPostService.decorate(viewer, await postLikeService.decorate(viewer, items)) };
 };
 
 // A signed-in user keeps a copy of a public trip: the copy is theirs and private, the

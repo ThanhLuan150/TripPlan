@@ -10,6 +10,7 @@ import {
 } from 'react-icons/ai';
 import {
   IoAirplaneOutline,
+  IoBookmarkOutline,
   IoChevronForward,
   IoLanguageOutline,
   IoLogOutOutline,
@@ -114,6 +115,15 @@ export default function ProfilePage() {
             <IoAirplaneOutline size={22} />
           </span>
           <span className="font-semibold text-slate-800">{t('profile.plans')}</span>
+        </Link>
+        <Link
+          to={routes.SavedPosts}
+          className="card col-span-2 flex items-center gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-md">
+          <span className="grid size-11 place-items-center rounded-xl bg-amber-50 text-amber-600">
+            <IoBookmarkOutline size={22} />
+          </span>
+          <span className="font-semibold text-slate-800">{t('profile.savedPosts')}</span>
+          <IoChevronForward size={16} className="ml-auto text-slate-400" />
         </Link>
         <Link
           to={routes.Preferences}

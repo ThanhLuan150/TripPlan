@@ -99,6 +99,39 @@ describe('ExplorePage', () => {
     });
   });
 
+  describe('saving', () => {
+    const page = {page: 1, limit: 12, total: 2, items: [{...card('a1', 'Đà Lạt 3 ngày'), saved: true}, card('b2', 'Huế 2 ngày')]};
+
+    it('shows a sign-in link on every plan to a signed-out visitor', async () => {
+      vi.mocked(tripsApi.listPublic).mockResolvedValue(page);
+      renderWithProviders(<ExplorePage />, {route: '/explore'});
+
+      await screen.findByText('Đà Lạt 3 ngày');
+      expect(screen.getAllByRole('link', {name: t('trips.savePost.signIn')})).toHaveLength(2);
+      expect(tripsApi.savePost).not.toHaveBeenCalled();
+    });
+
+    it('shows which plans the signed-in user saved and saves / unsaves one without leaving the list', async () => {
+      saveSession({message: 'ok', accessToken: 'a.b.c', data: {username: 'reader', role: 'user'}} as never);
+      vi.mocked(tripsApi.listPublic).mockResolvedValue(page);
+      vi.mocked(tripsApi.savePost).mockResolvedValue({saved: true});
+      vi.mocked(tripsApi.unsavePost).mockResolvedValue({saved: false});
+      renderWithProviders(<ExplorePage />, {route: '/explore'});
+
+      await screen.findByText('Đà Lạt 3 ngày');
+      const unsave = screen.getByRole('button', {name: t('trips.savePost.unsave')});
+      expect(unsave).toHaveAttribute('aria-pressed', 'true');
+
+      await userEvent.click(screen.getByRole('button', {name: t('trips.savePost.save')}));
+      expect(tripsApi.savePost).toHaveBeenCalledWith('b2');
+      await userEvent.click(unsave);
+      expect(tripsApi.unsavePost).toHaveBeenCalledWith('a1');
+
+      await waitFor(() => expect(screen.getByRole('button', {name: t('trips.savePost.unsave')})).toBeInTheDocument());
+      expect(screen.queryByTestId('location')).not.toBeInTheDocument();
+    });
+  });
+
   it('says so when nothing is public yet', async () => {
     vi.mocked(tripsApi.listPublic).mockResolvedValue({page: 1, limit: 12, total: 0, items: []});
     renderWithProviders(<ExplorePage />, {route: '/explore'});

@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, LikeState, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, LikeState, SaveState, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -107,10 +107,10 @@ export const tripsApi = {
   // public: a trip its owner made public (404 when private, deleted or unknown)
   // (carries the like state of the post: likesCount, and liked when signed in)
   getPublic: async (id: string): Promise<SharedTrip> => {
-    const {tripDatas, likesCount, liked} = (
-      await api.get<{tripDatas: SharedTrip} & Partial<LikeState>>(`/public-trip/${encodeURIComponent(id)}`)
+    const {tripDatas, likesCount, liked, saved} = (
+      await api.get<{tripDatas: SharedTrip} & Partial<LikeState> & Partial<SaveState>>(`/public-trip/${encodeURIComponent(id)}`)
     ).data;
-    return {...tripDatas, likesCount, liked};
+    return {...tripDatas, likesCount, liked, saved};
   },
 
   // public trips of everyone (cards only), newest first
@@ -127,6 +127,17 @@ export const tripsApi = {
 
   unlikePublic: async (id: string) =>
     (await api.delete<LikeState>(`/public-trip/${encodeURIComponent(id)}/like`)).data,
+
+  // save / unsave a public post to read later (signed in); both answer with the real state
+  savePost: async (id: string) =>
+    (await api.post<SaveState>(`/public-trip/${encodeURIComponent(id)}/save`)).data,
+
+  unsavePost: async (id: string) =>
+    (await api.delete<SaveState>(`/public-trip/${encodeURIComponent(id)}/save`)).data,
+
+  // the signed-in user's own saved posts (private list; deleted / no longer public posts are left out)
+  savedPosts: async (page: number) =>
+    (await api.get<PublicTripsPage>('/user/saved-posts', {params: {page}})).data,
 
   // favorites of the signed-in user (deleted trips are left out by the backend)
   favorites: async () =>

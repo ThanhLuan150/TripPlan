@@ -1,6 +1,7 @@
 import { Router } from "express";
 import publicTripController from "../controllers/publicTripController.js";
 import postLikeController from "../controllers/postLikeController.js";
+import savedPostController from "../controllers/savedPostController.js";
 import authenticate from "../middleware/auth.js";
 import optionalAuth from "../middleware/optionalAuth.js";
 import requireRole from "../middleware/requireRole.js";
@@ -18,5 +19,8 @@ router.post("/:id/copy", authenticate, requireRole("user", "admin"), logActivity
 
 router.post("/:id/like", authenticate, requireRole("user", "admin"), postLikeController.like);     // role: user|admin — like a public post (no duplicate, idempotent)
 router.delete("/:id/like", authenticate, requireRole("user", "admin"), postLikeController.unlike); // role: user|admin — remove the caller's own like (idempotent)
+
+router.post("/:id/save", authenticate, requireRole("user", "admin"), savedPostController.save);     // role: user|admin — save a public post to read later (no duplicate, idempotent)
+router.delete("/:id/save", authenticate, requireRole("user", "admin"), savedPostController.unsave); // role: user|admin — remove the caller's own saved post (idempotent)
 
 export default router;

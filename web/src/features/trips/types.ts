@@ -42,6 +42,8 @@ export interface PublicTripCard {
   // likes of the post and whether the signed-in viewer liked it
   likesCount?: number;
   liked?: boolean;
+  // whether the signed-in viewer saved the post (read later)
+  saved?: boolean;
   nameTrip?: string;
   location: string;
   startDate: string;
@@ -75,6 +77,11 @@ export interface LikeState {
   likesCount: number;
 }
 
+// What save / unsave answers: the real state after the change
+export interface SaveState {
+  saved: boolean;
+}
+
 export type TripVisibility = 'public' | 'private';
 
 export interface ShareStatus {
@@ -89,6 +96,7 @@ export interface SharedTrip {
   // like state of a public post (not present on a share link)
   likesCount?: number;
   liked?: boolean;
+  saved?: boolean;
   nameTrip?: string;
   location: string;
   startDate: string;

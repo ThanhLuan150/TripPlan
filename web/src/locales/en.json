@@ -395,13 +395,23 @@
       "notExpense": "This is an estimate made by AI. It is not what you actually spent and it is not saved as an expense.",
       "travelers": "Number of people",
       "level": "Spending level",
-      "levels": {"budget": "Budget", "moderate": "Moderate", "premium": "Premium"},
+      "levels": {
+        "budget": "Budget",
+        "moderate": "Moderate",
+        "premium": "Premium"
+      },
       "estimate": "Estimate budget",
       "reestimate": "Estimate again",
       "loading": "The AI is estimating your budget…",
       "empty": "No estimate yet. Choose the number of people and a spending level, then ask the AI.",
       "travelersInvalid": "Enter a whole number of people from 1 to {{max}}",
-      "categories": {"accommodation": "Accommodation", "food": "Food & drink", "transport": "Transport", "activities": "Activities & tickets", "other": "Other"},
+      "categories": {
+        "accommodation": "Accommodation",
+        "food": "Food & drink",
+        "transport": "Transport",
+        "activities": "Activities & tickets",
+        "other": "Other"
+      },
       "total": "Estimated total",
       "assumptions": "Assumptions",
       "forPeople": "For {{count}} people, {{level}}",
@@ -520,6 +530,20 @@
       "places_other": "{{count}} places",
       "you": "You are here",
       "myLocation": "My location"
+    },
+    "savePost": {
+      "save": "Save",
+      "unsave": "Remove from saved",
+      "signIn": "Sign in to bookmark this plan for later",
+      "failed": "Could not update your saved posts",
+      "unavailable": "This plan is no longer available"
+    },
+    "saved": {
+      "title": "Saved posts",
+      "subtitle": "Public plans you saved to read later. Only you can see this list.",
+      "empty": "You have not saved any plan yet. Tap the bookmark on a plan in Explore to keep it here.",
+      "error": "Could not load your saved posts",
+      "goExplore": "Explore plans"
     }
   },
   "destinations": {
@@ -690,7 +714,8 @@
         "empty": "Choose at least one group or write a note",
         "notesLong": "The note is too long (300 characters at most)"
       }
-    }
+    },
+    "savedPosts": "Saved posts"
   },
   "videos": {
     "title": "Travel videos",

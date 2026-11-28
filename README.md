@@ -238,7 +238,7 @@ services/        logic nghiệp vụ (đăng ký/đăng nhập, gọi Gemini, l�
                  adminService: người dùng + số liệu, contentService: video / thông báo / cài đặt / báo cáo nội dung, activityLogService)
 repositories/    toàn bộ truy vấn Mongoose
 models/          schema Mongoose (User, TripPlan, TripDay, Challenge, UserChallengeProgress, ChatAi, Question, Response, Notification,
-                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow, PostLike)
+                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow, PostLike, SavedPost)
 middleware/      auth (JWT + tự cấp lại access token), requireRole, ownership (chủ sở hữu trip/chat/challenge), logActivity (ghi nhật ký), errorHandler
 seed/            seedAdmin, seedSampleData, index.js (chạy bằng npm run seed / seed:sample)
 utils/           jwt, mailer, gemini, geocode (HERE), HttpError, asyncHandler, ...
@@ -266,6 +266,7 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 | `POST /trip-plan/:id/places` | user, admin; `:id` phải là kế hoạch của mình (thêm một địa điểm vào một ngày) |
 | `GET /public-trip`, `GET /public-trip/:id`, `GET /shared/:token` | public, chỉ đọc |
 | `POST /public-trip/:id/copy`, `POST|DELETE /public-trip/:id/like` | user, admin; like / unlike bằng chính tài khoản đăng nhập (bài riêng tư / đã xóa -> 404) |
+| `POST|DELETE /public-trip/:id/save`, `GET /user/saved-posts` | user, admin; lưu / bỏ lưu bằng chính tài khoản đăng nhập, danh sách đã lưu **riêng tư** (không có tham số user id, người khác không xem được) |
 | `/challenge/*` | user, admin; `chaId` phải thuộc kế hoạch của mình |
 
 ### Sao chép chuyến đi (Duplicate Trip)
@@ -329,6 +330,8 @@ Mỗi kế hoạch có `visibility`: `private` (mặc định, chỉ chủ sở 
 | `GET /public-trip/:id` | **Công khai**, chỉ đọc, kèm `likesCount` và `liked`. Kế hoạch riêng tư / đã xoá / không tồn tại đều trả 404 |
 | `POST /public-trip/:id/copy` | user, admin: lưu bản sao riêng của một kế hoạch công khai (ghi nhật ký `createTrip`) |
 | `POST /public-trip/:id/like`, `DELETE /public-trip/:id/like` | user, admin: thích / bỏ thích một bài công khai (idempotent, không trùng). Xem mục Like Post |
+| `POST /public-trip/:id/save`, `DELETE /public-trip/:id/save` | user, admin: lưu / bỏ lưu một bài công khai để xem lại sau (idempotent, không trùng). Xem mục Save Post |
+| `GET /user/saved-posts?page&limit` | user, admin: danh sách bài đã lưu **của chính mình**, mới lưu trước. Xem mục Save Post |
 
 - Người xem chỉ thấy kế hoạch (qua whitelist trường): không thấy chủ sở hữu, tiến độ, ảnh check-in hay ghi chú.
 - Web: nút đổi chế độ ở trang chi tiết, mục "Khám phá" trên thanh điều hướng chính, giữa Trợ lý và Xếp hạng (`/explore`; địa chỉ cũ `/assistant/explore` tự chuyển sang), và trang `/trip/:id`. Mobile: nút ở màn chi tiết, tab "Khám phá" (giữa Trợ lý và Xếp hạng) là danh sách kế hoạch công khai.
@@ -478,6 +481,20 @@ Trong cộng đồng, **bài viết = kế hoạch công khai** (`visibility: "p
 - **Phân quyền / lỗi:** chỉ user / admin đã đăng nhập mới Like / Unlike (chưa đăng nhập hoặc tài khoản bị khóa -> **401**). Bài riêng tư, đã xóa, không tồn tại hoặc `:id` sai định dạng -> **404**, không ghi gì. Bỏ thích một bài đã bị xóa / chuyển riêng tư vẫn xóa dòng like (dọn dữ liệu) rồi trả 404.
 - **UX (web `LikeButton` trong `ExplorePage` và `PublicTripPage`, mobile `LikeButton` trong `PublicTrips` và `PublicTripDetail`):** nút trái tim hiện trạng thái hiện tại (`aria-pressed`) và tổng lượt Like; sau khi bấm hiển thị đúng số server trả về; nút bị khóa trong lúc request chạy nên không gửi trùng; khách chưa đăng nhập thấy tổng và đường dẫn đăng nhập; lỗi (bài không còn, mất mạng) giữ nguyên trạng thái và hiện thông báo.
 
+### Lưu bài viết (Save Post, COMMUNITY-004)
+
+**Bài viết = kế hoạch công khai** như ở Like Post (chưa có model Post riêng). Lưu bài là "đánh dấu để xem lại sau", **riêng tư của từng tài khoản**, khác với "Lưu về kế hoạch của tôi" (`/copy`, tạo bản sao kế hoạch) và khác Favorite Trip (chỉ cho kế hoạch của chính mình). Ticket này **không** làm Like Post (đã có ở COMMUNITY-003).
+
+- Dữ liệu: model `SavedPost` = `{ userId, tripId, createdAt }`, **mỗi bài đã lưu một dòng**. Chỉ mục **unique** `(userId, tripId)` nên không thể lưu trùng, kể cả khi nhiều request chạy song song (`savedPostRepository.add` dùng upsert và coi lỗi trùng khóa E11000 là "đã lưu"). Chỉ mục `(userId, createdAt)` cho danh sách "mới lưu trước".
+- `POST /public-trip/:id/save`: lưu bài, trả `{ message, saved: true }`. Lưu lần nữa vẫn 200 và không tạo dòng mới.
+- `DELETE /public-trip/:id/save`: bỏ lưu (idempotent), trả `{ message, saved: false }`. Chỉ xóa dòng của chính mình (`userId` luôn lấy từ token, bỏ qua `userId` do client gửi).
+- `GET /user/saved-posts?page&limit` (mặc định 12, tối đa 50 mỗi trang): danh sách thẻ bài đã lưu **của chính người gọi**, bài mới lưu đứng đầu, mỗi thẻ có `saved: true`, kèm `{ page, limit, total }`. Route **không nhận user id** (query / params / body đều bị bỏ qua) nên không có cách xem danh sách của người khác; trả `Cache-Control: no-store`.
+- **Bài bị xóa hoặc không còn công khai:** không hiện trong danh sách (không đếm vào `total`). Dòng đã lưu **không bị xóa**, nên bài hiện lại nếu chủ chuyển về công khai. Lưu một bài riêng tư / đã xóa / không tồn tại / `:id` sai định dạng -> **404**, không ghi gì. Bỏ lưu một bài đã bị xóa / chuyển riêng tư vẫn xóa dòng đã lưu (dọn dữ liệu) rồi trả 404.
+- `GET /public-trip` (mỗi thẻ) và `GET /public-trip/:id` có thêm `saved` (chỉ đúng khi gửi token hợp lệ; khách chưa đăng nhập luôn thấy `saved: false`).
+- **Phân quyền / lỗi:** chỉ user / admin đã đăng nhập mới Lưu / Bỏ lưu / xem danh sách (chưa đăng nhập, token sai hoặc tài khoản bị khóa -> **401**).
+- **UX:** web `SaveButton` (nút dấu trang, `aria-pressed`) trong `ExplorePage` và `PublicTripPage`, khu vực **Bài viết đã lưu** là trang `/saved` (`SavedPostsPage`, mở từ trang Tài khoản); mobile `SaveButton` trong `PublicTrips` và `PublicTripDetail`, màn `SavedPosts` (mở từ Tài khoản). Nút hiển thị trạng thái server trả về và bị khóa trong lúc request chạy (không gửi trùng); khách chưa đăng nhập thấy đường dẫn đăng nhập; danh sách có **trạng thái trống** (kèm nút sang Khám phá) và **trạng thái lỗi** (web có nút Thử lại); bỏ lưu trong danh sách làm bài biến mất ngay; lỗi (bài không còn, mất mạng) giữ nguyên trạng thái và hiện thông báo.
+- **Test:** backend unit (model, repository, service, controller) + `integration/savedPost.test.js` (CRUD, phân quyền, danh sách riêng tư, bài bị xóa / riêng tư, phân trang); web `SaveButton`, `SavedPostsPage`, `ExplorePage`, `PublicTripPage`, `featureApis`; mobile `savedPosts.test.tsx`, `publicTrips`, `apiModule`; Cypress `automation/backend/.../savedPost.cy.ts` và `automation/web/.../community/savedPosts.cy.ts`.
+
 ### Quy ước khi triển khai một ticket mới
 
 Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:
@@ -489,7 +506,7 @@ Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, 
 5. **Trước khi báo xong:** chạy `npx vitest run` (backend và web, web thêm `npx tsc -b` và `npx eslint src`), `npx jest` (mobile). Lỗi `tsc` / eslint có sẵn ở mobile `RootNavigator.tsx` và `TripDetail.tsx` không thuộc ticket.
 6. **Cập nhật README này:** thêm mục mô tả tính năng (endpoint, quyền, giới hạn, hành vi khi lỗi, nơi hiển thị trên web / mobile) và cập nhật danh sách model / bảng phân quyền.
 
-Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002), Like Post (COMMUNITY-003).
+Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002), Like Post (COMMUNITY-003), Save Post (COMMUNITY-004).
 
 ### API quản trị — `/admin/*` (role admin)
 

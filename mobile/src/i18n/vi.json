@@ -308,6 +308,15 @@
     "like": "Thích",
     "unlike": "Bỏ thích",
     "likeFailed": "Không cập nhật được lượt thích",
+    "savePost": "Lưu bài viết",
+    "unsavePost": "Bỏ lưu",
+    "savePostFailed": "Không cập nhật được bài viết đã lưu",
+    "savedTitle": "Bài viết đã lưu",
+    "savedSubtitle": "Các kế hoạch công khai bạn đã lưu để xem lại sau. Chỉ mình bạn thấy danh sách này.",
+    "savedEmpty": "Bạn chưa lưu kế hoạch nào. Nhấn biểu tượng đánh dấu ở một kế hoạch trong Khám phá để lưu lại đây.",
+    "savedError": "Không tải được bài viết đã lưu",
+    "savedMore": "Xem thêm",
+    "savedExplore": "Khám phá kế hoạch",
     "publicSaveFailed": "Không lưu được kế hoạch này"
   },
   "recommend": {
@@ -541,6 +550,7 @@
     "titleLegend": "Nhà thám hiểm siêu phàm"
   },
   "profile": {
+    "savedPosts": "Bài viết đã lưu",
     "edit": "Chỉnh sửa",
     "notifications": "Thông báo",
     "plans": "Kế hoạch",

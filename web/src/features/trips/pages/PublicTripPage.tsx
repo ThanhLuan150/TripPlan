@@ -8,6 +8,7 @@ import {getUser} from '@/features/auth/store/session';
 import {connectionErrorKey} from '@/lib/apiClient';
 import {tripsApi} from '../api/tripsApi';
 import LikeButton from '../components/LikeButton';
+import SaveButton from '../components/SaveButton';
 import {ReadOnlyTripPage} from './SharedTripPage';
 
 // Public, read only page of a trip its owner made public (no sign-in needed). A private,
@@ -57,6 +58,7 @@ export default function PublicTripPage() {
             likesCount={trip.likesCount}
             className="bg-white/20 text-white hover:bg-white/30"
           />
+          <SaveButton tripId={id!} saved={trip.saved} className="bg-white/20 text-white hover:bg-white/30" />
           {saveAction}
         </>
       )}

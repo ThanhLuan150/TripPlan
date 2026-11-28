@@ -148,6 +148,21 @@ describe('tripsApi', () => {
     expect(del).toHaveBeenCalledWith('/public-trip/7/like');
   });
 
+  it('public posts: detail carries the saved state, save / unsave / list use the save routes', async () => {
+    get.mockResolvedValueOnce(reply({tripDatas: {location: 'x'}, likesCount: 3, liked: true, saved: true}));
+    post.mockResolvedValue(reply({saved: true}));
+    del.mockResolvedValue(reply({saved: false}));
+    await expect(tripsApi.getPublic('7')).resolves.toEqual({location: 'x', likesCount: 3, liked: true, saved: true});
+    await expect(tripsApi.savePost('7')).resolves.toEqual({saved: true});
+    await expect(tripsApi.unsavePost('7')).resolves.toEqual({saved: false});
+    expect(post).toHaveBeenCalledWith('/public-trip/7/save');
+    expect(del).toHaveBeenCalledWith('/public-trip/7/save');
+
+    get.mockResolvedValueOnce(reply({page: 2, limit: 12, total: 13, items: [{_id: '7'}]}));
+    await expect(tripsApi.savedPosts(2)).resolves.toEqual({page: 2, limit: 12, total: 13, items: [{_id: '7'}]});
+    expect(get).toHaveBeenLastCalledWith('/user/saved-posts', {params: {page: 2}});
+  });
+
   it('share: status, enable and disable use the share route', async () => {
     const on = {isShared: true, permission: 'view', shareToken: 'tok', shareUrl: null, sharedAt: null};
     get.mockResolvedValue(reply(on));

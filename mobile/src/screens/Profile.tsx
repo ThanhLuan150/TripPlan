@@ -121,6 +121,17 @@ export default function Profile() {
 
       <View style={[styles.card, shadow]}>
         <Row
+          icon={
+            <Ionicons
+              name="bookmark-outline"
+              size={20}
+              color={colors.primaryDark}
+            />
+          }
+          label={t('profile.savedPosts')}
+          onPress={() => navigation.navigate('SavedPosts')}
+        />
+        <Row
           icon={<Ionicons name="sparkles-outline" size={20} color={colors.primaryDark} />}
           label={t('profile.preferences.link')}
           onPress={() => navigation.navigate('Preferences')}

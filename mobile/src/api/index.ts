@@ -191,16 +191,26 @@ export const tripsApi = {
   // one public trip, read only (404: private, deleted or unknown)
   // (carries the like state of the post: likesCount and liked)
   getPublic: async (id: string): Promise<PublicTrip> => {
-    const {tripDatas, likesCount, liked} = (
-      await api.get<{tripDatas: PublicTrip} & Partial<LikeState>>(`/public-trip/${id}`)
+    const {tripDatas, likesCount, liked, saved} = (
+      await api.get<{tripDatas: PublicTrip} & Partial<LikeState> & Partial<SaveState>>(
+        `/public-trip/${id}`,
+      )
     ).data;
-    return {...tripDatas, likesCount, liked};
+    return {...tripDatas, likesCount, liked, saved};
   },
   // like / unlike a public post; both answer with the real state
   likePublic: async (id: string) =>
     (await api.post<LikeState>(`/public-trip/${id}/like`)).data,
   unlikePublic: async (id: string) =>
     (await api.delete<LikeState>(`/public-trip/${id}/like`)).data,
+  // save / unsave a public post to read later; both answer with the real state
+  savePost: async (id: string) =>
+    (await api.post<SaveState>(`/public-trip/${id}/save`)).data,
+  unsavePost: async (id: string) =>
+    (await api.delete<SaveState>(`/public-trip/${id}/save`)).data,
+  // the user's own saved posts (private list; deleted / no longer public posts are left out)
+  savedPosts: async (page: number) =>
+    (await api.get<PublicTripsPage>('/user/saved-posts', {params: {page}})).data,
   // keep a private copy of a public trip (signed in)
   copyPublic: async (id: string) =>
     (await api.post<{tripId: string; nameTrip: string}>(`/public-trip/${id}/copy`)).data,
@@ -442,11 +452,17 @@ export interface LikeState {
   liked: boolean;
   likesCount: number;
 }
+// What save / unsave answers: the real state after the change
+export interface SaveState {
+  saved: boolean;
+}
 export interface PublicTripCard {
   _id: string;
   // likes of the post and whether the signed-in user liked it
   likesCount?: number;
   liked?: boolean;
+  // whether the signed-in user saved the post (read later)
+  saved?: boolean;
   nameTrip?: string;
   location: string;
   startDate: string;

@@ -21,6 +21,9 @@ vi.mock("../../src/repositories/chatRepository.js", () => ({ default: {} }));
 vi.mock("../../src/repositories/postLikeRepository.js", () => ({
     default: { add: vi.fn(), remove: vi.fn(), exists: vi.fn(), countByTrip: vi.fn(), countByTrips: vi.fn(), likedTripIds: vi.fn() },
 }));
+vi.mock("../../src/repositories/savedPostRepository.js", () => ({
+    default: { exists: vi.fn(), savedTripIds: vi.fn() },
+}));
 vi.mock("../../src/services/activityLogService.js", () => ({ default: { record: vi.fn() } }));
 
 const { default: app } = await import("../../src/app.js");
@@ -29,6 +32,7 @@ const { default: userRepository } = await import("../../src/repositories/userRep
 const { default: tripPlanRepository } = await import("../../src/repositories/tripPlanRepository.js");
 const { default: tripDayRepository } = await import("../../src/repositories/tripDayRepository.js");
 const { default: postLikeRepository } = await import("../../src/repositories/postLikeRepository.js");
+const { default: savedPostRepository } = await import("../../src/repositories/savedPostRepository.js");
 const { generateAccessToken, generateRefreshToken } = await import("../../src/utils/jwt.js");
 
 const USER = "64b000000000000000000001";
@@ -66,6 +70,8 @@ beforeEach(() => {
     postLikeRepository.countByTrips.mockImplementation(async (ids) =>
         Object.fromEntries(ids.map((t) => [String(t), [...likes].filter((l) => l.endsWith(`>${t}`)).length])));
     postLikeRepository.likedTripIds.mockImplementation(async (u, ids) => ids.filter((t) => likes.has(`${u}>${t}`)).map(String));
+    savedPostRepository.exists.mockResolvedValue(false);
+    savedPostRepository.savedTripIds.mockResolvedValue([]);
 });
 
 describe("like endpoints", () => {

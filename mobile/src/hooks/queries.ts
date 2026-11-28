@@ -24,6 +24,7 @@ export const queryKeys = {
   tripNotes: (id: string) => ['tripNotes', id] as const,
   tripBudget: (id: string) => ['tripBudget', id] as const,
   publicTrips: ['publicTrips'] as const,
+  savedPosts: ['savedPosts'] as const,
   destinationHistory: ['destinationHistory'] as const,
   publicTrip: (id: string) => ['publicTrip', id] as const,
   notifications: ['notifications'] as const,
@@ -87,6 +88,16 @@ export const usePublicTrips = () =>
   useInfiniteQuery({
     queryKey: queryKeys.publicTrips,
     queryFn: ({pageParam}) => tripsApi.listPublic(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: last =>
+      last.page * last.limit < last.total ? last.page + 1 : undefined,
+  });
+
+// The user's own saved posts (private list), newest save first
+export const useSavedPosts = () =>
+  useInfiniteQuery({
+    queryKey: queryKeys.savedPosts,
+    queryFn: ({pageParam}) => tripsApi.savedPosts(pageParam),
     initialPageParam: 1,
     getNextPageParam: last =>
       last.page * last.limit < last.total ? last.page + 1 : undefined,
