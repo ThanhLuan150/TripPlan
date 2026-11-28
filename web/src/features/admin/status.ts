@@ -88,6 +88,9 @@ export const logActionLabel: Record<LogAction, string> = {
   manageShowcase: 'admin.activityLogs.actions.manageShowcase',
   manageAnnouncement: 'admin.activityLogs.actions.manageAnnouncement',
   moderate: 'admin.activityLogs.actions.moderate',
+  removePost: 'admin.activityLogs.actions.removePost',
+  revokeShare: 'admin.activityLogs.actions.revokeShare',
+  deleteReview: 'admin.activityLogs.actions.deleteReview',
   updateSettings: 'admin.activityLogs.actions.updateSettings',
 };
 
@@ -96,6 +99,7 @@ export const moderationTypeLabel: Record<ModerationType, string> = {
   chatMessage: 'admin.moderation.types.chatMessage',
   profile: 'admin.moderation.types.profile',
   video: 'admin.moderation.types.video',
+  post: 'admin.moderation.types.post',
 };
 
 export const moderationReasonLabel: Record<ModerationReason, string> = {
@@ -103,6 +107,8 @@ export const moderationReasonLabel: Record<ModerationReason, string> = {
   inappropriate: 'admin.moderation.reasons.inappropriate',
   wrongLocation: 'admin.moderation.reasons.wrongLocation',
   copyright: 'admin.moderation.reasons.copyright',
+  misinformation: 'admin.moderation.reasons.misinformation',
+  other: 'admin.moderation.reasons.other',
 };
 
 export const permissionLabel: Record<Permission, string> = {

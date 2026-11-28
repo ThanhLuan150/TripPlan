@@ -180,7 +180,7 @@ describe('status maps', () => {
       {value: 'admin', label: t('admin.roles.admin')},
       {value: 'user', label: t('admin.roles.user')},
     ]);
-    expect(optionsOf(moderationTypeLabel, t).map(o => o.value)).toEqual(['challengePhoto', 'chatMessage', 'profile', 'video']);
+    expect(optionsOf(moderationTypeLabel, t).map(o => o.value)).toEqual(['challengePhoto', 'chatMessage', 'profile', 'video', 'post']);
     expect(optionsOf(moderationTypeLabel, t)[0].label).toBe(t('admin.moderation.types.challengePhoto'));
   });
 
@@ -201,10 +201,10 @@ describe('status maps', () => {
 });
 
 describe('navigation', () => {
-  it('lists the 13 admin pages once each', () => {
+  it('lists the 14 admin pages once each', () => {
     const items = adminNav.flatMap(group => group.items);
-    expect(items).toHaveLength(13);
-    expect(new Set(items.map(item => item.to)).size).toBe(13);
+    expect(items).toHaveLength(14);
+    expect(new Set(items.map(item => item.to)).size).toBe(14);
     expect(items.every(item => item.to.startsWith('/admin/'))).toBe(true);
   });
 

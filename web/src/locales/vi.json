@@ -469,7 +469,15 @@
       "pagination": "Phân trang",
       "prev": "Trước",
       "next": "Sau",
-      "page": "Trang {{page}} / {{pages}}"
+      "page": "Trang {{page}} / {{pages}}",
+      "searchLabel": "Tìm kiếm kế hoạch",
+      "searchPlaceholder": "Tìm theo tên, địa điểm hoặc mô tả",
+      "clearSearch": "Xóa từ khóa",
+      "searchHint": "Tối đa {{max}} ký tự",
+      "results": "Kết quả cho \"{{q}}\": {{count}}",
+      "noResults": "Không tìm thấy kế hoạch nào cho \"{{q}}\".",
+      "noResultsHint": "Hãy kiểm tra chính tả hoặc thử từ khóa khác.",
+      "searchFailed": "Không thể tìm kiếm kế hoạch."
     },
     "like": {
       "like": "Thích",
@@ -486,7 +494,10 @@
       "signInToSave": "Đăng nhập để lưu kế hoạch này",
       "readOnly": "Kế hoạch công khai · chỉ xem",
       "invalidTitle": "Không xem được kế hoạch này",
-      "invalidText": "Kế hoạch không tồn tại hoặc chủ sở hữu đã chuyển sang riêng tư."
+      "invalidText": "Kế hoạch không tồn tại hoặc chủ sở hữu đã chuyển sang riêng tư.",
+      "authorNote": "Lời giới thiệu của tác giả",
+      "reviewsLink": "Đánh giá về {{place}}",
+      "sharedOn": "Đã chia sẻ ngày {{date}}"
     },
     "shared": {
       "readOnly": "Kế hoạch được chia sẻ · chỉ xem",
@@ -542,6 +553,63 @@
       "empty": "Bạn chưa lưu kế hoạch nào. Nhấn biểu tượng đánh dấu ở một kế hoạch trong Khám phá để lưu lại đây.",
       "error": "Không tải được bài viết đã lưu",
       "goExplore": "Khám phá kế hoạch"
+    },
+    "post": {
+      "open": "Đăng bài",
+      "openLabel": "Chia sẻ kế hoạch này thành bài viết",
+      "title": "Chia sẻ thành bài viết",
+      "subtitle": "Đăng kế hoạch này lên Cộng đồng du lịch để mọi người cùng xem.",
+      "contentLabel": "Lời giới thiệu (không bắt buộc)",
+      "contentPlaceholder": "Chia sẻ đôi điều về chuyến đi này...",
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "Lời giới thiệu tối đa {{max}} ký tự.",
+      "notice": "Đăng bài sẽ đặt kế hoạch ở chế độ công khai (chỉ xem). Ghi chú, ảnh check-in và thông tin tài khoản của bạn không bao giờ được hiển thị.",
+      "posted": "Kế hoạch này đang được chia sẻ thành bài viết.",
+      "notPosted": "Kế hoạch này đang riêng tư. Chỉ mình bạn xem được.",
+      "share": "Đăng bài",
+      "update": "Cập nhật bài viết",
+      "saving": "Đang lưu...",
+      "remove": "Xóa bài viết",
+      "removing": "Đang xóa...",
+      "removeTitle": "Xóa bài viết này?",
+      "removeText": "Kế hoạch sẽ trở về riêng tư và bài viết biến mất khỏi cộng đồng. Kế hoạch của bạn không bị xóa.",
+      "removeAction": "Đồng ý xóa",
+      "shared": "Kế hoạch của bạn đã thành bài viết",
+      "updated": "Đã cập nhật bài viết",
+      "removed": "Đã xóa bài viết, kế hoạch trở về riêng tư",
+      "noDays": "Hãy thêm ít nhất một ngày vào kế hoạch trước khi chia sẻ.",
+      "failed": "Không thể chia sẻ kế hoạch.",
+      "removeFailed": "Không thể xóa bài viết.",
+      "loadFailed": "Không thể tải trạng thái bài viết.",
+      "viewPost": "Mở bài viết"
+    },
+    "report": {
+      "open": "Báo cáo",
+      "title": "Báo cáo bài viết",
+      "subtitle": "Cho chúng tôi biết bài viết này có vấn đề gì. Báo cáo được giữ kín: tác giả không bao giờ biết ai đã gửi.",
+      "reasonLabel": "Lý do",
+      "reasons": {
+        "spam": "Spam hoặc quảng cáo",
+        "inappropriate": "Nội dung không phù hợp",
+        "wrongLocation": "Địa điểm sai hoặc gây hiểu nhầm",
+        "copyright": "Vi phạm bản quyền",
+        "misinformation": "Thông tin sai sự thật",
+        "other": "Lý do khác"
+      },
+      "descriptionLabel": "Mô tả chi tiết",
+      "descriptionOptional": "Mô tả chi tiết (không bắt buộc)",
+      "descriptionPlaceholder": "Thêm thông tin giúp chúng tôi xem xét bài viết",
+      "descriptionRequired": "Vui lòng mô tả vấn đề.",
+      "tooLong": "Mô tả tối đa {{max}} ký tự.",
+      "submit": "Gửi báo cáo",
+      "sending": "Đang gửi...",
+      "success": "Đã gửi báo cáo",
+      "successText": "Cảm ơn bạn. Chúng tôi sẽ xem xét bài viết này. Tác giả không biết ai đã báo cáo.",
+      "duplicate": "Bạn đã báo cáo bài viết này rồi.",
+      "own": "Bạn không thể báo cáo bài viết của chính mình.",
+      "unavailable": "Bài viết này không còn khả dụng.",
+      "failed": "Không thể gửi báo cáo.",
+      "signIn": "Đăng nhập để báo cáo bài viết này"
     }
   },
   "destinations": {
@@ -817,7 +885,8 @@
       "activityLogs": "Nhật ký hoạt động",
       "roles": "Vai trò & quyền",
       "settings": "Cài đặt",
-      "home": "Trang chủ app"
+      "home": "Trang chủ app",
+      "reviews": "Đánh giá"
     },
     "layout": {
       "home": "Quản trị",
@@ -845,7 +914,7 @@
       "status": "Trạng thái",
       "allStatuses": "Mọi trạng thái",
       "refresh": "Làm mới",
-      "export": "Xuất dữ liệu",
+      "export": "Xuất PDF",
       "delete": "Xóa",
       "viewItem": "Xem {{name}}",
       "editItem": "Sửa {{name}}",
@@ -906,7 +975,9 @@
         "users": "Người dùng",
         "trips": "Kế hoạch chuyến đi",
         "challengesCompleted": "Thử thách hoàn thành",
-        "aiChats": "Cuộc trò chuyện AI"
+        "aiChats": "Cuộc trò chuyện AI",
+        "posts": "Bài viết cộng đồng",
+        "reviews": "Đánh giá địa điểm"
       },
       "newUsers": "Người dùng mới",
       "newUsersHint": "Số tài khoản đăng ký mỗi tháng, 12 tháng gần nhất",
@@ -920,7 +991,7 @@
     "users": {
       "title": "Quản lý người dùng",
       "description": "Quản lý tài khoản và hoạt động của người dùng Aloca.",
-      "exportUsers": "Xuất người dùng",
+      "exportUsers": "Xuất người dùng (PDF)",
       "search": "Tìm theo tên hoặc email",
       "allRoles": "Mọi vai trò",
       "registrationDate": "Ngày đăng ký",
@@ -955,7 +1026,11 @@
         "completedTrips": "Chuyến đi hoàn thành",
         "challengesJoined": "Thử thách đã tham gia",
         "points": "Tổng điểm",
-        "aiConversations": "Cuộc trò chuyện AI"
+        "aiConversations": "Cuộc trò chuyện AI",
+        "posts": "Bài viết",
+        "reviews": "Đánh giá",
+        "followers": "Người theo dõi",
+        "following": "Đang theo dõi"
       },
       "columns": {
         "user": "Người dùng",
@@ -1002,7 +1077,7 @@
       "bulk": {
         "label": "Thao tác hàng loạt",
         "selected": "Đã chọn {{count}} người dùng",
-        "export": "Xuất đã chọn",
+        "export": "Xuất đã chọn (PDF)",
         "suspend": "Khóa đã chọn",
         "reactivate": "Mở khóa đã chọn",
         "clear": "Bỏ chọn"
@@ -1109,7 +1184,8 @@
         "exported": "Đã xuất {{count}} người dùng",
         "created": "Đã tạo tài khoản"
       },
-      "add": "Thêm người dùng"
+      "add": "Thêm người dùng",
+      "community": "Cộng đồng"
     },
     "trips": {
       "title": "Chuyến đi",
@@ -1123,12 +1199,32 @@
         "dates": "Khởi hành",
         "challenges": "Thử thách",
         "cost": "Tổng chi phí",
-        "status": "Trạng thái"
+        "status": "Trạng thái",
+        "visibility": "Cộng đồng",
+        "activity": "Thích / lưu"
       },
       "days": "{{count}} ngày",
       "deleteTitle": "Xóa chuyến đi?",
       "deleteText": "Kế hoạch \"{{name}}\" sẽ bị ẩn khỏi danh sách của người dùng.",
-      "deleted": "Đã xóa chuyến đi \"{{name}}\""
+      "deleted": "Đã xóa chuyến đi \"{{name}}\"",
+      "visibility": {
+        "public": "Bài viết",
+        "private": "Riêng tư"
+      },
+      "visibilityFilter": "Cộng đồng",
+      "allVisibility": "Tất cả kế hoạch",
+      "activityValue": "{{likes}} thích · {{saves}} lưu",
+      "unpublish": "Gỡ bài viết",
+      "unpublishItem": "Gỡ bài viết {{name}}",
+      "unpublishTitle": "Gỡ bài viết này?",
+      "unpublishText": "\"{{name}}\" sẽ về riêng tư: rời khỏi cộng đồng và link chia sẻ ngừng hoạt động. Kế hoạch vẫn được giữ cho chủ sở hữu.",
+      "unpublished": "Đã gỡ bài viết: {{name}}",
+      "sharedLink": "Đang bật link chia sẻ",
+      "revokeItem": "Tắt link chia sẻ của {{name}}",
+      "revokeTitle": "Tắt link chia sẻ này?",
+      "revokeText": "Link của \"{{name}}\" sẽ ngừng hoạt động vĩnh viễn. Chủ sở hữu có thể chia sẻ lại và sẽ có link mới.",
+      "revoke": "Tắt link",
+      "revoked": "Đã tắt link chia sẻ: {{name}}"
     },
     "challenges": {
       "title": "Thử thách",
@@ -1185,6 +1281,13 @@
         "response": "Phản hồi TB",
         "updated": "Cập nhật",
         "status": "Trạng thái"
+      },
+      "tools": "Các công cụ AI khác",
+      "features": {
+        "destinationSearches": "Lượt gợi ý điểm đến",
+        "plansFromSuggestions": "Kế hoạch tạo từ gợi ý",
+        "budgetEstimates": "Ước tính ngân sách",
+        "usersWithPreferences": "Tài khoản đã đặt sở thích du lịch"
       }
     },
     "videos": {
@@ -1268,7 +1371,9 @@
         "newUsers": "Người dùng mới",
         "tripsCreated": "Kế hoạch được tạo",
         "completionRate": "Tỉ lệ hoàn thành thử thách",
-        "avgTripCost": "Chi phí TB mỗi chuyến"
+        "avgTripCost": "Chi phí TB mỗi chuyến",
+        "postsShared": "Bài viết đã đăng",
+        "newReviews": "Đánh giá mới"
       },
       "tripsCreated": "Kế hoạch được tạo",
       "byProvince": "Theo tỉnh thành",
@@ -1289,13 +1394,16 @@
         "challengePhoto": "Ảnh thử thách",
         "chatMessage": "Tin nhắn",
         "profile": "Hồ sơ",
-        "video": "Video"
+        "video": "Video",
+        "post": "Bài viết cộng đồng"
       },
       "reasons": {
         "spam": "Spam",
         "inappropriate": "Không phù hợp",
         "wrongLocation": "Sai vị trí",
-        "copyright": "Bản quyền"
+        "copyright": "Bản quyền",
+        "misinformation": "Thông tin sai sự thật",
+        "other": "Lý do khác"
       },
       "approve": "Duyệt",
       "reject": "Từ chối",
@@ -1307,7 +1415,12 @@
       "rejectText": "Nội dung sẽ bị ẩn và người đăng sẽ nhận được thông báo.",
       "emptyTitle": "Không có nội dung chờ duyệt",
       "approved": "Đã duyệt nội dung",
-      "rejected": "Đã từ chối nội dung"
+      "rejected": "Đã từ chối nội dung",
+      "openPost": "Mở bài viết",
+      "reporterNote": "Ghi chú của người báo cáo",
+      "rejectPostText": "Bài viết bị báo cáo sẽ được gỡ: kế hoạch về riêng tư và rời khỏi cộng đồng. Kế hoạch vẫn được giữ cho chủ sở hữu.",
+      "approvePostText": "Bài viết được giữ lại trong cộng đồng. Người báo cáo không thể báo cáo lại bài này.",
+      "rejectedPostRemoved": "Đã từ chối báo cáo, bài viết đã được gỡ"
     },
     "activityLogs": {
       "title": "Nhật ký hoạt động",
@@ -1343,7 +1456,10 @@
         "manageVideo": "Quản lý video",
         "manageAnnouncement": "Quản lý thông báo",
         "moderate": "Kiểm duyệt nội dung",
-        "manageShowcase": "Quản lý ảnh trang chủ"
+        "manageShowcase": "Quản lý ảnh trang chủ",
+        "removePost": "Gỡ một bài viết",
+        "deleteReview": "Xóa một đánh giá",
+        "revokeShare": "Tắt một link chia sẻ"
       }
     },
     "rolesPage": {
@@ -1454,6 +1570,73 @@
         "imageRequired": "Vui lòng chọn ảnh.",
         "order": "Thứ tự là số nguyên từ 0 đến 9999."
       }
+    },
+    "reviews": {
+      "title": "Đánh giá địa điểm",
+      "description": "Các đánh giá du khách viết về địa điểm. Xóa những đánh giá vi phạm; điểm trung bình sẽ tự cập nhật.",
+      "search": "Tìm theo nội dung, tác giả hoặc địa điểm",
+      "destination": "Địa điểm",
+      "allDestinations": "Tất cả địa điểm",
+      "rating": "Điểm",
+      "allRatings": "Tất cả điểm",
+      "stars": "{{count}} sao",
+      "columns": {
+        "review": "Đánh giá",
+        "author": "Tác giả",
+        "rating": "Điểm",
+        "destination": "Địa điểm",
+        "date": "Ngày viết"
+      },
+      "edited": "đã sửa",
+      "deleteTitle": "Xóa đánh giá này?",
+      "deleteText": "Đánh giá của {{author}} về {{destination}} sẽ bị xóa và điểm trung bình được cập nhật. Không thể hoàn tác.",
+      "deleted": "Đã xóa đánh giá",
+      "deleteItem": "Xóa đánh giá của {{name}}"
+    },
+    "export": {
+      "count": "{{count}} dòng",
+      "users": {
+        "title": "Người dùng Aloca",
+        "columns": {
+          "fullname": "Họ tên",
+          "username": "Tên đăng nhập",
+          "email": "Email",
+          "phone": "Điện thoại",
+          "role": "Vai trò",
+          "status": "Trạng thái",
+          "createdAt": "Ngày tham gia",
+          "lastActiveAt": "Hoạt động gần nhất",
+          "totalTrips": "Kế hoạch",
+          "completedTrips": "Kế hoạch hoàn thành",
+          "challengesJoined": "Thử thách đã tham gia",
+          "points": "Điểm"
+        }
+      },
+      "logs": {
+        "title": "Nhật ký hoạt động Aloca",
+        "columns": {
+          "time": "Thời gian",
+          "actor": "Người thực hiện",
+          "action": "Hành động",
+          "target": "Đối tượng",
+          "ip": "IP",
+          "level": "Mức độ"
+        }
+      },
+      "report": {
+        "title": "Báo cáo Aloca",
+        "columns": {
+          "section": "Nhóm",
+          "name": "Mục",
+          "value": "Giá trị",
+          "extra": "Chi tiết"
+        },
+        "sections": {
+          "stats": "Số liệu chính",
+          "trips": "Kế hoạch được tạo",
+          "provinces": "Điểm đến (kế hoạch / chi phí trung bình)"
+        }
+      }
     }
   },
   "route": {
@@ -1496,5 +1679,54 @@
     "blocked": "Tài khoản này hiện không khả dụng.",
     "loadFailed": "Không tải được hồ sơ này.",
     "failed": "Không cập nhật được. Vui lòng thử lại."
+  },
+  "reviews": {
+    "pageTitle": "Đánh giá về {{place}}",
+    "subtitle": "Du khách nói gì về địa điểm này.",
+    "back": "Quay lại",
+    "plansLink": "Xem kế hoạch về {{place}}",
+    "average": "Điểm trung bình",
+    "averageValue": "{{average}} / 5",
+    "noAverage": "Chưa có đánh giá",
+    "count_other": "{{count}} đánh giá",
+    "empty": "Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ trải nghiệm.",
+    "loadFailed": "Không thể tải các đánh giá.",
+    "notFoundTitle": "Không tìm thấy địa điểm",
+    "notFoundText": "Chúng tôi không tìm thấy địa điểm này.",
+    "formTitle": "Viết đánh giá",
+    "editTitle": "Chỉnh sửa đánh giá của bạn",
+    "ratingLabel": "Điểm của bạn",
+    "star_other": "{{count}} sao",
+    "starsOf": "{{count}} trên 5 sao",
+    "commentLabel": "Trải nghiệm của bạn",
+    "commentPlaceholder": "Chia sẻ điều bạn thích và những điều cần biết trước khi đi...",
+    "counter": "{{count}} / {{max}}",
+    "errRating": "Hãy chọn điểm từ 1 đến 5 sao.",
+    "errContent": "Vui lòng viết nhận xét của bạn.",
+    "errContentLong": "Nhận xét tối đa {{max}} ký tự.",
+    "submit": "Đăng đánh giá",
+    "saving": "Đang lưu...",
+    "update": "Lưu thay đổi",
+    "cancel": "Hủy",
+    "yourReview": "Đánh giá của bạn",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "deleteTitle": "Xóa đánh giá của bạn?",
+    "deleteText": "Đánh giá sẽ bị xóa và điểm trung bình được cập nhật.",
+    "deleteAction": "Xóa đánh giá",
+    "edited": "đã sửa",
+    "created": "Đã đăng đánh giá",
+    "updated": "Đã cập nhật đánh giá",
+    "deleted": "Đã xóa đánh giá",
+    "duplicate": "Bạn đã đánh giá địa điểm này rồi. Hãy chỉnh sửa đánh giá hiện có.",
+    "notAllowed": "Bạn chỉ có thể thay đổi đánh giá của chính mình.",
+    "reviewGone": "Đánh giá này không còn tồn tại.",
+    "failed": "Không thể lưu đánh giá.",
+    "deleteFailed": "Không thể xóa đánh giá.",
+    "signIn": "Đăng nhập để viết đánh giá",
+    "prev": "Trước",
+    "next": "Sau",
+    "page": "Trang {{page}} / {{pages}}",
+    "pagination": "Phân trang"
   }
 }

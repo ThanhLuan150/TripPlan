@@ -1,9 +1,11 @@
+import {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -18,17 +20,70 @@ import {formatDate} from '../lib/date';
 import {addCommas} from '../lib/money';
 import {colors, radius, shadow} from '../lib/theme';
 
-// The Explore tab: plans other people made public. Open one to read it, like it and keep a private copy.
-// Only the plan is listed (no owner, progress or photos).
+// the backend rejects a longer keyword
+export const MAX_SEARCH_LENGTH = 100;
+// wait for the user to stop typing before asking the server
+const SEARCH_DELAY_MS = 350;
+
+// The Explore tab: plans other people made public. Search them, open one to read it, like it and keep
+// a private copy. Only the plan is listed (no owner, progress or photos).
 export default function PublicTrips() {
   const {t, i18n} = useTranslation();
   const navigation = useNavigation<any>();
-  const query = usePublicTrips();
+  // what is typed, and the keyword being searched (typing searches after a short pause)
+  const [text, setText] = useState('');
+  const [q, setQ] = useState('');
+  const query = usePublicTrips(q);
   const items = query.data?.pages.flatMap(page => page.items) ?? [];
+  const total = query.data?.pages[0]?.total ?? 0;
+  const searching = q !== '';
+
+  useEffect(() => {
+    const next = text.trim();
+    if (next === q) {
+      return;
+    }
+    const timer = setTimeout(() => setQ(next), SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [text, q]);
+
+  const clear = () => {
+    setText('');
+    setQ('');
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('trips.exploreTitle')}</Text>
+      <View style={styles.search}>
+        <Ionicons name="search" size={18} color={colors.faint} />
+        <TextInput
+          accessibilityLabel={t('trips.searchLabel')}
+          placeholder={t('trips.searchPlaceholder')}
+          placeholderTextColor={colors.faint}
+          value={text}
+          maxLength={MAX_SEARCH_LENGTH}
+          returnKeyType="search"
+          autoCorrect={false}
+          style={styles.searchInput}
+          onChangeText={setText}
+          onSubmitEditing={() => setQ(text.trim())}
+        />
+        {text !== '' && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t('trips.searchClear')}
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            onPress={clear}>
+            <Ionicons name="close-circle" size={20} color={colors.faint} />
+          </TouchableOpacity>
+        )}
+      </View>
+      {searching && items.length > 0 && (
+        <Text style={styles.results}>
+          {t('trips.searchResults', {q, count: total})}
+        </Text>
+      )}
       {query.isLoading ? (
         <ActivityIndicator
           size={30}
@@ -36,7 +91,9 @@ export default function PublicTrips() {
           style={styles.loading}
         />
       ) : query.isError && items.length === 0 ? (
-        <ErrorText message={t('trips.exploreError')} />
+        <ErrorText
+          message={t(searching ? 'trips.searchFailed' : 'trips.exploreError')}
+        />
       ) : (
         <FlatList
           contentContainerStyle={styles.list}
@@ -44,7 +101,24 @@ export default function PublicTrips() {
           data={items}
           keyExtractor={item => item._id}
           ListEmptyComponent={
-            <EmptyState icon="compass-outline" text={t('trips.exploreEmpty')} />
+            searching ? (
+              <View>
+                <EmptyState
+                  icon="search-outline"
+                  text={t('trips.searchEmpty', {q})}
+                />
+                <Text style={styles.hint}>{t('trips.searchEmptyHint')}</Text>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t('trips.searchClear')}
+                  style={styles.more}
+                  onPress={clear}>
+                  <Text style={styles.moreText}>{t('trips.searchClear')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <EmptyState icon="compass-outline" text={t('trips.exploreEmpty')} />
+            )
           }
           renderItem={({item}) => (
             <View style={styles.card}>
@@ -57,6 +131,11 @@ export default function PublicTrips() {
                 <Text style={styles.name} numberOfLines={1}>
                   {item.nameTrip ?? item.location}
                 </Text>
+                {!!item.postContent && (
+                  <Text style={styles.intro} numberOfLines={2}>
+                    {item.postContent}
+                  </Text>
+                )}
                 <View style={styles.row}>
                   <Ionicons name="location" size={14} color={colors.primary} />
                   <Text style={styles.meta}>{item.location}</Text>
@@ -120,6 +199,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 14,
   },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    height: 44,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  searchInput: {flex: 1, color: colors.text, paddingVertical: 0},
+  results: {
+    marginHorizontal: 15,
+    marginBottom: 6,
+    color: colors.body,
+    fontSize: 13,
+  },
+  hint: {color: colors.faint, fontSize: 12, textAlign: 'center'},
+  intro: {fontSize: 13, color: colors.body},
   loading: {marginTop: 40},
   list: {paddingHorizontal: 15, paddingBottom: 110, gap: 12},
   card: {

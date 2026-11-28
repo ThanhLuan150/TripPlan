@@ -12,7 +12,7 @@ import ModerationPage from '@/features/admin/pages/ModerationPage';
 import ReportsPage from '@/features/admin/pages/ReportsPage';
 import RolesPage from '@/features/admin/pages/RolesPage';
 import SettingsPage from '@/features/admin/pages/SettingsPage';
-import {renderWithProviders, t} from '../../utils/render';
+import {renderWithProviders, t, pickOption} from '../../utils/render';
 
 import * as adminApi from '@/features/admin/api';
 import {httpError} from '../../utils/render';
@@ -135,7 +135,7 @@ describe('ReportsPage', () => {
 
     await screen.findByText(t('admin.reports.stats.newUsers'));
 
-    expect(screen.getByLabelText(t('admin.reports.period'))).toHaveValue('30d');
+    expect(screen.getByLabelText(t('admin.reports.period'))).toHaveAttribute('data-value', '30d');
     expect(bars(container)).toBe(30);
     expect(stat(t('admin.reports.stats.newUsers'))).toHaveTextContent(vi_.format(1763));
     expect(stat(t('admin.reports.stats.completionRate'))).toHaveTextContent('64%');
@@ -155,28 +155,44 @@ describe('ReportsPage', () => {
     const {container} = page();
     await screen.findByText(t('admin.reports.stats.newUsers'));
 
-    await user.selectOptions(screen.getByLabelText(t('admin.reports.period')), '7d');
+    await pickOption(user, screen.getByLabelText(t('admin.reports.period')), '7d');
     expect(bars(container)).toBe(7);
     expect(stat(t('admin.reports.stats.newUsers'))).toHaveTextContent('410');
 
-    await user.selectOptions(screen.getByLabelText(t('admin.reports.period')), '90d');
+    await pickOption(user, screen.getByLabelText(t('admin.reports.period')), '90d');
     expect(bars(container)).toBe(13);
     expect(screen.getAllByText(t('admin.reports.periods.90d')).length).toBeGreaterThan(0);
   });
 
-  it('exports the report as CSV', async () => {
+  it('exports the report as PDF with the figures of the period', async () => {
     const create = vi.fn(() => 'blob:report');
     Object.assign(URL, {createObjectURL: create, revokeObjectURL: vi.fn()});
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    vi.mocked(adminApi.exportPdf).mockResolvedValue(new Blob(['%PDF-'], {type: 'application/pdf'}));
     const user = userEvent.setup();
     page();
     await screen.findByText(t('admin.reports.stats.newUsers'));
 
     await user.click(screen.getByRole('button', {name: t('admin.common.export')}));
 
-    expect(create).toHaveBeenCalledWith(expect.any(Blob));
-    expect(click).toHaveBeenCalled();
+    await waitFor(() => expect(click).toHaveBeenCalled());
+    const table = vi.mocked(adminApi.exportPdf).mock.calls[0][0];
+    expect(table.title).toBe(t('admin.export.report.title'));
+    expect(table.subtitle).toBe(t('admin.reports.periods.30d'));
+    expect(table.rows.length).toBeGreaterThan(6);
+    expect(table.rows[0][1]).toBe(t('admin.reports.stats.newUsers'));
     click.mockRestore();
+  });
+
+  it('shows the error when the PDF cannot be made', async () => {
+    vi.mocked(adminApi.exportPdf).mockRejectedValue(httpError(500));
+    const user = userEvent.setup();
+    page();
+    await screen.findByText(t('admin.reports.stats.newUsers'));
+
+    await user.click(screen.getByRole('button', {name: t('admin.common.export')}));
+
+    expect(await screen.findByText(t('admin.common.actionFailed'))).toBeInTheDocument();
   });
 
   it('asks the API for the chosen period', async () => {
@@ -185,7 +201,7 @@ describe('ReportsPage', () => {
     await screen.findByText(t('admin.reports.stats.newUsers'));
     expect(adminApi.fetchReport).toHaveBeenCalledWith('30d');
 
-    await user.selectOptions(screen.getByLabelText(t('admin.reports.period')), '7d');
+    await pickOption(user, screen.getByLabelText(t('admin.reports.period')), '7d');
     await waitFor(() => expect(adminApi.fetchReport).toHaveBeenCalledWith('7d'));
   });
 });
@@ -255,10 +271,10 @@ describe('ModerationPage', () => {
     page();
     await screen.findByRole('list');
 
-    await user.selectOptions(screen.getByLabelText(t('admin.moderation.type')), 'video');
+    await pickOption(user, screen.getByLabelText(t('admin.moderation.type')), 'video');
     expect(items()).toHaveLength(pending.filter(item => item.type === 'video').length);
 
-    await user.selectOptions(screen.getByLabelText(t('admin.moderation.type')), 'all');
+    await pickOption(user, screen.getByLabelText(t('admin.moderation.type')), 'all');
     await user.type(screen.getByRole('searchbox', {name: t('admin.moderation.search')}), pending[0].author);
     expect(within(items()[0]).getByText(pending[0].content)).toBeInTheDocument();
   });
@@ -494,6 +510,7 @@ describe('admin routes', () => {
     ['/admin/dashboard', 'admin.dashboard.title'],
     ['/admin/users', 'admin.users.title'],
     ['/admin/trips', 'admin.trips.title'],
+    ['/admin/reviews', 'admin.reviews.title'],
     ['/admin/challenges', 'admin.challenges.title'],
     ['/admin/ai', 'admin.ai.title'],
     ['/admin/videos', 'admin.videos.title'],

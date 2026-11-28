@@ -35,7 +35,7 @@ jest.mock('../src/api', () => ({
   contentApi: {home: jest.fn(), videos: jest.fn()},
   rankingApi: {get: jest.fn()},
   profileApi: {notifications: jest.fn(), update: jest.fn()},
-  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), visibility: jest.fn(), setVisibility: jest.fn(), notes: jest.fn(), budgetEstimate: jest.fn().mockResolvedValue(null), addNote: jest.fn(), updateNote: jest.fn(), removeNote: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn()},
+  tripsApi: {list: jest.fn(), get: jest.fn(), generate: jest.fn(), save: jest.fn(), remove: jest.fn(), duplicate: jest.fn(), favorites: jest.fn(), addFavorite: jest.fn(), removeFavorite: jest.fn(), visibility: jest.fn(), setVisibility: jest.fn(), notes: jest.fn(), budgetEstimate: jest.fn().mockResolvedValue(null), addNote: jest.fn(), updateNote: jest.fn(), removeNote: jest.fn(), shareStatus: jest.fn(), enableShare: jest.fn(), disableShare: jest.fn(), postStatus: jest.fn(), sharePost: jest.fn(), removePost: jest.fn()},
 }));
 
 const t = (key: string, opts?: object) => (i18n.t as any)(key, opts) as string;
@@ -373,6 +373,26 @@ describe('TripDetail', () => {
       await flush();
       expect(alerts.some(a => a.title === t('trips.visibilityFailed'))).toBe(true);
       expect(allText(tree)).toContain(t('trips.visibilityPublic'));
+    });
+  });
+
+  describe('share as a post', () => {
+    const postButton = (tree: Tree) => tree.root.findAll(n => n.props.accessibilityLabel === t('trips.postOpen') && n.props.onPress)[0];
+
+    it('opens the dialog for the owner with the status of the post and shares the plan', async () => {
+      (tripsApi.postStatus as jest.Mock).mockResolvedValue({isPosted: false, visibility: 'private', content: '', postedAt: null});
+      (tripsApi.sharePost as jest.Mock).mockResolvedValue({isPosted: true, visibility: 'public', content: '', postedAt: 'x'});
+      const tree = await mount();
+
+      press(postButton(tree));
+      await flush();
+      expect(tripsApi.postStatus).toHaveBeenCalledWith('trip1');
+      expect(allText(tree)).toContain(t('trips.postNotPosted'));
+      press(tree.root.findAll(n => n.props.accessibilityLabel === t('trips.postShare') && n.props.onPress)[0]);
+      await flush();
+
+      expect(tripsApi.sharePost).toHaveBeenCalledWith('trip1', '');
+      expect(allText(tree)).toContain(t('trips.postPosted'));
     });
   });
 

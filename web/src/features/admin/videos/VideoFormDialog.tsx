@@ -3,6 +3,7 @@ import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
 import {apiMessage} from '@/lib/apiClient';
 import {fieldError} from '@/lib/forms';
+import AdminSelect from '../components/AdminSelect';
 import AdminModal from '../components/AdminModal';
 import {adminButton, adminInput} from '../components/styles';
 import {useSaveVideo} from '../hooks/useAdminData';
@@ -105,13 +106,12 @@ export default function VideoFormDialog({video, onClose}: {video?: AdminVideo; o
             </FormField>
             <FormField label={t('admin.common.status')}>
               {props => (
-                <select {...props} className={adminInput} {...bind('status')}>
-                  {optionsOf(videoStatusBadge, t).map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <AdminSelect
+                  id={props.id}
+                  value={values.status}
+                  onChange={value => formik.setFieldValue('status', value)}
+                  options={optionsOf(videoStatusBadge, t)}
+                />
               )}
             </FormField>
           </div>

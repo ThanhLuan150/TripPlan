@@ -6,6 +6,7 @@ import tripService from "./tripService.js";
 import postLikeService from "./postLikeService.js";
 import savedPostService from "./savedPostService.js";
 import HttpError from "../utils/HttpError.js";
+import { cleanKeyword } from "../utils/searchPattern.js";
 
 export const VISIBILITIES = ["private", "public"];
 
@@ -13,7 +14,7 @@ export const VISIBILITIES = ["private", "public"];
 export const visibilityOf = (trip) => (trip?.visibility === "public" ? "public" : "private");
 
 // Page where anyone can open a public trip (null: private, or WEB_URL not set so the client builds it).
-const publicUrlOf = (tripId, visibility) =>
+export const publicUrlOf = (tripId, visibility) =>
     visibility === "public" && env.webUrl ? `${env.webUrl}/trip/${tripId}` : null;
 
 // trip: loaded by ownTrip (owned by the user, not deleted)
@@ -65,14 +66,19 @@ const intOr = (value, fallback, min, max) => {
 };
 
 // Public trips for everyone to browse (no sign-in): cards only, newest first, paged.
-const listPublicTrips = async ({ page, limit } = {}, viewer = null) => {
+// q (optional): search by trip name, destination or introduction; a bad keyword is a 400.
+const listPublicTrips = async ({ page, limit, q } = {}, viewer = null) => {
+    const { keyword, error } = cleanKeyword(q);
+    if (error) {
+        throw new HttpError(400, error);
+    }
     const size = intOr(limit, DEFAULT_LIMIT, 1, MAX_LIMIT);
     const current = intOr(page, 1, 1, 100000);
     const [items, total] = await Promise.all([
-        tripPlanRepository.listPublic((current - 1) * size, size),
-        tripPlanRepository.countPublic(),
+        tripPlanRepository.listPublic((current - 1) * size, size, keyword),
+        tripPlanRepository.countPublic(keyword),
     ]);
-    return { message: "Get public trips successfully", page: current, limit: size, total, items: await savedPostService.decorate(viewer, await postLikeService.decorate(viewer, items)) };
+    return { message: "Get public trips successfully", q: keyword, page: current, limit: size, total, items: await savedPostService.decorate(viewer, await postLikeService.decorate(viewer, items)) };
 };
 
 // A signed-in user keeps a copy of a public trip: the copy is theirs and private, the

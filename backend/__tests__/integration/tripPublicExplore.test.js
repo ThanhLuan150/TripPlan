@@ -82,14 +82,14 @@ describe("browse public trips", () => {
         const res = await request(app).get("/public-trip?page=2&limit=5").expect(200);
         expect(res.headers["cache-control"]).toBe("no-store");
         expect(res.body).toMatchObject({ page: 2, limit: 5, total: 1, items: [{ _id: TRIP_ID, nameTrip: "Da Lat" }] });
-        expect(tripPlanRepository.listPublic).toHaveBeenCalledWith(5, 5);
+        expect(tripPlanRepository.listPublic).toHaveBeenCalledWith(5, 5, "");
     });
 
     it("bad paging values fall back to the defaults and the page size is capped", async () => {
         await request(app).get("/public-trip?page=-3&limit=abc").expect(200);
-        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(0, 12);
+        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(0, 12, "");
         await request(app).get("/public-trip?page[x]=1&limit=100000").expect(200);
-        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(0, 50);
+        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(0, 50, "");
     });
 
     it("the list asks the database for public trips only", async () => {

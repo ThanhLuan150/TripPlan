@@ -54,6 +54,8 @@ export interface AdminUserActivity {
 export interface AdminUserDetail {
   user: AdminUser;
   aiConversations: number;
+  // what the account does in the community
+  community?: {posts: number; reviews: number; followers: number; following: number};
   trips: AdminTrip[];
   challenges: AdminUserChallenge[];
   activity: AdminUserActivity[];
@@ -120,6 +122,15 @@ export interface AdminTrip {
   otherCostTotal: number;
   challenges: number;
   status: TripStatus;
+  // community side: a public trip is a post of the Travel Community
+  visibility?: 'public' | 'private';
+  postContent?: string;
+  postedAt?: string | null;
+  // users who liked / saved the post
+  likes?: number;
+  saves?: number;
+  // a share link is on: anyone with the link reads the trip, even a private one
+  shared?: boolean;
 }
 
 export interface AdminChallenge {
@@ -154,6 +165,13 @@ export interface Metric {
 
 export interface AdminAiOverview {
   stats: {conversations: Metric; messages: Metric; activeUsers: Metric; avgMessages: Metric};
+  // the other AI tools of the app
+  features: {
+    destinationSearches: number;
+    plansFromSuggestions: number;
+    budgetEstimates: number;
+    usersWithPreferences: number;
+  };
   dailyMessages: SeriesPoint[];
   chats: AdminAiChat[];
 }
@@ -232,6 +250,9 @@ export type LogAction =
   | 'manageShowcase'
   | 'manageAnnouncement'
   | 'moderate'
+  | 'removePost'
+  | 'revokeShare'
+  | 'deleteReview'
   | 'updateSettings';
 
 export interface AdminActivityLog {
@@ -245,8 +266,8 @@ export interface AdminActivityLog {
 }
 
 export type ModerationStatus = 'pending' | 'approved' | 'rejected';
-export type ModerationType = 'challengePhoto' | 'chatMessage' | 'profile' | 'video';
-export type ModerationReason = 'spam' | 'inappropriate' | 'wrongLocation' | 'copyright';
+export type ModerationType = 'challengePhoto' | 'chatMessage' | 'profile' | 'video' | 'post';
+export type ModerationReason = 'spam' | 'inappropriate' | 'wrongLocation' | 'copyright' | 'misinformation' | 'other';
 
 export interface AdminModerationItem {
   id: string;
@@ -256,6 +277,24 @@ export interface AdminModerationItem {
   author: string;
   reportedAt: string;
   status: ModerationStatus;
+  // what the reporter wrote (never who reported)
+  details?: string;
+  // the post a report of type "post" is about
+  targetId?: string | null;
+  // answer of the decision: the reported post was taken down
+  postRemoved?: boolean;
+}
+
+// A destination review, as the admin sees it (GET /admin/reviews)
+export interface AdminReview {
+  id: string;
+  destination: string;
+  rating: number;
+  content: string;
+  author: string;
+  authorId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Bell menu of the admin header
@@ -270,7 +309,14 @@ export interface AdminAlert {
 }
 
 export interface AdminDashboard {
-  stats: {users: Metric; trips: Metric; challengesCompleted: Metric; aiChats: Metric};
+  stats: {
+    users: Metric;
+    trips: Metric;
+    challengesCompleted: Metric;
+    aiChats: Metric;
+    posts: Metric;
+    reviews: Metric;
+  };
   // first day of each month
   newUsers: SeriesPoint[];
   topDestinations: {name: string; trips: number}[];
@@ -279,7 +325,14 @@ export interface AdminDashboard {
 export type ReportPeriod = '7d' | '30d' | '90d';
 
 export interface AdminReport {
-  stats: {newUsers: Metric; tripsCreated: Metric; completionRate: Metric; avgTripCost: Metric};
+  stats: {
+    newUsers: Metric;
+    tripsCreated: Metric;
+    completionRate: Metric;
+    avgTripCost: Metric;
+    postsShared: Metric;
+    newReviews: Metric;
+  };
   tripsCreated: SeriesPoint[];
   provinces: {name: string; trips: number; avgCost: number}[];
 }

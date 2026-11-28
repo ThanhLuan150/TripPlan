@@ -5,8 +5,8 @@ import {act, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import Toast from '@/components/ui/Toast';
+import * as adminApi from '@/features/admin/api';
 import * as api from '@/features/admin/users/api';
-import {usersToCsv, downloadUsersCsv} from '@/features/admin/users/exportCsv';
 import {validateCreateForm, validateUserForm} from '@/features/admin/users/userForm';
 import {
   applyUserFilters,
@@ -22,7 +22,7 @@ import UsersPage from '@/features/admin/pages/UsersPage';
 import type {AdminUser, AdminUserDetail} from '@/features/admin/types';
 import {saveSession} from '@/features/auth/store/session';
 import {uploadImage} from '@/lib/upload';
-import {currentPath, httpError, renderWithProviders, t} from '../../utils/render';
+import {currentPath, httpError, renderWithProviders, t, pickOption} from '../../utils/render';
 
 vi.mock('@/features/admin/users/api', () => ({
   fetchUsers: vi.fn(),
@@ -161,30 +161,6 @@ describe('user form validation', () => {
   });
 });
 
-describe('CSV export', () => {
-  it('quotes cells and neutralises spreadsheet formulas', () => {
-    const csv = usersToCsv([user({fullname: 'Lê, "Bình"', email: '=cmd@x.vn', lastActiveAt: null})]);
-    const [header, line] = csv.split('\r\n');
-    expect(header.split(',')[0]).toBe('id');
-    expect(line).toContain('"Lê, ""Bình"""');
-    expect(line).toContain("'=cmd@x.vn");
-  });
-
-  it('downloads a file', () => {
-    const create = vi.fn(() => 'blob:users');
-    const revoke = vi.fn();
-    Object.assign(URL, {createObjectURL: create, revokeObjectURL: revoke});
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-
-    downloadUsersCsv([user()], 'users.csv');
-
-    expect(create).toHaveBeenCalledWith(expect.any(Blob));
-    expect(click).toHaveBeenCalled();
-    expect(revoke).toHaveBeenCalledWith('blob:users');
-    click.mockRestore();
-  });
-});
-
 describe('UsersPage', () => {
   const page = () => renderWithProviders(<UsersPage />, {route: '/admin/users'});
 
@@ -240,16 +216,16 @@ describe('UsersPage', () => {
     page();
     await screen.findByText(mockUsers[0].fullname);
 
-    await user.selectOptions(select(t('admin.users.columns.role')), 'admin');
+    await pickOption(user, select(t('admin.users.columns.role')), 'admin');
     expect(rows()).toHaveLength(2);
 
-    await user.selectOptions(select(t('admin.users.columns.role')), 'all');
-    await user.selectOptions(select(t('admin.users.columns.status')), 'suspended');
+    await pickOption(user, select(t('admin.users.columns.role')), 'all');
+    await pickOption(user, select(t('admin.users.columns.status')), 'suspended');
     expect(rows()).toHaveLength(mockUsers.filter(u => u.status === 'suspended').length);
 
     await user.click(screen.getByRole('button', {name: t('admin.common.resetFilters')}));
     expect(rows()).toHaveLength(10);
-    expect(select(t('admin.users.columns.status'))).toHaveValue('all');
+    expect(select(t('admin.users.columns.status'))).toHaveAttribute('data-value', 'all');
   });
 
   it('filters by registration date and last activity, and sorts', async () => {
@@ -257,16 +233,16 @@ describe('UsersPage', () => {
     page();
     await screen.findByText(mockUsers[0].fullname);
 
-    await user.selectOptions(select(t('admin.users.registrationDate')), '30d');
+    await pickOption(user, select(t('admin.users.registrationDate')), '30d');
     const recent = mockUsers.filter(u => Date.now() - new Date(u.createdAt).getTime() <= 30 * 86_400_000).length;
     expect(summary(1, Math.min(10, recent), recent)).toBeInTheDocument();
 
-    await user.selectOptions(select(t('admin.users.registrationDate')), 'all');
-    await user.selectOptions(select(t('admin.users.columns.lastActive')), 'never');
+    await pickOption(user, select(t('admin.users.registrationDate')), 'all');
+    await pickOption(user, select(t('admin.users.columns.lastActive')), 'never');
     expect(rows()).toHaveLength(mockUsers.filter(u => !u.lastActiveAt).length);
 
-    await user.selectOptions(select(t('admin.users.columns.lastActive')), 'all');
-    await user.selectOptions(select(t('admin.users.sortBy')), 'oldest');
+    await pickOption(user, select(t('admin.users.columns.lastActive')), 'all');
+    await pickOption(user, select(t('admin.users.sortBy')), 'oldest');
     expect(within(rows()[0]).getByText(mockUsers[mockUsers.length - 1].fullname)).toBeInTheDocument();
   });
 
@@ -279,7 +255,7 @@ describe('UsersPage', () => {
     expect(summary(11, 20, mockUsers.length)).toBeInTheDocument();
     expect(within(rows()[0]).getByText(mockUsers[10].fullname)).toBeInTheDocument();
 
-    await user.selectOptions(select(t('admin.users.pageSize')), '20');
+    await pickOption(user, select(t('admin.users.pageSize')), '20');
     expect(rows()).toHaveLength(20);
     expect(summary(1, 20, mockUsers.length)).toBeInTheDocument();
   });
@@ -538,23 +514,40 @@ describe('UsersPage', () => {
     expect(await screen.findByText(t('admin.users.toasts.roleChanged'))).toBeInTheDocument();
   });
 
-  it('exports the filtered list and the selection as CSV', async () => {
+  it('exports the filtered list and the selection as PDF', async () => {
     const create = vi.fn(() => 'blob:users');
     Object.assign(URL, {createObjectURL: create, revokeObjectURL: vi.fn()});
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    vi.mocked(adminApi.exportPdf).mockResolvedValue(new Blob(['%PDF-'], {type: 'application/pdf'}));
     const user = userEvent.setup();
     page();
     await screen.findByText(mockUsers[0].fullname);
 
     await user.click(screen.getByRole('button', {name: t('admin.users.exportUsers')}));
-    expect(create).toHaveBeenCalledTimes(1);
     expect(await screen.findByText(t('admin.users.toasts.exported', {count: mockUsers.length}))).toBeInTheDocument();
+    expect(create).toHaveBeenCalledTimes(1);
+    const first = vi.mocked(adminApi.exportPdf).mock.calls[0][0];
+    expect(first.title).toBe(t('admin.export.users.title'));
+    expect(first.rows).toHaveLength(mockUsers.length);
 
     await user.click(screen.getByRole('checkbox', {name: t('admin.users.selectUser', {name: second.fullname})}));
     await user.click(screen.getByRole('button', {name: t('admin.users.bulk.export')}));
-    expect(create).toHaveBeenCalledTimes(2);
     expect(await screen.findByText(t('admin.users.toasts.exported', {count: 1}))).toBeInTheDocument();
+    expect(vi.mocked(adminApi.exportPdf).mock.calls[1][0].rows).toHaveLength(1);
+    expect(create).toHaveBeenCalledTimes(2);
     click.mockRestore();
+  });
+
+  it('shows the error when the PDF cannot be made', async () => {
+    vi.mocked(adminApi.exportPdf).mockRejectedValue(httpError(500));
+    const user = userEvent.setup();
+    page();
+    await screen.findByText(mockUsers[0].fullname);
+
+    await user.click(screen.getByRole('button', {name: t('admin.users.exportUsers')}));
+
+    expect(await screen.findByText(t('admin.common.actionFailed'))).toBeInTheDocument();
+    expect(screen.queryByText(t('admin.users.toasts.exported', {count: mockUsers.length}))).toBeNull();
   });
 
   it('offers a retry when the users cannot be loaded', async () => {
@@ -772,7 +765,7 @@ describe('add user', () => {
     postUser.mockResolvedValue({...second, id: 'newid'});
     const {user, dialog} = await open();
     await fill(user, dialog);
-    await user.selectOptions(within(dialog).getByLabelText(t('admin.users.columns.role')), 'admin');
+    await pickOption(user, within(dialog).getByLabelText(t('admin.users.columns.role')), 'admin');
     await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.createAccount')}));
 
     await waitFor(() =>

@@ -6,6 +6,14 @@ import adminRepository from "../../../src/repositories/adminRepository.js";
 import contentRepository from "../../../src/repositories/contentRepository.js";
 import tripPlanRepository from "../../../src/repositories/tripPlanRepository.js";
 import activityLogService from "../../../src/services/activityLogService.js";
+import destinationReviewRepository from "../../../src/repositories/destinationReviewRepository.js";
+import postLikeRepository from "../../../src/repositories/postLikeRepository.js";
+import savedPostRepository from "../../../src/repositories/savedPostRepository.js";
+import followRepository from "../../../src/repositories/followRepository.js";
+import tripVisibilityService from "../../../src/services/tripVisibilityService.js";
+import destinationSearchRepository from "../../../src/repositories/destinationSearchRepository.js";
+import tripBudgetEstimateRepository from "../../../src/repositories/tripBudgetEstimateRepository.js";
+import userRepository from "../../../src/repositories/userRepository.js";
 
 vi.mock("../../../src/repositories/adminRepository.js", () => ({
     default: Object.fromEntries(
@@ -21,15 +29,52 @@ vi.mock("../../../src/repositories/adminRepository.js", () => ({
 vi.mock("../../../src/repositories/contentRepository.js", () => ({
     default: { countPendingReports: vi.fn(), listLogs: vi.fn(), listReports: vi.fn(), decideReport: vi.fn() },
 }));
-vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({ default: { softDelete: vi.fn() } }));
-vi.mock("../../../src/repositories/userRepository.js", () => ({ default: {} }));
+vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({
+    default: { softDelete: vi.fn(), findById: vi.fn(), disableShare: vi.fn(), countPosts: vi.fn(), countPostsBetween: vi.fn(), countPostsByUser: vi.fn() },
+}));
+vi.mock("../../../src/repositories/destinationReviewRepository.js", () => ({
+    default: { listRecent: vi.fn(), countAll: vi.fn(), countBetween: vi.fn(), countByUser: vi.fn(), findById: vi.fn(), deleteById: vi.fn() },
+}));
+vi.mock("../../../src/repositories/postLikeRepository.js", () => ({ default: { countByTrips: vi.fn() } }));
+vi.mock("../../../src/repositories/savedPostRepository.js", () => ({ default: { countByTrips: vi.fn() } }));
+vi.mock("../../../src/repositories/followRepository.js", () => ({ default: { countFollowers: vi.fn(), countFollowing: vi.fn() } }));
+vi.mock("../../../src/services/tripVisibilityService.js", () => ({
+    default: { setVisibility: vi.fn() },
+    visibilityOf: (trip) => (trip?.visibility === "public" ? "public" : "private"),
+}));
+
+vi.mock("../../../src/repositories/userRepository.js", () => ({ default: { countWithPreferences: vi.fn() } }));
+vi.mock("../../../src/repositories/destinationSearchRepository.js", () => ({ default: { countAll: vi.fn(), countCreated: vi.fn() } }));
+vi.mock("../../../src/repositories/tripBudgetEstimateRepository.js", () => ({ default: { countAll: vi.fn() } }));
 vi.mock("../../../src/services/activityLogService.js", () => ({ default: { record: vi.fn() } }));
 
 const admin = { _id: "a1", fullname: "Admin" };
 const ID = "64b000000000000000000001";
 const DAY = 86_400_000;
 
-beforeEach(() => vi.resetAllMocks());
+
+// the community numbers the admin panel shows next to the trips (zero unless a test says otherwise)
+const quiet = () => {
+    postLikeRepository.countByTrips.mockResolvedValue({});
+    savedPostRepository.countByTrips.mockResolvedValue({});
+    destinationReviewRepository.countAll.mockResolvedValue(0);
+    destinationReviewRepository.countBetween.mockResolvedValue(0);
+    destinationReviewRepository.countByUser.mockResolvedValue(0);
+    tripPlanRepository.countPosts.mockResolvedValue(0);
+    tripPlanRepository.countPostsBetween.mockResolvedValue(0);
+    tripPlanRepository.countPostsByUser.mockResolvedValue(0);
+    followRepository.countFollowers.mockResolvedValue(0);
+    followRepository.countFollowing.mockResolvedValue(0);
+    destinationSearchRepository.countAll.mockResolvedValue(0);
+    destinationSearchRepository.countCreated.mockResolvedValue(0);
+    tripBudgetEstimateRepository.countAll.mockResolvedValue(0);
+    userRepository.countWithPreferences.mockResolvedValue(0);
+};
+
+beforeEach(() => {
+    vi.resetAllMocks();
+    quiet();
+});
 
 describe("dashboard", () => {
     it("shows the totals with their growth against the previous 30 days, 12 months of sign-ups and the top places", async () => {
@@ -45,12 +90,20 @@ describe("dashboard", () => {
         adminRepository.signupsByMonth.mockResolvedValue([{ _id: { y: now.getFullYear(), m: now.getMonth() + 1 }, value: 7 }]);
         adminRepository.topDestinations.mockResolvedValue([{ _id: "Huế", trips: 4 }, { _id: null, trips: 1 }]);
 
+        tripPlanRepository.countPosts.mockResolvedValue(12);
+        tripPlanRepository.countPostsBetween.mockResolvedValueOnce(6).mockResolvedValueOnce(3);
+        destinationReviewRepository.countAll.mockResolvedValue(40);
+        destinationReviewRepository.countBetween.mockResolvedValueOnce(5).mockResolvedValueOnce(10);
+
         const result = await adminService.dashboard();
 
         expect(result.stats.users).toEqual({ value: 100, delta: 0.5 });
         // no trips in the previous period: no growth to speak of
         expect(result.stats.trips).toEqual({ value: 50, delta: 0 });
         expect(result.stats.challengesCompleted.value).toBe(8);
+        // posts (public trips) and destination reviews, each against the previous 30 days
+        expect(result.stats.posts).toEqual({ value: 12, delta: 1 });
+        expect(result.stats.reviews).toEqual({ value: 40, delta: -0.5 });
         expect(result.newUsers).toHaveLength(12);
         expect(result.newUsers[11].value).toBe(7);
         expect(result.newUsers[0].value).toBe(0);
@@ -71,6 +124,121 @@ describe("alerts", () => {
     });
 });
 
+describe("trips: community", () => {
+    it("shows which trips are public posts, their introduction and how many users liked / saved them", async () => {
+        adminRepository.listTrips.mockResolvedValue([
+            { _id: "t1", visibility: "public", postContent: "Hello", postedAt: new Date("2026-02-01") },
+            { _id: "t2" },
+        ]);
+        adminRepository.findUsersByIds.mockResolvedValue([]);
+        adminRepository.challengesPerTrip.mockResolvedValue(new Map());
+        postLikeRepository.countByTrips.mockResolvedValue({ t1: 5 });
+        savedPostRepository.countByTrips.mockResolvedValue({ t1: 2 });
+
+        const [post, plain] = await adminService.listTrips();
+
+        expect(post).toMatchObject({ visibility: "public", postContent: "Hello", postedAt: new Date("2026-02-01"), likes: 5, saves: 2 });
+        expect(plain).toMatchObject({ visibility: "private", postContent: "", postedAt: null, likes: 0, saves: 0 });
+        expect(postLikeRepository.countByTrips).toHaveBeenCalledWith(["t1", "t2"]);
+    });
+
+    it("takes a post down: the trip goes private through the visibility rule and the action is logged", async () => {
+        const trip = { _id: ID, nameTrip: "Huế", visibility: "public", status: "active" };
+        tripPlanRepository.findById.mockResolvedValue(trip);
+
+        await expect(adminService.unpublishTrip(admin, ID)).resolves.toMatchObject({ message: "Post removed", visibility: "private" });
+
+        expect(tripVisibilityService.setVisibility).toHaveBeenCalledWith(trip, "private");
+        expect(activityLogService.record).toHaveBeenCalledWith(expect.objectContaining({ action: "removePost", target: "Huế", level: "warning" }));
+    });
+
+    it("does nothing (and logs nothing) for a trip that is not a post", async () => {
+        tripPlanRepository.findById.mockResolvedValue({ _id: ID, nameTrip: "Huế" });
+
+        await expect(adminService.unpublishTrip(admin, ID)).resolves.toMatchObject({ visibility: "private" });
+
+        expect(tripVisibilityService.setVisibility).not.toHaveBeenCalled();
+        expect(activityLogService.record).not.toHaveBeenCalled();
+    });
+
+    it("answers 404 for an unknown, deleted or malformed trip", async () => {
+        await expect(adminService.unpublishTrip(admin, "bad")).rejects.toMatchObject({ status: 404 });
+        tripPlanRepository.findById.mockResolvedValue(null);
+        await expect(adminService.unpublishTrip(admin, ID)).rejects.toMatchObject({ status: 404 });
+        tripPlanRepository.findById.mockResolvedValue({ _id: ID, status: "delete", visibility: "public" });
+        await expect(adminService.unpublishTrip(admin, ID)).rejects.toMatchObject({ status: 404 });
+        expect(tripVisibilityService.setVisibility).not.toHaveBeenCalled();
+    });
+});
+
+describe("trips: share links", () => {
+    it("shows which trips have a share link on", async () => {
+        adminRepository.listTrips.mockResolvedValue([{ _id: "t1", shareEnabled: true }, { _id: "t2" }]);
+        adminRepository.findUsersByIds.mockResolvedValue([]);
+        adminRepository.challengesPerTrip.mockResolvedValue(new Map());
+
+        const [shared, plain] = await adminService.listTrips();
+
+        expect(shared.shared).toBe(true);
+        expect(plain.shared).toBe(false);
+    });
+
+    it("turns the share link off and logs it", async () => {
+        tripPlanRepository.findById.mockResolvedValue({ _id: ID, nameTrip: "Huế", shareEnabled: true });
+
+        await expect(adminService.revokeShare(admin, ID)).resolves.toMatchObject({ message: "Sharing turned off", shared: false });
+
+        expect(tripPlanRepository.disableShare).toHaveBeenCalledWith(ID);
+        expect(activityLogService.record).toHaveBeenCalledWith(expect.objectContaining({ action: "revokeShare", target: "Huế", level: "warning" }));
+    });
+
+    it("does nothing for a trip without a link, and answers 404 for an unknown, deleted or malformed trip", async () => {
+        tripPlanRepository.findById.mockResolvedValue({ _id: ID, nameTrip: "Huế" });
+        await expect(adminService.revokeShare(admin, ID)).resolves.toMatchObject({ shared: false });
+        expect(tripPlanRepository.disableShare).not.toHaveBeenCalled();
+        expect(activityLogService.record).not.toHaveBeenCalled();
+
+        await expect(adminService.revokeShare(admin, "bad")).rejects.toMatchObject({ status: 404 });
+        tripPlanRepository.findById.mockResolvedValue(null);
+        await expect(adminService.revokeShare(admin, ID)).rejects.toMatchObject({ status: 404 });
+        tripPlanRepository.findById.mockResolvedValue({ _id: ID, status: "delete", shareEnabled: true });
+        await expect(adminService.revokeShare(admin, ID)).rejects.toMatchObject({ status: 404 });
+    });
+});
+
+describe("destination reviews", () => {
+    it("lists the newest reviews with the name of their author", async () => {
+        destinationReviewRepository.listRecent.mockResolvedValue([
+            { _id: "r1", destination: "Hà Giang", rating: 4, content: "Đẹp", userId: "u1", createdAt: new Date("2026-01-01"), updatedAt: new Date("2026-01-02") },
+            { _id: "r2", destination: "Huế", rating: 1, content: "Tệ", userId: "ghost", createdAt: new Date("2026-01-03"), updatedAt: new Date("2026-01-03") },
+        ]);
+        adminRepository.findUsersByIds.mockResolvedValue([{ _id: "u1", username: "an" }]);
+
+        const [first, second] = await adminService.listReviews();
+
+        expect(first).toEqual({ id: "r1", destination: "Hà Giang", rating: 4, content: "Đẹp", author: "an", authorId: "u1", createdAt: new Date("2026-01-01"), updatedAt: new Date("2026-01-02") });
+        expect(second).toMatchObject({ author: "", authorId: "ghost" });
+        expect(destinationReviewRepository.listRecent).toHaveBeenCalledWith(1000);
+    });
+
+    it("deletes a review and logs it", async () => {
+        destinationReviewRepository.findById.mockResolvedValue({ _id: ID, destination: "Huế", content: "Spam spam" });
+
+        await expect(adminService.deleteReview(admin, ID)).resolves.toEqual({ message: "Delete review successfully" });
+
+        expect(destinationReviewRepository.deleteById).toHaveBeenCalledWith(ID);
+        expect(activityLogService.record).toHaveBeenCalledWith(expect.objectContaining({ action: "deleteReview", target: "Huế: Spam spam" }));
+    });
+
+    it("answers 404 for an unknown or malformed review and deletes nothing", async () => {
+        destinationReviewRepository.findById.mockResolvedValue(null);
+
+        await expect(adminService.deleteReview(admin, ID)).rejects.toMatchObject({ status: 404 });
+        await expect(adminService.deleteReview(admin, "bad")).rejects.toMatchObject({ status: 404 });
+        expect(destinationReviewRepository.deleteById).not.toHaveBeenCalled();
+    });
+});
+
 describe("trips", () => {
     it("lists the trips with owner, days, cost, challenges and phase", async () => {
         const start = new Date(Date.now() + 3 * DAY);
@@ -84,7 +252,7 @@ describe("trips", () => {
 
         const [first, second, third] = await adminService.listTrips();
 
-        expect(first).toMatchObject({ nameTrip: "Đà Lạt", owner: "An", days: 3, phase: "upcoming", challenges: 4, status: "active", createdAt: "2026-01-01T00:00:00.000Z" });
+        expect(first).toMatchObject({ nameTrip: "Đà Lạt", owner: "An", days: 3, phase: "upcoming", challenges: 4, status: "active", createdAt: "2026-01-01T00:00:00.000Z", visibility: "private", likes: 0, saves: 0 });
         expect(second).toMatchObject({ owner: "", phase: "ongoing", challenges: 0, createdAt: null });
         expect(third).toMatchObject({ days: 0, phase: "upcoming", transportCostTotal: 0 });
     });
@@ -167,8 +335,15 @@ describe("aiOverview", () => {
         adminRepository.findUsersByIds.mockResolvedValue([{ _id: "u1", username: "an" }]);
         adminRepository.messagesPerChat.mockResolvedValue(new Map([["c1", 5]]));
 
+        destinationSearchRepository.countAll.mockResolvedValue(30);
+        destinationSearchRepository.countCreated.mockResolvedValue(12);
+        tripBudgetEstimateRepository.countAll.mockResolvedValue(7);
+        userRepository.countWithPreferences.mockResolvedValue(5);
+
         const result = await adminService.aiOverview();
 
+        // the other AI tools: AI suggestions, plans started from them, budget estimates, accounts with preferences
+        expect(result.features).toEqual({ destinationSearches: 30, plansFromSuggestions: 12, budgetEstimates: 7, usersWithPreferences: 5 });
         expect(result.stats).toEqual({
             conversations: { value: 10, delta: 1 },
             messages: { value: 35 },
@@ -210,6 +385,8 @@ describe("reports", () => {
 
     it.each([["7d", 7], ["30d", 30], ["90d", 13]])("%s: stats, change against the previous period, chart (%i points)", async (period, points) => {
         stub();
+        tripPlanRepository.countPostsBetween.mockResolvedValueOnce(8).mockResolvedValueOnce(4);
+        destinationReviewRepository.countBetween.mockResolvedValueOnce(3).mockResolvedValueOnce(6);
 
         const report = await adminService.reports(period);
 
@@ -217,6 +394,9 @@ describe("reports", () => {
         expect(report.stats.tripsCreated).toEqual({ value: 10, delta: 1 });
         expect(report.stats.completionRate).toEqual({ value: 0.5, delta: 0 });
         expect(report.stats.avgTripCost).toEqual({ value: 1000, delta: 0 });
+        // posts shared and reviews written in the period, against the previous one
+        expect(report.stats.postsShared).toEqual({ value: 8, delta: 1 });
+        expect(report.stats.newReviews).toEqual({ value: 3, delta: -0.5 });
         expect(report.tripsCreated).toHaveLength(points);
         expect(report.provinces).toEqual([{ name: "Huế", trips: 4, avgCost: 1501 }, { name: "", trips: 1, avgCost: 0 }]);
     });
@@ -236,7 +416,21 @@ describe("activity log and moderation", () => {
     it("lists the reported content", async () => {
         contentRepository.listReports.mockResolvedValue([{ _id: ID, type: "video", reason: "spam", content: "c", authorName: "Bình", createdAt: new Date("2026-01-01"), status: "pending" }]);
 
-        await expect(adminService.listReports()).resolves.toEqual([{ id: ID, type: "video", reason: "spam", content: "c", author: "Bình", reportedAt: new Date("2026-01-01"), status: "pending" }]);
+        await expect(adminService.listReports()).resolves.toEqual([
+            { id: ID, type: "video", reason: "spam", content: "c", author: "Bình", reportedAt: new Date("2026-01-01"), status: "pending", details: "", targetId: null, decidedAt: null },
+        ]);
+    });
+
+    it("shows the admin what the reporter wrote and which post it is about, but never who reported", async () => {
+        contentRepository.listReports.mockResolvedValue([
+            { _id: ID, type: "post", reason: "other", content: "Huế - Huế", authorName: "an", createdAt: new Date("2026-01-01"), status: "pending", details: "Rude photos", targetId: "t1", reporterId: "secret-reporter" },
+        ]);
+
+        const [item] = await adminService.listReports();
+
+        expect(item).toMatchObject({ type: "post", details: "Rude photos", targetId: "t1" });
+        expect(JSON.stringify(item)).not.toContain("secret-reporter");
+        expect(item).not.toHaveProperty("reporterId");
     });
 
     it("approves or rejects a report and logs the decision", async () => {
@@ -247,6 +441,55 @@ describe("activity log and moderation", () => {
         expect(contentRepository.decideReport).toHaveBeenCalledWith(ID, "rejected", "a1");
         expect(result.status).toBe("rejected");
         expect(activityLogService.record).toHaveBeenCalledWith(expect.objectContaining({ action: "moderate", target: "rejected: Ảnh lạ" }));
+    });
+
+    describe("a reported post", () => {
+        const report = (extra = {}) => ({ _id: ID, type: "post", targetId: "t1", content: "Huế", status: "rejected", ...extra });
+
+        it("rejecting it takes the post down: the trip goes back to private and the removal is logged", async () => {
+            const trip = { _id: "t1", nameTrip: "Huế", visibility: "public", status: "active" };
+            contentRepository.decideReport.mockResolvedValue(report());
+            tripPlanRepository.findById.mockResolvedValue(trip);
+
+            const result = await adminService.decideReport(admin, ID, "rejected");
+
+            expect(tripVisibilityService.setVisibility).toHaveBeenCalledWith(trip, "private");
+            expect(result).toMatchObject({ status: "rejected", postRemoved: true });
+            expect(activityLogService.record).toHaveBeenCalledWith(expect.objectContaining({ action: "removePost", target: "Huế" }));
+            expect(activityLogService.record).toHaveBeenCalledWith(expect.objectContaining({ action: "moderate" }));
+        });
+
+        it("approving it keeps the post (nothing is touched)", async () => {
+            contentRepository.decideReport.mockResolvedValue(report({ status: "approved" }));
+
+            const result = await adminService.decideReport(admin, ID, "approved");
+
+            expect(result.postRemoved).toBe(false);
+            expect(tripPlanRepository.findById).not.toHaveBeenCalled();
+            expect(tripVisibilityService.setVisibility).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ["already private", { _id: "t1", visibility: "private" }],
+            ["deleted", { _id: "t1", visibility: "public", status: "delete" }],
+            ["gone", null],
+        ])("rejecting a post that is %s changes nothing and still records the decision", async (_name, trip) => {
+            contentRepository.decideReport.mockResolvedValue(report());
+            tripPlanRepository.findById.mockResolvedValue(trip);
+
+            const result = await adminService.decideReport(admin, ID, "rejected");
+
+            expect(result).toMatchObject({ status: "rejected", postRemoved: false });
+            expect(tripVisibilityService.setVisibility).not.toHaveBeenCalled();
+        });
+
+        it("rejecting any other kind of report never touches a trip", async () => {
+            contentRepository.decideReport.mockResolvedValue(report({ type: "video" }));
+
+            await adminService.decideReport(admin, ID, "rejected");
+
+            expect(tripPlanRepository.findById).not.toHaveBeenCalled();
+        });
     });
 
     it("rejects a bad decision and an unknown report", async () => {

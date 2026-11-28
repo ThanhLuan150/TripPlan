@@ -10,4 +10,7 @@ const save = (tripId, userId, data) => TripBudgetEstimate.findOneAndUpdate(
     { new: true, upsert: true },
 );
 
-export default { findByTrip, save };
+// number of saved estimates (admin panel)
+const countAll = () => TripBudgetEstimate.countDocuments({});
+
+export default { findByTrip, save, countAll };

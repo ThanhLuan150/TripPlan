@@ -76,7 +76,7 @@ describe('admin: dashboard', () => {
     const metric = {value: 0, delta: 0};
     openAdmin('/admin/dashboard', {
       'GET /admin/dashboard': {
-        stats: {users: metric, trips: metric, challengesCompleted: metric, aiChats: metric},
+        stats: {users: metric, trips: metric, challengesCompleted: metric, aiChats: metric, posts: metric, reviews: metric},
         newUsers: [{date: '2026-01-01', value: 0}],
         topDestinations: [],
       },

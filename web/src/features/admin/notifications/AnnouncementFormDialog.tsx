@@ -3,6 +3,7 @@ import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
 import {apiMessage} from '@/lib/apiClient';
 import {fieldError} from '@/lib/forms';
+import AdminSelect from '../components/AdminSelect';
 import AdminModal from '../components/AdminModal';
 import {adminButton, adminInput} from '../components/styles';
 import {useSaveAnnouncement} from '../hooks/useAdminData';
@@ -97,10 +98,15 @@ export default function AnnouncementFormDialog({item, onClose}: {item?: AdminAnn
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t('admin.common.status')}>
               {props => (
-                <select {...props} className={adminInput} {...bind('status')}>
-                  <option value="draft">{t('admin.status.draft')}</option>
-                  <option value="published">{t('admin.notifications.publish')}</option>
-                </select>
+                <AdminSelect
+                  id={props.id}
+                  value={values.status}
+                  onChange={value => formik.setFieldValue('status', value)}
+                  options={[
+                    {value: 'draft', label: t('admin.status.draft')},
+                    {value: 'published', label: t('admin.notifications.publish')},
+                  ]}
+                />
               )}
             </FormField>
             <FormField label={t('admin.notifications.columns.time')} error={shown('publishAt')}>

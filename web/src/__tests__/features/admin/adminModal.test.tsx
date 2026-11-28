@@ -2,7 +2,6 @@ import {fireEvent, render, renderHook, screen} from '@testing-library/react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import Toast from '@/components/ui/Toast';
 import AdminModal from '@/features/admin/components/AdminModal';
-import {toCsv} from '@/features/admin/csv';
 import {useAdminToast} from '@/features/admin/hooks/useAdminToast';
 import {httpError} from '../../utils/render';
 
@@ -72,12 +71,6 @@ describe('AdminModal', () => {
     );
 
     expect(document.querySelector('header button')).toHaveFocus();
-  });
-});
-
-describe('toCsv', () => {
-  it('quotes, escapes formulas and writes empty cells', () => {
-    expect(toCsv(['a'], [['=SUM(1)'], ['x,"y"'], [null], [3]])).toBe('a\r\n\'=SUM(1)\r\n"x,""y"""\r\n\r\n3');
   });
 });
 

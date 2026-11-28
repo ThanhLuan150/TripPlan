@@ -12,7 +12,7 @@ const { fns } = vi.hoisted(() => ({ fns: (...names) => Object.fromEntries(names.
 vi.mock("../../../src/services/adminService.js", () => ({
     default: fns(
         "dashboard", "alerts", "listUsers", "getUser", "createUser", "updateUser", "bulkUpdateUsers",
-        "listTrips", "getTrip", "deleteTrip", "listChallenges", "updateChallenge", "deleteChallenge",
+        "listTrips", "getTrip", "deleteTrip", "unpublishTrip", "revokeShare", "listReviews", "deleteReview", "listChallenges", "updateChallenge", "deleteChallenge",
         "roles", "aiOverview", "reports", "listLogs", "listReports", "decideReport",
     ),
 }));
@@ -40,6 +40,10 @@ describe("adminController", () => {
         ["listTrips", "listTrips", {}, []],
         ["getTrip", "getTrip", { params: { id: "t1" } }, ["t1"]],
         ["deleteTrip", "deleteTrip", { params: { id: "t1" } }, [admin, "t1"]],
+        ["unpublishTrip", "unpublishTrip", { params: { id: "t1" } }, [admin, "t1"]],
+        ["revokeShare", "revokeShare", { params: { id: "t1" } }, [admin, "t1"]],
+        ["listReviews", "listReviews", {}, []],
+        ["deleteReview", "deleteReview", { params: { id: "r1" } }, [admin, "r1"]],
         ["listChallenges", "listChallenges", {}, []],
         ["updateChallenge", "updateChallenge", { params: { id: "c1" }, body: { points: 5 } }, [admin, "c1", { points: 5 }]],
         ["deleteChallenge", "deleteChallenge", { params: { id: "c1" } }, [admin, "c1"]],

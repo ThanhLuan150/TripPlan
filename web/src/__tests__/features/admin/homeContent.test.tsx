@@ -7,7 +7,7 @@ import * as adminApi from '@/features/admin/api';
 import HomeContentPage from '@/features/admin/pages/HomeContentPage';
 import {mockShowcase} from '@/__tests__/fixtures/admin/data';
 import {uploadImage} from '@/lib/upload';
-import {httpError, pending, renderWithProviders, t} from '../../utils/render';
+import {httpError, pending, renderWithProviders, t, pickOption} from '../../utils/render';
 
 vi.mock('@/lib/upload', () => ({uploadImage: vi.fn(), uploadErrorKey: (e: {code?: string}) => (e?.code === 'big' ? 'common.imageTooLarge' : null)}));
 
@@ -85,7 +85,7 @@ describe('HomeContentPage', () => {
     const dialog = screen.getByRole('dialog');
     await user.upload(within(dialog).getByLabelText(t('admin.showcase.chooseImage'), {selector: 'input'}), file());
     await user.type(within(dialog).getByLabelText(t('admin.showcase.fields.location')), 'Ninh Bình');
-    await user.selectOptions(within(dialog).getByLabelText(t('admin.common.status')), 'hidden');
+    await pickOption(user, within(dialog).getByLabelText(t('admin.common.status')), 'hidden');
     await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
 
     await waitFor(() =>

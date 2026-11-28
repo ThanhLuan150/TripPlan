@@ -1,8 +1,12 @@
 import {useTranslation} from 'react-i18next';
 import {
+  IoCalculatorOutline,
   IoChatbubblesOutline,
+  IoCompassOutline,
+  IoOptionsOutline,
   IoSparklesOutline,
   IoPeopleOutline,
+  IoRocketOutline,
 } from 'react-icons/io5';
 import AdminBarChart from '../components/AdminBarChart';
 import AdminCard from '../components/AdminCard';
@@ -88,6 +92,15 @@ export default function AiPage() {
               icon={IoChatbubblesOutline}
             />
           </div>
+          <section aria-label={t('admin.ai.tools')} className="mb-6">
+            <h2 className="mb-3 text-sm font-semibold text-slate-700">{t('admin.ai.tools')}</h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+              <AdminStatCard label={t('admin.ai.features.destinationSearches')} value={format.number(data.features?.destinationSearches ?? 0)} icon={IoCompassOutline} />
+              <AdminStatCard label={t('admin.ai.features.plansFromSuggestions')} value={format.number(data.features?.plansFromSuggestions ?? 0)} icon={IoRocketOutline} />
+              <AdminStatCard label={t('admin.ai.features.budgetEstimates')} value={format.number(data.features?.budgetEstimates ?? 0)} icon={IoCalculatorOutline} />
+              <AdminStatCard label={t('admin.ai.features.usersWithPreferences')} value={format.number(data.features?.usersWithPreferences ?? 0)} icon={IoOptionsOutline} />
+            </div>
+          </section>
           <AdminCard className="mb-6" title={t('admin.ai.dailyMessages')} description={t('admin.ai.dailyMessagesHint')}>
             <div className="p-5">
               <AdminBarChart

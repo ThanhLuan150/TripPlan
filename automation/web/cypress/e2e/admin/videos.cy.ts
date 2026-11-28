@@ -19,10 +19,10 @@ describe('admin: videos', () => {
     openAdmin('/admin/videos');
     cards().should('have.length', 8);
 
-    cy.findByLabelText(t('admin.common.status')).select('hidden');
+    cy.findByLabelText(t('admin.common.status')).pick('hidden');
     cards().should('have.length', mockVideos.filter(v => v.status === 'hidden').length);
 
-    cy.findByLabelText(t('admin.common.status')).select('all');
+    cy.findByLabelText(t('admin.common.status')).pick('all');
     cy.findByRole('button', {name: t('admin.pagination.next')}).click();
     cards().should('have.length', 7);
 
@@ -84,7 +84,7 @@ describe('admin: videos', () => {
     const dialog = () => cy.findByRole('dialog', {name: t('admin.videos.edit')});
 
     dialog().findByLabelText(t('admin.videos.fields.title')).should('have.value', video.title);
-    dialog().findByLabelText(t('admin.common.status')).select('hidden');
+    dialog().findByLabelText(t('admin.common.status')).pick('hidden');
     saveButton().click();
 
     cy.findByText(t('admin.videos.updated')).should('be.visible');

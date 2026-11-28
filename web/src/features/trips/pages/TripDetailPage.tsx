@@ -9,6 +9,7 @@ import {
   IoCheckmarkCircle,
   IoChevronDown,
   IoDocumentTextOutline,
+  IoEarthOutline,
   IoHeart,
   IoHeartOutline,
   IoLocationOutline,
@@ -31,6 +32,7 @@ import RouteOptimizePanel from '../components/RouteOptimizePanel';
 import BudgetEstimatePanel from '../components/BudgetEstimatePanel';
 import ChallengeLocationDialog from '../components/ChallengeLocationDialog';
 import ShareTripDialog from '../components/ShareTripDialog';
+import SharePostDialog from '../components/SharePostDialog';
 import TripNotes from '../components/TripNotes';
 import TripVisibilityButton from '../components/TripVisibilityButton';
 import {images} from '../data/provinceImages';
@@ -64,6 +66,7 @@ export default function TripDetailPage() {
   const {idTrip} = useParams();
   const [exporting, setExporting] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [posting, setPosting] = useState(false);
   const {data: result, isLoading, isError} = useTripDetail(idTrip);
   const favorites = useFavoriteTrips();
   const toggleFavorite = useToggleFavorite();
@@ -217,6 +220,14 @@ export default function TripDetailPage() {
               {isFavorite ? <IoHeart size={20} className="text-rose-500" /> : <IoHeartOutline size={20} />}
             </button>
             {idTrip && <TripVisibilityButton tripId={idTrip} />}
+            <button
+              type="button"
+              aria-label={t('trips.post.openLabel')}
+              onClick={() => setPosting(true)}
+              className="flex h-10 items-center gap-2 rounded-full bg-white/90 px-3 text-sm font-semibold text-slate-800 backdrop-blur transition hover:bg-white md:px-4">
+              <IoEarthOutline size={18} className="text-brand-600" />
+              <span className="hidden sm:inline">{t('trips.post.open')}</span>
+            </button>
             <button
               type="button"
               aria-label={t('trips.share.open')}
@@ -385,6 +396,7 @@ export default function TripDetailPage() {
       />
 
       {sharing && idTrip && <ShareTripDialog tripId={idTrip} onClose={() => setSharing(false)} />}
+      {posting && idTrip && <SharePostDialog tripId={idTrip} onClose={() => setPosting(false)} />}
 
       {locating && (
         <ChallengeLocationDialog

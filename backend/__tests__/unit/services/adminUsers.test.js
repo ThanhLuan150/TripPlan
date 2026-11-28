@@ -4,6 +4,11 @@ import adminRepository from "../../../src/repositories/adminRepository.js";
 import contentRepository from "../../../src/repositories/contentRepository.js";
 import userRepository from "../../../src/repositories/userRepository.js";
 import activityLogService from "../../../src/services/activityLogService.js";
+import tripPlanRepository from "../../../src/repositories/tripPlanRepository.js";
+import destinationReviewRepository from "../../../src/repositories/destinationReviewRepository.js";
+import postLikeRepository from "../../../src/repositories/postLikeRepository.js";
+import savedPostRepository from "../../../src/repositories/savedPostRepository.js";
+import followRepository from "../../../src/repositories/followRepository.js";
 import { doc } from "../../helpers/http.js";
 
 vi.mock("../../../src/repositories/adminRepository.js", () => ({
@@ -28,7 +33,12 @@ vi.mock("../../../src/repositories/contentRepository.js", () => ({ default: { li
 vi.mock("../../../src/repositories/userRepository.js", () => ({
     default: { findById: vi.fn(), findByEmail: vi.fn(), findByUsername: vi.fn(), create: vi.fn(), updateById: vi.fn() },
 }));
-vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({ default: {} }));
+vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({ default: { countPostsByUser: vi.fn() } }));
+vi.mock("../../../src/repositories/destinationReviewRepository.js", () => ({ default: { countByUser: vi.fn() } }));
+vi.mock("../../../src/repositories/postLikeRepository.js", () => ({ default: { countByTrips: vi.fn() } }));
+vi.mock("../../../src/repositories/savedPostRepository.js", () => ({ default: { countByTrips: vi.fn() } }));
+vi.mock("../../../src/repositories/followRepository.js", () => ({ default: { countFollowers: vi.fn(), countFollowing: vi.fn() } }));
+vi.mock("../../../src/services/tripVisibilityService.js", () => ({ default: {}, visibilityOf: (trip) => (trip?.visibility === "public" ? "public" : "private") }));
 vi.mock("../../../src/services/activityLogService.js", () => ({ default: { record: vi.fn() } }));
 
 const ADMIN = { _id: "64b000000000000000000001", username: "boss", role: "admin" };
@@ -48,6 +58,12 @@ const account = (extra = {}) => ({
 
 beforeEach(() => {
     vi.resetAllMocks();
+    postLikeRepository.countByTrips.mockResolvedValue({});
+    savedPostRepository.countByTrips.mockResolvedValue({});
+    tripPlanRepository.countPostsByUser.mockResolvedValue(3);
+    destinationReviewRepository.countByUser.mockResolvedValue(2);
+    followRepository.countFollowers.mockResolvedValue(7);
+    followRepository.countFollowing.mockResolvedValue(5);
     adminRepository.tripStatsByUser.mockResolvedValue([]);
     adminRepository.challengeStatsByUser.mockResolvedValue([]);
 });
@@ -85,6 +101,9 @@ describe("getUser", () => {
 
         expect(result.user.id).toBe(ID);
         expect(result.aiConversations).toBe(7);
+        // what the account does in the community: posts, reviews, followers, following
+        expect(result.community).toEqual({ posts: 3, reviews: 2, followers: 7, following: 5 });
+        expect(tripPlanRepository.countPostsByUser).toHaveBeenCalledWith(ID);
         expect(result.trips[0]).toMatchObject({ nameTrip: "Đà Lạt", challenges: 2, owner: "Traveler" });
         expect(result.challenges[0]).toMatchObject({ name: "Hồ Xuân Hương", points: 50, completed: true });
         expect(result.activity[0]).toMatchObject({ action: "login" });

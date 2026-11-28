@@ -71,7 +71,7 @@ describe('admin: app home page content', () => {
 
     cy.findByRole('dialog').find('input[type="file"]').selectFile(PHOTO, {force: true});
     cy.findByRole('dialog').findByLabelText(t('admin.showcase.fields.location')).type('Ninh Bình');
-    cy.findByRole('dialog').findByLabelText(t('admin.common.status')).select('hidden');
+    cy.findByRole('dialog').findByLabelText(t('admin.common.status')).pick('hidden');
     saveButton().click();
 
     cy.findByText(t('admin.showcase.created')).should('be.visible');

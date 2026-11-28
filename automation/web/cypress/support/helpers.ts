@@ -140,7 +140,7 @@ export const visit = (path: string, options: Partial<Cypress.VisitOptions> = {})
 export const fixDate = (date: Date) => cy.clock(date.getTime(), ['Date']);
 
 // ---------------------------------------------------------------------------
-// Downloads: records the file names the app saves (a CSV export) instead of
+// Downloads: records the file names the app saves (a PDF export) instead of
 // really downloading them.
 // ---------------------------------------------------------------------------
 export const stubDownloads = () => {

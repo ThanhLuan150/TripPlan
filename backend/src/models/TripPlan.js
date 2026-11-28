@@ -22,6 +22,11 @@ const TripPlanSchema = mongoose.Schema({
     // what the link allows; only "view" (read only) exists, there is no shared editing
     sharePermission: { type: String, enum: ["view"], default: "view" },
     sharedAt: Date,
+    // Share as a post (Travel Community): the author's short introduction shown with the trip
+    // in the public list and page, and when it was shared. The post IS this public trip: nothing
+    // of the plan is copied. Both are removed when the trip goes private again.
+    postContent: { type: String, trim: true, maxlength: 1000 },
+    postedAt: Date,
 });
 
 // Model name kept as "Tripplan" so the existing "tripplans" collection is used.

@@ -23,7 +23,7 @@ import {
   mockVideos,
 } from '@/__tests__/fixtures/admin/data';
 import {announcementState} from '@/features/admin/notifications/state';
-import {httpError, renderWithProviders, t} from '../../utils/render';
+import {httpError, renderWithProviders, t, pickOption} from '../../utils/render';
 
 const rows = () => within(screen.getByRole('table')).getAllByRole('row').slice(1);
 const summary = (from: number, to: number, total: number) =>
@@ -77,12 +77,15 @@ describe('TripsPage', () => {
   const page = () => renderWithProviders(<TripsPage />);
   const trip = mockTrips[0];
 
-  it('lists the trips with their place, owner and status', async () => {
+  it('lists the trips with their place, owner and status, without the deleted ones', async () => {
     page();
     await screen.findByRole('table', {name: t('admin.trips.title')});
+    const active = mockTrips.filter(item => item.status === 'active').length;
 
     expect(rows()).toHaveLength(8);
-    expect(summary(1, 8, 30)).toBeInTheDocument();
+    expect(summary(1, 8, active)).toBeInTheDocument();
+    expect(active).toBeLessThan(mockTrips.length);
+    expect(screen.getByLabelText(t('admin.trips.columns.status'))).toHaveAttribute('data-value', 'active');
     expect(within(rows()[0]).getByText(trip.nameTrip)).toBeInTheDocument();
     expect(within(rows()[0]).getByText(trip.owner)).toBeInTheDocument();
     expect(within(rows()[0]).getByText(t('admin.trips.days', {count: trip.days}))).toBeInTheDocument();
@@ -105,12 +108,12 @@ describe('TripsPage', () => {
     const place = trip.location;
     const inPlace = mockTrips.filter(item => item.location === place).length;
 
-    await user.selectOptions(select(t('admin.trips.destination')), place);
+    await pickOption(user, select(t('admin.trips.destination')), place);
     expect(rows()).toHaveLength(Math.min(8, inPlace));
     expect(summary(1, Math.min(8, inPlace), inPlace)).toBeInTheDocument();
 
-    await user.selectOptions(select(t('admin.trips.destination')), 'all');
-    await user.selectOptions(select(t('admin.trips.columns.status')), 'delete');
+    await pickOption(user, select(t('admin.trips.destination')), 'all');
+    await pickOption(user, select(t('admin.trips.columns.status')), 'delete');
     expect(rows()).toHaveLength(mockTrips.filter(item => item.status === 'delete').length);
   });
 
@@ -176,10 +179,10 @@ describe('ChallengesPage', () => {
     await screen.findByRole('table');
     const inProvince = mockChallenges.filter(c => c.province === 'Hà Giang').length;
 
-    await user.selectOptions(select(t('admin.challenges.columns.province')), 'Hà Giang');
+    await pickOption(user, select(t('admin.challenges.columns.province')), 'Hà Giang');
     expect(rows()).toHaveLength(inProvince);
 
-    await user.selectOptions(select(t('admin.challenges.columns.province')), 'all');
+    await pickOption(user, select(t('admin.challenges.columns.province')), 'all');
     await user.type(search(t('admin.challenges.search')), 'fansipan');
     expect(rows()).toHaveLength(1);
   });
@@ -313,10 +316,10 @@ describe('VideosPage', () => {
     page();
     await screen.findByRole('list');
 
-    await user.selectOptions(select(t('admin.common.status')), 'hidden');
+    await pickOption(user, select(t('admin.common.status')), 'hidden');
     expect(cards()).toHaveLength(mockVideos.filter(v => v.status === 'hidden').length);
 
-    await user.selectOptions(select(t('admin.common.status')), 'all');
+    await pickOption(user, select(t('admin.common.status')), 'all');
     await user.click(screen.getByRole('button', {name: t('admin.pagination.next')}));
     expect(cards()).toHaveLength(7);
 
@@ -377,7 +380,7 @@ describe('VideosPage', () => {
     await user.click(screen.getByRole('button', {name: t('admin.common.editItem', {name: video.title})}));
     const dialog = screen.getByRole('dialog', {name: t('admin.videos.edit')});
     expect(within(dialog).getByLabelText(t('admin.videos.fields.title'))).toHaveValue(video.title);
-    await user.selectOptions(within(dialog).getByLabelText(t('admin.common.status')), 'hidden');
+    await pickOption(user, within(dialog).getByLabelText(t('admin.common.status')), 'hidden');
     await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
 
     await waitFor(() => expect(adminApi.patchVideo).toHaveBeenCalledWith(video.id, expect.objectContaining({status: 'hidden', title: video.title})));
@@ -432,13 +435,13 @@ describe('NotificationsPage', () => {
     page();
     await screen.findByRole('table');
 
-    await user.selectOptions(select(t('admin.notifications.columns.status')), 'scheduled');
+    await pickOption(user, select(t('admin.notifications.columns.status')), 'scheduled');
     expect(rows()).toHaveLength(3);
 
-    await user.selectOptions(select(t('admin.notifications.columns.status')), 'draft');
+    await pickOption(user, select(t('admin.notifications.columns.status')), 'draft');
     expect(rows()).toHaveLength(mockAnnouncements.filter(a => announcementState(a) === 'draft').length);
 
-    await user.selectOptions(select(t('admin.notifications.columns.status')), 'all');
+    await pickOption(user, select(t('admin.notifications.columns.status')), 'all');
     await user.type(search(t('admin.notifications.search')), 'hoan thanh ho so');
     expect(rows()).toHaveLength(1);
   });
@@ -456,7 +459,7 @@ describe('NotificationsPage', () => {
 
     await user.type(within(dialog).getByLabelText(t('admin.notifications.columns.title')), 'Bảo trì');
     await user.type(within(dialog).getByLabelText(t('admin.notifications.fields.message')), 'Tối nay 22h');
-    await user.selectOptions(within(dialog).getByLabelText(t('admin.common.status')), 'published');
+    await pickOption(user, within(dialog).getByLabelText(t('admin.common.status')), 'published');
     await user.click(within(dialog).getByRole('button', {name: t('admin.users.dialogs.saveChanges')}));
 
     await waitFor(() =>
@@ -531,11 +534,11 @@ describe('ActivityLogsPage', () => {
     page();
     await screen.findByRole('table');
 
-    await user.selectOptions(select(t('admin.activityLogs.columns.level')), 'warning');
+    await pickOption(user, select(t('admin.activityLogs.columns.level')), 'warning');
     expect(rows()).toHaveLength(mockActivityLogs.filter(l => l.level === 'warning').length);
 
-    await user.selectOptions(select(t('admin.activityLogs.columns.level')), 'all');
-    await user.selectOptions(select(t('admin.activityLogs.columns.action')), 'deleteUser');
+    await pickOption(user, select(t('admin.activityLogs.columns.level')), 'all');
+    await pickOption(user, select(t('admin.activityLogs.columns.action')), 'deleteUser');
     expect(rows()).toHaveLength(Math.min(10, mockActivityLogs.filter(l => l.action === 'deleteUser').length));
   });
 
@@ -554,18 +557,33 @@ describe('ActivityLogsPage', () => {
     expect(rows()).toHaveLength(10);
   });
 
-  it('exports the filtered log as CSV', async () => {
+  it('exports the filtered log as PDF, with the headings and the text of the page', async () => {
     const create = vi.fn(() => 'blob:log');
     Object.assign(URL, {createObjectURL: create, revokeObjectURL: vi.fn()});
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    vi.mocked(adminApi.exportPdf).mockResolvedValue(new Blob(['%PDF-'], {type: 'application/pdf'}));
     const user = userEvent.setup();
     page();
     await screen.findByRole('table');
 
     await user.click(screen.getByRole('button', {name: t('admin.common.export')}));
 
-    expect(create).toHaveBeenCalledWith(expect.any(Blob));
-    expect(click).toHaveBeenCalled();
+    await waitFor(() => expect(click).toHaveBeenCalled());
+    const table = vi.mocked(adminApi.exportPdf).mock.calls[0][0];
+    expect(table.title).toBe(t('admin.export.logs.title'));
+    expect(table.columns).toEqual(['time', 'actor', 'action', 'target', 'ip', 'level'].map(key => t(`admin.export.logs.columns.${key}`)));
+    expect(table.rows).toHaveLength(mockActivityLogs.length);
     click.mockRestore();
+  });
+
+  it('shows the error when the PDF cannot be made', async () => {
+    vi.mocked(adminApi.exportPdf).mockRejectedValue(httpError(500));
+    const user = userEvent.setup();
+    page();
+    await screen.findByRole('table');
+
+    await user.click(screen.getByRole('button', {name: t('admin.common.export')}));
+
+    expect(await screen.findByText(t('admin.common.actionFailed'))).toBeInTheDocument();
   });
 });

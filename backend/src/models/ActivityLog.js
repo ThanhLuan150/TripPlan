@@ -19,6 +19,9 @@ export const LOG_ACTIONS = [
     "manageShowcase",
     "manageAnnouncement",
     "moderate",
+    "removePost",
+    "revokeShare",
+    "deleteReview",
     "updateSettings",
 ];
 export const LOG_LEVELS = ["info", "warning", "error"];

@@ -9,6 +9,7 @@ import HomeContentPage from './pages/HomeContentPage';
 import ModerationPage from './pages/ModerationPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ReportsPage from './pages/ReportsPage';
+import ReviewsPage from './pages/ReviewsPage';
 import RolesPage from './pages/RolesPage';
 import SettingsPage from './pages/SettingsPage';
 import TripsPage from './pages/TripsPage';
@@ -28,6 +29,7 @@ export default function AdminRoutes() {
         <Route path="users" element={<UsersPage />} />
         <Route path="users/:id" element={<UserDetailsPage />} />
         <Route path="trips" element={<TripsPage />} />
+        <Route path="reviews" element={<ReviewsPage />} />
         <Route path="challenges" element={<ChallengesPage />} />
         <Route path="ai" element={<AiPage />} />
         <Route path="home" element={<HomeContentPage />} />

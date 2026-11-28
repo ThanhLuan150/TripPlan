@@ -13,12 +13,14 @@ interface Options<T> {
   // filter name -> does the row match the selected value
   filters?: Record<string, (row: T, value: string) => boolean>;
   pageSize?: number;
+  // filters that start on a value other than ALL ("Reset" goes back to these)
+  initialFilters?: Record<string, string>;
 }
 
 // Search + filters + pagination of a list, all on the client (mock data).
-export function useTableState<T>(rows: T[] | undefined, {searchText, filters = {}, pageSize = 8}: Options<T>) {
+export function useTableState<T>(rows: T[] | undefined, {searchText, filters = {}, pageSize = 8, initialFilters = {}}: Options<T>) {
   const [query, setQueryValue] = useState('');
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>(initialFilters);
   const [page, setPage] = useState(1);
 
   const q = normalize(query);
@@ -43,7 +45,7 @@ export function useTableState<T>(rows: T[] | undefined, {searchText, filters = {
     },
     reset: () => {
       setQueryValue('');
-      setValues({});
+      setValues(initialFilters);
       setPage(1);
     },
     page: current,

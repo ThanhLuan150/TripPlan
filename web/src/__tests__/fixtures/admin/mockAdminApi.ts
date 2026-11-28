@@ -9,6 +9,7 @@ import {
   mockChallenges,
   mockDashboard,
   mockModeration,
+  mockReviews,
   mockReports,
   mockRoles,
   mockSettingsData,
@@ -30,6 +31,7 @@ export const mockAdminApi = () => {
   m.fetchReport.mockImplementation(async period => mockReports[period]);
   m.fetchLogs.mockResolvedValue(mockActivityLogs);
   m.fetchModeration.mockResolvedValue(mockModeration);
+  m.fetchReviews.mockResolvedValue(mockReviews);
   m.fetchVideos.mockResolvedValue(mockVideos);
   m.fetchAnnouncements.mockResolvedValue(mockAnnouncements);
   m.fetchSettings.mockResolvedValue(mockSettingsData);

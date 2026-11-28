@@ -1,10 +1,13 @@
 import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {routes} from '@/app/routes';
 import {
   IoChatbubbleEllipsesOutline,
   IoCheckmark,
   IoClose,
+  IoDocumentTextOutline,
   IoImageOutline,
+  IoOpenOutline,
   IoPersonOutline,
   IoVideocamOutline,
 } from 'react-icons/io5';
@@ -31,6 +34,7 @@ const typeIcon: Record<ModerationType, typeof IoImageOutline> = {
   chatMessage: IoChatbubbleEllipsesOutline,
   profile: IoPersonOutline,
   video: IoVideocamOutline,
+  post: IoDocumentTextOutline,
 };
 
 const tabs = Object.keys(moderationStatusBadge) as ModerationStatus[];
@@ -103,6 +107,22 @@ export default function ModerationPage() {
                       <AdminStatusBadge tone="warning">{t(moderationReasonLabel[item.reason])}</AdminStatusBadge>
                     </div>
                     <p className="mt-1.5 text-sm text-slate-900">{item.content}</p>
+                    {!!item.details && (
+                      <p className="mt-1.5 rounded-lg bg-slate-50 p-2 text-sm break-words whitespace-pre-line text-slate-700">
+                        <span className="block text-xs font-medium text-slate-500">{t('admin.moderation.reporterNote')}</span>
+                        {item.details}
+                      </p>
+                    )}
+                    {item.type === 'post' && !!item.targetId && (
+                      <a
+                        href={routes.PublicTrip(item.targetId)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1.5 inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
+                        <IoOpenOutline size={14} aria-hidden />
+                        {t('admin.moderation.openPost')}
+                      </a>
+                    )}
                     <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                       <AdminAvatar name={item.author} size="sm" />
                       {item.author}
@@ -146,7 +166,15 @@ export default function ModerationPage() {
         open={!!decision}
         tone={decision?.approve ? 'primary' : 'danger'}
         title={t(decision?.approve ? 'admin.moderation.approveTitle' : 'admin.moderation.rejectTitle')}
-        description={t(decision?.approve ? 'admin.moderation.approveText' : 'admin.moderation.rejectText')}
+        description={t(
+          decision?.item.type === 'post'
+            ? decision.approve
+              ? 'admin.moderation.approvePostText'
+              : 'admin.moderation.rejectPostText'
+            : decision?.approve
+              ? 'admin.moderation.approveText'
+              : 'admin.moderation.rejectText',
+        )}
         confirmLabel={t(decision?.approve ? 'admin.moderation.approve' : 'admin.moderation.reject')}
         onCancel={() => setDecision(null)}
         onConfirm={() => {
@@ -155,7 +183,16 @@ export default function ModerationPage() {
           decide.mutate(
             {id: item.id, status: approve ? 'approved' : 'rejected'},
             {
-              onSuccess: () => toast.done(t(approve ? 'admin.moderation.approved' : 'admin.moderation.rejected')),
+              onSuccess: result =>
+                toast.done(
+                  t(
+                    approve
+                      ? 'admin.moderation.approved'
+                      : result?.postRemoved
+                        ? 'admin.moderation.rejectedPostRemoved'
+                        : 'admin.moderation.rejected',
+                  ),
+                ),
               onError: toast.failed,
             },
           );

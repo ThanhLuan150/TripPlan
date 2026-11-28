@@ -21,6 +21,7 @@ import TripMapPage from '@/features/trips/pages/TripMapPage';
 import ExplorePage from '@/features/trips/pages/ExplorePage';
 import SavedPostsPage from '@/features/trips/pages/SavedPostsPage';
 import RecommendPage from '@/features/destinations/pages/RecommendPage';
+import DestinationPage from '@/features/destinations/pages/DestinationPage';
 import PublicTripPage from '@/features/trips/pages/PublicTripPage';
 import SharedTripPage from '@/features/trips/pages/SharedTripPage';
 import RankingPage from '@/features/ranking/pages/RankingPage';
@@ -52,6 +53,7 @@ export default function AppRouter() {
         {/* public, read only view of a shared trip */}
         <Route path="/shared/:token" element={<SharedTripPage />} />
         <Route path="/trip/:id" element={<PublicTripPage />} />
+        <Route path="/destination/:name" element={<DestinationPage />} />
 
         {/* signed in (any role) */}
         <Route element={<RequireAuth />}>

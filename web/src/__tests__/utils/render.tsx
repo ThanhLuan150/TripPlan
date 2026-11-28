@@ -2,6 +2,7 @@
 // the toast host, and read where the page navigated to.
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {render, screen} from '@testing-library/react';
+import type {UserEvent} from '@testing-library/user-event';
 import type {ReactElement} from 'react';
 import {MemoryRouter, Route, Routes, useLocation} from 'react-router-dom';
 import {ToastHost} from '@/components/ui/Toast';
@@ -27,6 +28,8 @@ export function LocationProbe() {
 interface RenderOptions {
   // URL of the page
   route?: string;
+  // query string of the page, e.g. '?q=lat'
+  search?: string;
   // route pattern, e.g. '/assistant/trips/:idTrip' (default: route)
   path?: string;
   // router state (location.state)
@@ -38,9 +41,9 @@ interface RenderOptions {
 
 export function renderWithProviders(
   ui: ReactElement,
-  {route = '/', path, state, history = [], client = createTestQueryClient()}: RenderOptions = {},
+  {route = '/', search, path, state, history = [], client = createTestQueryClient()}: RenderOptions = {},
 ) {
-  const entries = [...history, {pathname: route, state}];
+  const entries = [...history, {pathname: route, search, state}];
   const result = render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1}>
@@ -72,3 +75,15 @@ export const networkError = () =>
 
 // a promise that never settles: keeps a query / mutation pending
 export const pending = <T,>() => new Promise<T>(() => undefined);
+
+// Chooses an option of the app's own dropdown (AdminSelect): opens it from its button, then clicks the
+// option with this value (what a <select> test did with selectOptions).
+export const pickOption = async (user: UserEvent, trigger: HTMLElement, value: string) => {
+  await user.click(trigger);
+  const list = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
+  const option = list?.querySelector<HTMLElement>(`button[data-value="${value}"]`);
+  if (!option) {
+    throw new Error(`No option "${value}" in the dropdown`);
+  }
+  await user.click(option);
+};

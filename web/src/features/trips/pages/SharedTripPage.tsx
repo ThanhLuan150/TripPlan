@@ -96,6 +96,12 @@ export function ReadOnlyTripPage({queryKey, id: token, load, textKeys, actions}:
             <IoLocationOutline size={16} />
             {trip.location}
           </p>
+          {trip.postContent && (
+            <blockquote className="mt-4 rounded-2xl bg-white/15 p-4 text-sm leading-relaxed whitespace-pre-line text-white">
+              <p className="mb-1 text-xs font-semibold tracking-wide text-white/75 uppercase">{t('trips.publicTrip.authorNote')}</p>
+              {trip.postContent}
+            </blockquote>
+          )}
           {actions && <div className="mt-4 flex flex-wrap items-center gap-3">{typeof actions === 'function' ? actions(trip) : actions}</div>}
         </div>
 

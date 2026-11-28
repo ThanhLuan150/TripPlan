@@ -8,6 +8,7 @@ import {
   IoNotificationsOutline,
   IoPeopleOutline,
   IoReceiptOutline,
+  IoStarOutline,
   IoSettingsOutline,
   IoShieldCheckmarkOutline,
   IoSparklesOutline,
@@ -42,6 +43,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       {to: adminRoutes.users, labelKey: 'admin.nav.users', icon: IoPeopleOutline},
       {to: adminRoutes.trips, labelKey: 'admin.nav.trips', icon: IoMapOutline},
+      {to: adminRoutes.reviews, labelKey: 'admin.nav.reviews', icon: IoStarOutline},
       {to: adminRoutes.challenges, labelKey: 'admin.nav.challenges', icon: IoTrophyOutline},
       {to: adminRoutes.ai, labelKey: 'admin.nav.ai', icon: IoSparklesOutline},
       {to: adminRoutes.home, labelKey: 'admin.nav.home', icon: IoImagesOutline},
