@@ -24,6 +24,7 @@ vi.mock('@/features/trips/pages/GenerateTripsPage', () => stub('GenerateTripsPag
 vi.mock('@/features/trips/pages/TripDetailPage', () => stub('TripDetailPage'));
 vi.mock('@/features/trips/pages/TripMapPage', () => stub('TripMapPage'));
 vi.mock('@/features/trips/pages/ExplorePage', () => stub('ExplorePage'));
+vi.mock('@/features/trips/pages/SavedPostsPage', () => stub('SavedPostsPage'));
 vi.mock('@/features/ranking/pages/RankingPage', () => stub('RankingPage'));
 vi.mock('@/features/profile/pages/ProfilePage', () => stub('ProfilePage'));
 vi.mock('@/features/profile/pages/EditProfilePage', () => stub('EditProfilePage'));
@@ -130,6 +131,12 @@ describe('signed-in routes', () => {
     open('/assistant/explore');
     expect(await screen.findByText('ExplorePage')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/explore');
+  });
+
+  it('/saved is the private saved posts page of a signed-in user', async () => {
+    signIn();
+    open('/saved');
+    expect(await screen.findByText('SavedPostsPage')).toBeInTheDocument();
   });
 
   it('/assistant opens the chat', async () => {

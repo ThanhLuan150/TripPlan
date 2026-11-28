@@ -41,6 +41,29 @@ describe('PublicTripPage', () => {
     expect(screen.getByTestId('likes-count')).toHaveTextContent('0');
   });
 
+  describe('saving the plan', () => {
+    it('a signed-out visitor gets a sign-in link', async () => {
+      vi.mocked(tripsApi.getPublic).mockResolvedValue({...trip, saved: false});
+      renderPage();
+
+      expect(await screen.findByRole('link', {name: t('trips.savePost.signIn')})).toHaveAttribute('href', '/login');
+    });
+
+    it('a signed-in user sees the saved state and unsaves the post', async () => {
+      saveSession({message: 'ok', accessToken: 'a.b.c', data: {username: 'reader', role: 'user'}} as never);
+      vi.mocked(tripsApi.getPublic).mockResolvedValue({...trip, saved: true});
+      vi.mocked(tripsApi.unsavePost).mockResolvedValue({saved: false});
+      renderPage();
+
+      const button = await screen.findByRole('button', {name: t('trips.savePost.unsave')});
+      expect(button).toHaveAttribute('aria-pressed', 'true');
+      await userEvent.click(button);
+
+      expect(tripsApi.unsavePost).toHaveBeenCalledWith('t1');
+      expect(await screen.findByRole('button', {name: t('trips.savePost.save')})).toHaveAttribute('aria-pressed', 'false');
+    });
+  });
+
   describe('liking the plan', () => {
     it('a signed-out visitor sees the total and a sign-in link', async () => {
       vi.mocked(tripsApi.getPublic).mockResolvedValue({...trip, likesCount: 9, liked: false});

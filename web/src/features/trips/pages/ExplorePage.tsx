@@ -9,6 +9,7 @@ import {connectionErrorKey} from '@/lib/apiClient';
 import {addCommas, formatDate} from '@/lib/date';
 import {tripsApi} from '../api/tripsApi';
 import LikeButton from '../components/LikeButton';
+import SaveButton from '../components/SaveButton';
 
 // Trips other people made public: browse them, open one, keep a private copy.
 // Only the plan is listed (no owner, progress or photos).
@@ -80,8 +81,9 @@ export default function ExplorePage() {
                     </p>
                   </div>
                 </Link>
-                <div className="flex border-t border-slate-100 px-2 py-1.5">
+                <div className="flex items-center justify-between border-t border-slate-100 px-2 py-1.5">
                   <LikeButton tripId={item._id} liked={item.liked} likesCount={item.likesCount} />
+                  <SaveButton tripId={item._id} saved={item.saved} />
                 </div>
               </li>
             ))}

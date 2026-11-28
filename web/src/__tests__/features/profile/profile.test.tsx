@@ -83,6 +83,7 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('link', {name: t('profile.edit')})).toHaveAttribute('href', '/profile/edit');
     expect(screen.getByRole('link', {name: t('profile.notifications')})).toHaveAttribute('href', '/notification');
     expect(screen.getByRole('link', {name: t('profile.plans')})).toHaveAttribute('href', '/assistant/trips');
+    expect(screen.getByRole('link', {name: t('profile.savedPosts')})).toHaveAttribute('href', '/saved');
     expect(screen.getByRole('link', {name: t('profile.whatIs')})).toHaveAttribute('href', '/what-aloca');
     expect(screen.getByText(t('profile.genzTitle')).closest('a')).toHaveAttribute('href', '/benefit');
     expect(screen.getByRole('link', {name: t('profile.hotline')})).toHaveAttribute('href', 'tel:19001009');

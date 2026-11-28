@@ -52,6 +52,7 @@ jest.mock('../src/screens/Preferences', () => ({__esModule: true, default: () =>
 jest.mock('../src/screens/UserProfile', () => ({__esModule: true, default: () => null}));
 jest.mock('../src/screens/Profile', () => ({__esModule: true, default: () => null}));
 jest.mock('../src/screens/PublicTripDetail', () => ({__esModule: true, default: () => null}));
+jest.mock('../src/screens/SavedPosts', () => ({__esModule: true, default: () => null}));
 jest.mock('../src/screens/PublicTrips', () => ({__esModule: true, default: () => null}));
 jest.mock('../src/screens/Recommend', () => ({__esModule: true, default: () => null}));
 jest.mock('../src/screens/Ranking', () => ({__esModule: true, default: () => null}));
@@ -80,7 +81,7 @@ describe('RootNavigator', () => {
   it('offers the app to a signed-in user, with five tabs', () => {
     renderApp(<RootNavigator />);
     expect(mockNames).toEqual([
-      'Tabs', 'CreateTrip', 'GenerateTrips', 'TripDetail', 'TripMap', 'Recommend', 'PublicTripDetail', 'Notifications', 'EditProfile', 'Preferences', 'UserProfile', 'Videos', 'WhatAloca', 'Benefit',
+      'Tabs', 'CreateTrip', 'GenerateTrips', 'TripDetail', 'TripMap', 'Recommend', 'PublicTripDetail', 'SavedPosts', 'Notifications', 'EditProfile', 'Preferences', 'UserProfile', 'Videos', 'WhatAloca', 'Benefit',
     ]);
   });
 });

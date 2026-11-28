@@ -12,6 +12,7 @@ import {useQueryClient} from '@tanstack/react-query';
 import {tripsApi} from '../api';
 import {BackPill, ErrorText} from '../components';
 import LikeButton from '../components/LikeButton';
+import SaveButton from '../components/SaveButton';
 import {PleaseWait} from '../components/GenerateStatus';
 import {queryKeys, usePublicTrip} from '../hooks/queries';
 import {useApiMutation} from '../hooks/useApiMutation';
@@ -69,6 +70,7 @@ export default function PublicTripDetail() {
             liked={data.liked}
             likesCount={data.likesCount}
           />
+          <SaveButton tripId={id} saved={data.saved} />
         </View>
         <TouchableOpacity
           accessibilityRole="button"
@@ -127,7 +129,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginVertical: 8,
   },
-  likeRow: {alignItems: 'center'},
+  likeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
   saveText: {color: '#fff', fontWeight: '700', fontSize: 15},
   disabled: {opacity: 0.6},
   day: {

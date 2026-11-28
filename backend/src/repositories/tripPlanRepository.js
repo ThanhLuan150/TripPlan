@@ -44,6 +44,16 @@ const PUBLIC_CARD = "nameTrip location startDate endDate transportCostTotal food
 const listPublic = (skip, limit) =>
     TripPlan.find({ visibility: "public", ...ACTIVE }).sort({ _id: -1 }).skip(skip).limit(limit).select(PUBLIC_CARD).lean();
 
+// Of these ids, the ones that are still public and not deleted (ids only).
+const findPublicIdsIn = async (ids) => {
+    const rows = await TripPlan.find({ _id: { $in: ids }, visibility: "public", ...ACTIVE }).select("_id").lean();
+    return rows.map((row) => String(row._id));
+};
+
+// Cards of these public trips (not deleted), in no particular order.
+const listPublicByIds = (ids) =>
+    TripPlan.find({ _id: { $in: ids }, visibility: "public", ...ACTIVE }).select(PUBLIC_CARD).lean();
+
 const countPublic = () => TripPlan.countDocuments({ visibility: "public", ...ACTIVE });
 
 const setVisibility = (id, visibility) =>
@@ -53,6 +63,8 @@ export default {
     findPublicById,
     listPublic,
     countPublic,
+    findPublicIdsIn,
+    listPublicByIds,
     setVisibility,
     findSharedByToken,
     enableShare,

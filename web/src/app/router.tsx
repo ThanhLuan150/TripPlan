@@ -19,6 +19,7 @@ import GenerateTripsPage from '@/features/trips/pages/GenerateTripsPage';
 import TripDetailPage from '@/features/trips/pages/TripDetailPage';
 import TripMapPage from '@/features/trips/pages/TripMapPage';
 import ExplorePage from '@/features/trips/pages/ExplorePage';
+import SavedPostsPage from '@/features/trips/pages/SavedPostsPage';
 import RecommendPage from '@/features/destinations/pages/RecommendPage';
 import PublicTripPage from '@/features/trips/pages/PublicTripPage';
 import SharedTripPage from '@/features/trips/pages/SharedTripPage';
@@ -70,6 +71,7 @@ export default function AppRouter() {
             {/* public plans of everyone: a main tab (the old address still works) */}
             <Route path={routes.Explore} element={<ExplorePage />} />
             <Route path="/assistant/explore" element={<Navigate to={routes.Explore} replace />} />
+            <Route path={routes.SavedPosts} element={<SavedPostsPage />} />
             <Route path={routes.Ranking} element={<RankingPage />} />
             <Route path={routes.Profile} element={<ProfilePage />} />
             <Route path="/user/:id" element={<UserProfilePage />} />

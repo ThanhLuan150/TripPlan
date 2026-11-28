@@ -309,7 +309,16 @@
     "publicSaveFailed": "Could not save this plan",
     "like": "Like",
     "unlike": "Unlike",
-    "likeFailed": "Could not update your like"
+    "likeFailed": "Could not update your like",
+    "savePost": "Save post",
+    "unsavePost": "Remove from saved",
+    "savePostFailed": "Could not update your saved posts",
+    "savedTitle": "Saved posts",
+    "savedSubtitle": "Public plans you saved to read later. Only you can see this list.",
+    "savedEmpty": "You have not saved any plan yet. Tap the bookmark on a plan in Explore to keep it here.",
+    "savedError": "Could not load your saved posts",
+    "savedMore": "Load more",
+    "savedExplore": "Explore plans"
   },
   "recommend": {
     "open": "Get destination ideas from AI",
@@ -542,6 +551,7 @@
     "titleLegend": "Legendary explorer"
   },
   "profile": {
+    "savedPosts": "Saved posts",
     "edit": "Edit",
     "notifications": "Notifications",
     "plans": "Plans",

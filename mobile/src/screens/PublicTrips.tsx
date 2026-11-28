@@ -11,6 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import EmptyState from '../components/EmptyState';
 import LikeButton from '../components/LikeButton';
+import SaveButton from '../components/SaveButton';
 import ErrorText from '../components/ErrorText';
 import {usePublicTrips} from '../hooks/queries';
 import {formatDate} from '../lib/date';
@@ -83,11 +84,14 @@ export default function PublicTrips() {
                   })}
                 </Text>
               </TouchableOpacity>
-              <LikeButton
-                tripId={item._id}
-                liked={item.liked}
-                likesCount={item.likesCount}
-              />
+              <View style={styles.actions}>
+                <LikeButton
+                  tripId={item._id}
+                  liked={item.liked}
+                  likesCount={item.likesCount}
+                />
+                <SaveButton tripId={item._id} saved={item.saved} />
+              </View>
             </View>
           )}
           ListFooterComponent={
@@ -128,6 +132,11 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   cardBody: {gap: 4},
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   name: {fontSize: 16, fontWeight: '700', color: colors.text},
   row: {flexDirection: 'row', alignItems: 'center', gap: 6},
   meta: {fontSize: 13, color: colors.muted},

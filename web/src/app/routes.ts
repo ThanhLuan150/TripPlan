@@ -20,6 +20,7 @@ export const routes = {
   Recommend: '/assistant/recommend', // AI destination suggestions
   PublicTrip: (id: string) => `/trip/${id}`, // public, read only view of a public trip
   SharedTrip: (token: string) => `/shared/${token}`, // public, read only
+  SavedPosts: '/saved', // the signed-in user's saved posts (private)
   Ranking: '/ranking', // 'Xếp hạng'
   Profile: '/profile', // 'Tài khoản'
   UserProfile: (id: string) => `/user/${id}`, // public profile of another account (Follow)

@@ -253,6 +253,22 @@ describe('tripsApi / challengeApi', () => {
     expect(del).toHaveBeenCalledWith('/public-trip/t1/like');
   });
 
+  it('public posts: detail carries the saved state, save / unsave / list use the save routes', async () => {
+    get.mockResolvedValueOnce(reply({tripDatas: {location: 'x'}, likesCount: 3, liked: true, saved: true}));
+    post.mockResolvedValue(reply({saved: true}));
+    del.mockResolvedValue(reply({saved: false}));
+
+    await expect(tripsApi.getPublic('t1')).resolves.toEqual({location: 'x', likesCount: 3, liked: true, saved: true});
+    await expect(tripsApi.savePost('t1')).resolves.toEqual({saved: true});
+    await expect(tripsApi.unsavePost('t1')).resolves.toEqual({saved: false});
+    expect(post).toHaveBeenCalledWith('/public-trip/t1/save');
+    expect(del).toHaveBeenCalledWith('/public-trip/t1/save');
+
+    get.mockResolvedValueOnce(reply({page: 2, limit: 12, total: 13, items: [{_id: 't1'}]}));
+    await expect(tripsApi.savedPosts(2)).resolves.toEqual({page: 2, limit: 12, total: 13, items: [{_id: 't1'}]});
+    expect(get).toHaveBeenLastCalledWith('/user/saved-posts', {params: {page: 2}});
+  });
+
   it('duplicate posts to the duplicate route', async () => {
     post.mockResolvedValue(reply({tripId: 't2', nameTrip: 'x (bản sao)'}));
 

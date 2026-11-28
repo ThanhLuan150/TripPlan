@@ -20,6 +20,8 @@ jest.mock('../src/api', () => ({
     copyPublic: jest.fn(),
     likePublic: jest.fn(),
     unlikePublic: jest.fn(),
+    savePost: jest.fn(),
+    unsavePost: jest.fn(),
   },
 }));
 
@@ -37,6 +39,13 @@ const card = (id: string, nameTrip: string) => ({
   likesCount: 0,
   liked: false,
 });
+
+const saveButtons = (tree: ReturnType<typeof renderApp>) =>
+  tree.root
+    .findAllByType(TouchableOpacity)
+    .filter(n =>
+      [t('trips.savePost'), t('trips.unsavePost')].includes(n.props.accessibilityLabel),
+    );
 
 const likeButtons = (tree: ReturnType<typeof renderApp>) =>
   tree.root
@@ -171,6 +180,34 @@ describe('PublicTrips', () => {
     });
   });
 
+  describe('saving', () => {
+    const page = {
+      page: 1,
+      limit: 12,
+      total: 2,
+      items: [{...card('a1', 'Đà Lạt 3 ngày'), saved: true}, card('b2', 'Huế 2 ngày')],
+    };
+
+    it('shows which plans are saved and saves / unsaves one without leaving the list', async () => {
+      (tripsApi.listPublic as jest.Mock).mockResolvedValue(page);
+      (tripsApi.savePost as jest.Mock).mockResolvedValue({saved: true});
+      (tripsApi.unsavePost as jest.Mock).mockResolvedValue({saved: false});
+      const tree = renderApp(<PublicTrips />);
+      await flush();
+
+      expect(saveButtons(tree).map(b => b.props.accessibilityLabel)).toEqual([t('trips.unsavePost'), t('trips.savePost')]);
+      press(saveButtons(tree)[1]);
+      await flush();
+      expect(tripsApi.savePost).toHaveBeenCalledWith('b2');
+      press(saveButtons(tree)[0]);
+      await flush();
+      expect(tripsApi.unsavePost).toHaveBeenCalledWith('a1');
+
+      expect(saveButtons(tree).map(b => b.props.accessibilityLabel)).toEqual([t('trips.savePost'), t('trips.unsavePost')]);
+      expect(nav.navigate).not.toHaveBeenCalled();
+    });
+  });
+
   it('says so when there is nothing public, or when loading fails', async () => {
     (tripsApi.listPublic as jest.Mock).mockResolvedValue({page: 1, limit: 12, total: 0, items: []});
     const empty = renderApp(<PublicTrips />);
@@ -223,6 +260,20 @@ describe('PublicTripDetail', () => {
     expect(tripsApi.likePublic).toHaveBeenCalledWith('p1');
     expect(likeButtons(tree)[0].props.accessibilityLabel).toBe(t('trips.unlike'));
     expect(allText(tree)).toContain('3');
+  });
+
+  it('shows the saved state of the plan and unsaves it', async () => {
+    (tripsApi.getPublic as jest.Mock).mockResolvedValue({...trip, saved: true});
+    (tripsApi.unsavePost as jest.Mock).mockResolvedValue({saved: false});
+    const tree = renderApp(<PublicTripDetail />);
+    await flush();
+
+    expect(saveButtons(tree)[0].props.accessibilityLabel).toBe(t('trips.unsavePost'));
+    press(saveButtons(tree)[0]);
+    await flush();
+
+    expect(tripsApi.unsavePost).toHaveBeenCalledWith('p1');
+    expect(saveButtons(tree)[0].props.accessibilityLabel).toBe(t('trips.savePost'));
   });
 
   it('keeps a private copy and opens it', async () => {

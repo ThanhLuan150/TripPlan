@@ -13,6 +13,9 @@ vi.mock("../../../src/repositories/postLikeRepository.js", () => ({
         countByTrips: vi.fn().mockResolvedValue({}), likedTripIds: vi.fn().mockResolvedValue([]),
     },
 }));
+vi.mock("../../../src/repositories/savedPostRepository.js", () => ({
+    default: { exists: vi.fn().mockResolvedValue(false), savedTripIds: vi.fn().mockResolvedValue([]) },
+}));
 vi.mock("../../../src/repositories/tripDayRepository.js", () => ({ default: { findByTripId: vi.fn().mockResolvedValue([]) } }));
 vi.mock("../../../src/repositories/challengeRepository.js", () => ({ default: { findByTripDayId: vi.fn() } }));
 

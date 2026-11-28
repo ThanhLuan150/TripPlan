@@ -395,13 +395,23 @@
       "notExpense": "Đây là con số do AI ước tính, không phải số tiền bạn đã chi và không được lưu thành khoản chi.",
       "travelers": "Số người",
       "level": "Mức chi tiêu",
-      "levels": {"budget": "Tiết kiệm", "moderate": "Vừa phải", "premium": "Cao cấp"},
+      "levels": {
+        "budget": "Tiết kiệm",
+        "moderate": "Vừa phải",
+        "premium": "Cao cấp"
+      },
       "estimate": "Ước tính ngân sách",
       "reestimate": "Ước tính lại",
       "loading": "AI đang ước tính ngân sách…",
       "empty": "Chưa có ước tính. Chọn số người và mức chi tiêu rồi hỏi AI.",
       "travelersInvalid": "Nhập số người là số nguyên từ 1 đến {{max}}",
-      "categories": {"accommodation": "Lưu trú", "food": "Ăn uống", "transport": "Di chuyển", "activities": "Hoạt động & vé", "other": "Khác"},
+      "categories": {
+        "accommodation": "Lưu trú",
+        "food": "Ăn uống",
+        "transport": "Di chuyển",
+        "activities": "Hoạt động & vé",
+        "other": "Khác"
+      },
       "total": "Tổng ước tính",
       "assumptions": "Giả định",
       "forPeople": "Cho {{count}} người, {{level}}",
@@ -518,6 +528,20 @@
       "places": "{{count}} địa điểm",
       "you": "Vị trí của bạn",
       "myLocation": "Vị trí của tôi"
+    },
+    "savePost": {
+      "save": "Lưu",
+      "unsave": "Bỏ lưu",
+      "signIn": "Đăng nhập để lưu kế hoạch này xem sau",
+      "failed": "Không cập nhật được bài viết đã lưu",
+      "unavailable": "Kế hoạch này không còn nữa"
+    },
+    "saved": {
+      "title": "Bài viết đã lưu",
+      "subtitle": "Các kế hoạch công khai bạn đã lưu để xem lại sau. Chỉ mình bạn thấy danh sách này.",
+      "empty": "Bạn chưa lưu kế hoạch nào. Nhấn biểu tượng đánh dấu ở một kế hoạch trong Khám phá để lưu lại đây.",
+      "error": "Không tải được bài viết đã lưu",
+      "goExplore": "Khám phá kế hoạch"
     }
   },
   "destinations": {
@@ -688,7 +712,8 @@
         "empty": "Chọn ít nhất một nhóm hoặc nhập ghi chú",
         "notesLong": "Ghi chú quá dài (tối đa 300 ký tự)"
       }
-    }
+    },
+    "savedPosts": "Bài viết đã lưu"
   },
   "videos": {
     "title": "Video du lịch",

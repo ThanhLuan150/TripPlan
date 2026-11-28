@@ -68,6 +68,7 @@ describe('Profile', () => {
       [null, 'EditProfile'],
       [t('profile.notifications'), 'Notifications'],
       [t('profile.plans'), 'Tabs', {screen: 'Assistant'}],
+      [t('profile.savedPosts'), 'SavedPosts'],
       [t('profile.preferences.link'), 'Preferences'],
       [t('profile.whatIs'), 'WhatAloca'],
       [t('profile.genzTitle'), 'Benefit'],
