@@ -12,21 +12,17 @@ import NoResults from '../components/NoResults';
 import {adminButton, adminToolbar} from '../components/styles';
 import {useAdminActivityLogs} from '../hooks/useAdminData';
 import {useAdminFormat} from '../hooks/useAdminFormat';
-import {downloadCsv} from '../csv';
+import {logsTable} from '../exports';
+import {useAdminToast} from '../hooks/useAdminToast';
+import {downloadPdf} from '../pdf';
 import {ALL, useTableState} from '../hooks/useTableState';
 import {logActionLabel, logLevelBadge, optionsOf} from '../status';
 import type {AdminActivityLog} from '../types';
 
-const exportLogs = (logs: AdminActivityLog[]) =>
-  downloadCsv(
-    ['time', 'actor', 'action', 'target', 'ip', 'level'],
-    logs.map(log => [log.at, log.actor, log.action, log.target, log.ip, log.level]),
-    'aloca-activity-log.csv',
-  );
-
 export default function ActivityLogsPage() {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const format = useAdminFormat();
+  const toast = useAdminToast();
   const {data, isLoading} = useAdminActivityLogs();
   const table = useTableState(data, {
     searchText: log => `${log.actor} ${log.target} ${log.ip}`,
@@ -96,7 +92,7 @@ export default function ActivityLogsPage() {
             type="button"
             className={adminButton.secondary}
             disabled={!table.total}
-            onClick={() => exportLogs(table.all)}>
+            onClick={() => downloadPdf(logsTable(table.all, t, format, i18n.language)).catch(toast.failed)}>
             <IoDownloadOutline size={16} aria-hidden />
             {t('admin.common.export')}
           </button>

@@ -5,6 +5,7 @@ import {useTranslation} from 'react-i18next';
 import {apiMessage} from '@/lib/apiClient';
 import {fieldError} from '@/lib/forms';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
+import AdminSelect from '../components/AdminSelect';
 import AdminModal from '../components/AdminModal';
 import {adminButton, adminInput} from '../components/styles';
 import {useSaveShowcase} from '../hooks/useAdminData';
@@ -164,10 +165,15 @@ export default function ShowcaseFormDialog({
             </FormField>
             <FormField label={t('admin.common.status')}>
               {props => (
-                <select {...props} className={adminInput} {...bind('status')}>
-                  <option value="published">{t('admin.status.published')}</option>
-                  <option value="hidden">{t('admin.status.hidden')}</option>
-                </select>
+                <AdminSelect
+                  id={props.id}
+                  value={values.status}
+                  onChange={value => formik.setFieldValue('status', value)}
+                  options={[
+                    {value: 'published', label: t('admin.status.published')},
+                    {value: 'hidden', label: t('admin.status.hidden')},
+                  ]}
+                />
               )}
             </FormField>
           </div>

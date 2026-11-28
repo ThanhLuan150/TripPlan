@@ -19,6 +19,7 @@ export const routes = {
   Explore: '/explore', // public trips of everyone
   Recommend: '/assistant/recommend', // AI destination suggestions
   PublicTrip: (id: string) => `/trip/${id}`, // public, read only view of a public trip
+  Destination: (name: string) => `/destination/${encodeURIComponent(name)}`, // public: reviews and average rating of a destination
   SharedTrip: (token: string) => `/shared/${token}`, // public, read only
   SavedPosts: '/saved', // the signed-in user's saved posts (private)
   Ranking: '/ranking', // 'Xếp hạng'
@@ -40,6 +41,7 @@ export const adminRoutes = {
   users: '/admin/users',
   user: (id: string) => `/admin/users/${id}`,
   trips: '/admin/trips',
+  reviews: '/admin/reviews',
   challenges: '/admin/challenges',
   ai: '/admin/ai',
   videos: '/admin/videos',

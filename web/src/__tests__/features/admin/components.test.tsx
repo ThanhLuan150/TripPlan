@@ -20,7 +20,7 @@ import AdminSearch from '@/features/admin/components/AdminSearch';
 import AdminStatCard from '@/features/admin/components/AdminStatCard';
 import AdminStatusBadge from '@/features/admin/components/AdminStatusBadge';
 import NoResults from '@/features/admin/components/NoResults';
-import {t} from '../../utils/render';
+import {t, pickOption} from '../../utils/render';
 
 describe('AdminStatCard', () => {
   const card = (props: Partial<Parameters<typeof AdminStatCard>[0]> = {}) =>
@@ -192,11 +192,21 @@ describe('AdminFilter', () => {
     );
 
     const select = screen.getByLabelText('Vai trò');
-    expect(within(select).getAllByRole('option')).toHaveLength(2);
-    expect(select).toHaveValue('all');
+    // a button showing the chosen option; the list opens on click, Escape closes it
+    expect(select).toHaveTextContent('Mọi vai trò');
+    expect(select).toHaveAttribute('data-value', 'all');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    await user.click(select);
+    expect(within(screen.getByRole('listbox')).getAllByRole('option')).toHaveLength(2);
+    expect(screen.getByRole('option', {name: 'Mọi vai trò'})).toHaveAttribute('aria-selected', 'true');
+    await user.keyboard('{Escape}');
+    await user.click(select);
+    await user.click(document.body);
+    expect(screen.queryByRole('listbox')).toBeNull();
 
-    await user.selectOptions(select, 'admin');
+    await pickOption(user, select, 'admin');
     expect(onChange).toHaveBeenCalledWith('admin');
+    expect(screen.queryByRole('listbox')).toBeNull();
   });
 });
 

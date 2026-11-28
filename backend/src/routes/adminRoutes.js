@@ -24,6 +24,11 @@ router.delete("/users/:id", adminController.deleteUser);               // soft d
 
 router.get("/trips", adminController.listTrips);
 router.get("/trips/:id", adminController.getTrip);                      // trip + its days
+router.delete("/trips/:id/share", adminController.revokeShare);       // turns the share link of a trip off (the old link stops working)
+router.post("/export/pdf", adminController.exportPdf);                 // { title, subtitle?, columns[], rows[][], lang? } -> PDF of that table
+router.post("/trips/:id/unpublish", adminController.unpublishTrip);    // takes a community post down: the trip goes back to private (kept, share link revoked)
+router.get("/reviews", adminController.listReviews);                   // destination reviews, 1000 newest
+router.delete("/reviews/:id", adminController.deleteReview);           // removes a review that breaks the rules (logged)
 router.delete("/trips/:id", adminController.deleteTrip);               // soft delete: gone from the user's list too
 
 router.get("/challenges", adminController.listChallenges);

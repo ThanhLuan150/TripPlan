@@ -30,4 +30,11 @@ const trim = async (userId, keep) => {
     }
 };
 
-export default { create, listByUser, findOwned, updateOwned, removeOwned, trim };
+// numbers for the admin panel: all the suggestions and the ones a plan was started from
+const countAll = () => DestinationSearch.countDocuments({});
+
+const countCreated = () => DestinationSearch.countDocuments({ status: "created" });
+
+export default {
+    countAll,
+    countCreated, create, listByUser, findOwned, updateOwned, removeOwned, trim };

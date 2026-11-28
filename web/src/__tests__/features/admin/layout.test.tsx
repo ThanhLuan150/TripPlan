@@ -85,11 +85,11 @@ describe('AdminLayout', () => {
 });
 
 describe('sidebar', () => {
-  it('lists the 13 pages in three groups, marking the current one', () => {
+  it('lists the 14 pages in three groups, marking the current one', () => {
     renderLayout();
     const nav = screen.getByRole('navigation', {name: t('admin.nav.label')});
 
-    expect(within(nav).getAllByRole('link')).toHaveLength(13);
+    expect(within(nav).getAllByRole('link')).toHaveLength(14);
     for (const group of ['overview', 'management', 'system']) {
       expect(within(nav).getByText(t(`admin.nav.groups.${group}`))).toBeInTheDocument();
     }

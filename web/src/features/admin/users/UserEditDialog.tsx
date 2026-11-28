@@ -4,6 +4,7 @@ import {useFormik} from 'formik';
 import {useTranslation} from 'react-i18next';
 import {fieldError} from '@/lib/forms';
 import {uploadErrorKey, uploadImage} from '@/lib/upload';
+import AdminSelect from '../components/AdminSelect';
 import AdminAvatar from '../components/AdminAvatar';
 import AdminModal from '../components/AdminModal';
 import AdminStatusBadge from '../components/AdminStatusBadge';
@@ -171,16 +172,12 @@ export default function UserEditDialog({
           </FormField>
           <FormField label={t('admin.users.columns.role')}>
             {props => (
-              <select
-                {...props}
-                className={adminInput}
-                {...bind('role')}>
-                {optionsOf(roleBadge, t).map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <AdminSelect
+                  id={props.id}
+                  value={values.role}
+                  onChange={value => formik.setFieldValue('role', value)}
+                  options={optionsOf(roleBadge, t)}
+                />
             )}
           </FormField>
         </div>

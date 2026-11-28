@@ -57,21 +57,42 @@ Module admin (`web/src/features/admin`) được tải riêng, sau lớp chặn 
 | --- | --- | --- |
 | Tổng quan | `/admin/dashboard` | số liệu chính + tăng trưởng 30 ngày, người dùng mới theo tháng, điểm đến phổ biến, hoạt động gần đây |
 | Người dùng | `/admin/users`, `/admin/users/:id` | xem phần dưới |
-| Chuyến đi | `/admin/trips` | tìm, lọc, xem chi tiết (lịch trình từng ngày), xóa |
+| Chuyến đi | `/admin/trips` | tìm, lọc (cả bài viết cộng đồng), xem chi tiết (lịch trình từng ngày), gỡ bài viết, xóa. Kế hoạch đã xóa (xóa mềm) **không hiện** theo mặc định (bộ lọc trạng thái mặc định là "Đang hoạt động"); chọn "Đã xóa" để xem lại |
+| Đánh giá | `/admin/reviews` | xem, tìm, lọc, xóa đánh giá địa điểm |
 | Thử thách | `/admin/challenges` | sửa tên / mô tả / điểm, xóa (kèm tiến độ của người dùng) |
 | Trợ lý AI | `/admin/ai` | số cuộc trò chuyện, tin nhắn, người dùng đã chat, biểu đồ 14 ngày |
 | Trang chủ app | `/admin/home` | quản lý ảnh trượt đầu trang và các gợi ý điểm đến (tải ảnh lên, thứ tự, đăng / ẩn) |
 | Video | `/admin/videos` | thêm / sửa / xóa; chọn video hiện ở trang chủ, đăng hoặc ẩn |
 | Thông báo | `/admin/notifications` | viết, sửa, xóa thông báo; nháp, đăng, hoặc hẹn ngày đăng |
-| Báo cáo | `/admin/reports` | theo kỳ 7 / 30 / 90 ngày, xuất CSV |
+| Báo cáo | `/admin/reports` | theo kỳ 7 / 30 / 90 ngày, xuất PDF |
 | Cài đặt | `/admin/settings` | tên app, email hỗ trợ, hotline |
-| Nhật ký hoạt động | `/admin/activity-logs` | đăng nhập, tạo kế hoạch, dùng AI, thao tác của admin…; xuất CSV |
-| Kiểm duyệt | `/admin/moderation` | duyệt / từ chối nội dung bị báo cáo |
+| Nhật ký hoạt động | `/admin/activity-logs` | đăng nhập, tạo kế hoạch, dùng AI, thao tác của admin…; xuất PDF |
+| Kiểm duyệt | `/admin/moderation` | duyệt / từ chối nội dung bị báo cáo (từ chối báo cáo bài viết sẽ gỡ bài) |
 | Vai trò & quyền | `/admin/roles` | số thành viên mỗi vai trò, ma trận quyền (chỉ xem) |
+
+### Quản trị các tính năng cộng đồng
+
+Admin quản lý được những gì của Follow / Like / Save / Search / Review / Share Post / Report Post (đều chỉ dành cho role `admin`, mọi thao tác ghi nhật ký):
+
+- **Báo cáo bài viết (Moderation, `/admin/moderation`):** báo cáo loại `post` hiện kèm **ghi chú của người báo cáo** (`details`) và **liên kết mở bài** (`targetId`, mở tab mới tới `/trip/:id`). **Không bao giờ có thông tin người báo cáo** (`reporterId` chỉ lưu, không trả ra). **Từ chối** một báo cáo bài viết thật sự **gỡ bài**: kế hoạch về `private` bằng đúng logic gỡ bài (thu hồi link chia sẻ, xóa lời giới thiệu), kế hoạch **không bị xóa**; câu trả lời có `postRemoved`, thông báo nói rõ bài đã được gỡ và ghi nhật ký `removePost`. **Duyệt** giữ bài nguyên vẹn. Bài đã riêng tư / đã xóa / không còn thì việc từ chối chỉ ghi quyết định (`postRemoved: false`). Hộp xác nhận của loại `post` mô tả đúng hậu quả.
+- **Báo cáo trùng:** quy tắc giữ nguyên, **mỗi người một báo cáo cho mỗi bài, kể cả sau khi admin đã xử lý** (chỉ mục unique `(type, targetId, reporterId)`). Như vậy một người không thể báo cáo lặp lại để gây áp lực dù báo cáo trước đã được duyệt (bài được giữ); bài bị gỡ thì không còn gì để báo cáo. Người khác vẫn báo cáo được.
+- **Chuyến đi (`/admin/trips`):** thêm cột **Cộng đồng** (bài viết / riêng tư, kèm số lượt thích và lưu của bài), bộ lọc theo chế độ hiển thị, và nút **Gỡ bài viết** (`POST /admin/trips/:id/unpublish`, idempotent, có hộp xác nhận, ghi `removePost`) cho những bài vi phạm mà chưa có báo cáo. Số thích / lưu lấy bằng hai truy vấn gộp cho cả danh sách.
+- **Đánh giá địa điểm (`/admin/reviews`, mục mới "Đánh giá"):** bảng mọi review (nội dung, địa điểm, số sao, tác giả có link tới trang người dùng, ngày viết, "đã sửa"), tìm theo nội dung / tác giả / địa điểm, lọc theo địa điểm và số sao, **xóa review vi phạm** có hộp xác nhận (`GET /admin/reviews`, `DELETE /admin/reviews/:id`, ghi `deleteReview`); điểm trung bình của địa điểm tự cập nhật vì tính ở database. Ticket 006 vẫn không có quy trình duyệt review; đây chỉ là công cụ xem và xóa.
+- **Tổng quan (`/admin/dashboard`) và Báo cáo (`/admin/reports`):** thêm số **bài viết cộng đồng** và **đánh giá địa điểm** (tổng + so với 30 ngày trước); báo cáo theo kỳ thêm **bài viết đã đăng** (theo `postedAt`) và **đánh giá mới**, có trong file PDF. Chuyển kế hoạch sang công khai bằng `PUT /visibility` cũng ghi `postedAt` (ngày đầu thành bài viết) nên được tính.
+- **Người dùng (`/admin/users/:id`):** thêm mục **Cộng đồng** với số bài viết, đánh giá, người theo dõi và đang theo dõi của tài khoản (`community` trong `GET /admin/users/:id`).
+- **Nhật ký hoạt động:** thêm hành động `removePost` và `deleteReview` (nhãn tiếng Việt / Anh).
+- Like, Save và Follow **không cần trang quản trị riêng** (dữ liệu của chính từng người dùng, không có nội dung để kiểm duyệt); admin chỉ xem số liệu của chúng ở các mục trên.
+
+### Xuất dữ liệu PDF và quản trị các tính năng trước COMMUNITY (Duplicate Trip đến Report Post)
+
+- **Xuất PDF thay cho CSV** ở Người dùng (cả danh sách đã lọc và các dòng đã chọn), Nhật ký hoạt động (danh sách đã lọc) và Báo cáo (kỳ đang xem). Web gửi đúng bảng đang hiển thị (tiêu đề cột đã dịch, giá trị đã định dạng: ngày giờ, tiền, phần trăm, nhãn hành động / vai trò / trạng thái) tới `POST /admin/export/pdf` `{ title, subtitle?, columns[], rows[][], lang? }`; backend dựng PDF A4 ngang bằng `pdfkit` với font DejaVu Sans (có tiếng Việt), **lặp lại dòng tiêu đề ở mỗi trang**, dòng xen kẽ màu, số trang, ngày giờ xuất và số dòng, trả file đính kèm. Giới hạn: tối đa 2000 dòng, 16 cột, mỗi ô 300 ký tự, chỉ nhận chuỗi / số (loại khác hoặc dòng sai độ dài -> 400); chỉ admin (401 / 403 cho người khác). Lỗi tạo PDF hiện thông báo, không tải gì về. Mã CSV cũ đã được bỏ.
+- **Link chia sẻ (Trip Sharing):** `GET /admin/trips` có thêm `shared`; trang Chuyến đi hiện "Đang bật link chia sẻ" và nút **Tắt link** (`DELETE /admin/trips/:id/share`, có hộp xác nhận, idempotent, link cũ ngừng hoạt động hẳn, ghi nhật ký `revokeShare`) cho trường hợp link bị chia sẻ lung tung. Kế hoạch được giữ cho chủ sở hữu.
+- **Các công cụ AI (AI Recommend, Budget Estimate, Travel Preferences):** trang Trợ lý AI có thêm mục "Các công cụ AI khác" (`features` trong `GET /admin/ai`): số lượt gợi ý điểm đến, số kế hoạch tạo từ gợi ý, số ước tính ngân sách và số tài khoản đã đặt sở thích du lịch. Đề xuất chỉnh sửa / tạo lại ngày / tối ưu tuyến hết hạn sau 1 giờ nên không có số liệu bền để đếm.
+- **Không cần trang quản trị riêng:** Duplicate Trip (bản sao là kế hoạch bình thường, đã có ở Chuyến đi và nhật ký `createTrip`), Favorite Trip, Trip Notes và Travel Preferences (dữ liệu riêng tư của từng người dùng: admin không đọc nội dung, chỉ xem số liệu tổng), Export PDF của một kế hoạch (thao tác đọc của chủ sở hữu), Follow / Unfollow / Like / Save (xem ở mục cộng đồng phía trên).
 
 ### Quản lý người dùng
 
-- **Danh sách:** thẻ thống kê (tổng, đang hoạt động, mới 30 ngày, bị khóa); tìm theo tên / tên đăng nhập / email (không phân biệt dấu); lọc theo vai trò, trạng thái, ngày đăng ký, hoạt động gần nhất; sắp xếp; chọn số dòng mỗi trang; chọn nhiều dòng và thao tác hàng loạt (khóa, mở khóa, xuất CSV); thêm người dùng.
+- **Danh sách:** thẻ thống kê (tổng, đang hoạt động, mới 30 ngày, bị khóa); tìm theo tên / tên đăng nhập / email (không phân biệt dấu); lọc theo vai trò, trạng thái, ngày đăng ký, hoạt động gần nhất; sắp xếp; chọn số dòng mỗi trang; chọn nhiều dòng và thao tác hàng loạt (khóa, mở khóa, xuất PDF); thêm người dùng.
 - **Chi tiết:** hồ sơ, 5 thống kê (chuyến đi, chuyến đã xong, thử thách, điểm, cuộc chat AI) và 4 tab: Tổng quan, Kế hoạch chuyến đi, Thử thách & thành tích, Lịch sử hoạt động.
 - **Thao tác:** sửa hồ sơ (họ tên, email, số điện thoại, ảnh), đổi vai trò, khóa (bắt buộc nhập lý do), mở khóa, xóa. Không thể đổi / khóa / xóa chính mình; muốn khóa hoặc xóa một admin khác phải hạ vai trò trước.
 - **Trạng thái tài khoản** (`User.isActive`): `active`, `notActive` (chưa xác minh email), `suspended` (admin khóa), `delete` (đã xóa). Tài khoản bị khóa hoặc xóa không đăng nhập được (khóa trả 403 kèm lý do), các phiên đang dùng bị đăng xuất, và biến mất khỏi bảng xếp hạng.
@@ -148,7 +169,7 @@ src/__tests__/
 │   ├── assistant/         trang chat, lịch sử trò chuyện, chatCache
 │   ├── trips/             danh sách, tạo, sinh bằng AI, chi tiết + chụp ảnh thử thách, bản đồ, kiểm tra vị trí
 │   ├── home/, profile/, ranking/, data/
-│   ├── admin/             layout, trang danh sách, người dùng (lọc, chọn nhiều, dialog, CSV), các trang còn lại, dữ liệu mẫu
+│   ├── admin/             layout, trang danh sách, người dùng (lọc, chọn nhiều, dialog, xuất PDF), các trang còn lại, dữ liệu mẫu
 ├── lib/                   apiClient + interceptor, upload (nén ảnh), location, date, text, config, i18n
 ├── locales/               vi.json / en.json cùng key; mọi key dùng trong code đều có bản dịch
 └── main.test.tsx
@@ -238,7 +259,7 @@ services/        logic nghiệp vụ (đăng ký/đăng nhập, gọi Gemini, l�
                  adminService: người dùng + số liệu, contentService: video / thông báo / cài đặt / báo cáo nội dung, activityLogService)
 repositories/    toàn bộ truy vấn Mongoose
 models/          schema Mongoose (User, TripPlan, TripDay, Challenge, UserChallengeProgress, ChatAi, Question, Response, Notification,
-                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow, PostLike, SavedPost)
+                 ActivityLog, Announcement, ContentReport, Setting, Showcase, Video, FavoriteTrip, TripNote, TripAiProposal, Follow, PostLike, SavedPost, DestinationReview)
 middleware/      auth (JWT + tự cấp lại access token), requireRole, ownership (chủ sở hữu trip/chat/challenge), logActivity (ghi nhật ký), errorHandler
 seed/            seedAdmin, seedSampleData, index.js (chạy bằng npm run seed / seed:sample)
 utils/           jwt, mailer, gemini, geocode (HERE), HttpError, asyncHandler, ...
@@ -249,6 +270,7 @@ utils/           jwt, mailer, gemini, geocode (HERE), HttpError, asyncHandler, .
 ### Phân quyền
 
 Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
+
 
 | Route | Quyền |
 | --- | --- |
@@ -264,7 +286,10 @@ Role là chuỗi trên User: `user` (mặc định) hoặc `admin`.
 | `/trip-plan/*` | user, admin; `/:id` phải là kế hoạch của mình |
 | `POST /destinations/recommend`, `GET|PATCH|DELETE /destinations/history[/:id]` | user, admin; chỉ đọc / sửa / xóa gợi ý của chính mình (người khác 404) |
 | `POST /trip-plan/:id/places` | user, admin; `:id` phải là kế hoạch của mình (thêm một địa điểm vào một ngày) |
-| `GET /public-trip`, `GET /public-trip/:id`, `GET /shared/:token` | public, chỉ đọc |
+| `GET /public-trip` (kể cả `?q=` tìm kiếm), `GET /public-trip/:id`, `GET /shared/:token`, `GET /destination-reviews` | public, chỉ đọc |
+| `POST|PUT|DELETE /destination-reviews[/:id]` | user, admin; sửa / xóa chỉ với review của chính mình (người khác 403) |
+| `GET|POST|DELETE /trip-plan/:id/post` | user, admin; `:id` phải là kế hoạch của mình (chia sẻ / gỡ bài viết) |
+| `POST /public-trip/:id/report` | user, admin; không báo cáo được bài của mình, mỗi người một báo cáo cho mỗi bài |
 | `POST /public-trip/:id/copy`, `POST|DELETE /public-trip/:id/like` | user, admin; like / unlike bằng chính tài khoản đăng nhập (bài riêng tư / đã xóa -> 404) |
 | `POST|DELETE /public-trip/:id/save`, `GET /user/saved-posts` | user, admin; lưu / bỏ lưu bằng chính tài khoản đăng nhập, danh sách đã lưu **riêng tư** (không có tham số user id, người khác không xem được) |
 | `/challenge/*` | user, admin; `chaId` phải thuộc kế hoạch của mình |
@@ -326,7 +351,7 @@ Mỗi kế hoạch có `visibility`: `private` (mặc định, chỉ chủ sở 
 | --- | --- |
 | `GET /trip-plan/:id/visibility` | Trạng thái hiện tại. Chỉ chủ sở hữu (`ownTrip`) |
 | `PUT /trip-plan/:id/visibility` | `{ visibility: "public" \| "private" }`. Chỉ chủ sở hữu |
-| `GET /public-trip?page&limit` | **Công khai**, danh sách thẻ kế hoạch công khai (tối đa 50 mỗi trang), mỗi thẻ có `likesCount` và `liked` (`liked` chỉ đúng khi gửi token hợp lệ) |
+| `GET /public-trip?q&page&limit` | **Công khai**, danh sách thẻ kế hoạch công khai (tối đa 50 mỗi trang; `q` tìm theo tên / địa điểm / lời giới thiệu, xem Search Posts), mỗi thẻ có `likesCount` và `liked` (`liked` chỉ đúng khi gửi token hợp lệ) |
 | `GET /public-trip/:id` | **Công khai**, chỉ đọc, kèm `likesCount` và `liked`. Kế hoạch riêng tư / đã xoá / không tồn tại đều trả 404 |
 | `POST /public-trip/:id/copy` | user, admin: lưu bản sao riêng của một kế hoạch công khai (ghi nhật ký `createTrip`) |
 | `POST /public-trip/:id/like`, `DELETE /public-trip/:id/like` | user, admin: thích / bỏ thích một bài công khai (idempotent, không trùng). Xem mục Like Post |
@@ -495,6 +520,69 @@ Trong cộng đồng, **bài viết = kế hoạch công khai** (`visibility: "p
 - **UX:** web `SaveButton` (nút dấu trang, `aria-pressed`) trong `ExplorePage` và `PublicTripPage`, khu vực **Bài viết đã lưu** là trang `/saved` (`SavedPostsPage`, mở từ trang Tài khoản); mobile `SaveButton` trong `PublicTrips` và `PublicTripDetail`, màn `SavedPosts` (mở từ Tài khoản). Nút hiển thị trạng thái server trả về và bị khóa trong lúc request chạy (không gửi trùng); khách chưa đăng nhập thấy đường dẫn đăng nhập; danh sách có **trạng thái trống** (kèm nút sang Khám phá) và **trạng thái lỗi** (web có nút Thử lại); bỏ lưu trong danh sách làm bài biến mất ngay; lỗi (bài không còn, mất mạng) giữ nguyên trạng thái và hiện thông báo.
 - **Test:** backend unit (model, repository, service, controller) + `integration/savedPost.test.js` (CRUD, phân quyền, danh sách riêng tư, bài bị xóa / riêng tư, phân trang); web `SaveButton`, `SavedPostsPage`, `ExplorePage`, `PublicTripPage`, `featureApis`; mobile `savedPosts.test.tsx`, `publicTrips`, `apiModule`; Cypress `automation/backend/.../savedPost.cy.ts` và `automation/web/.../community/savedPosts.cy.ts`.
 
+### Tìm kiếm bài viết (Search Posts, COMMUNITY-005)
+
+**Bài viết = kế hoạch công khai** như ở Like Post. Ticket này **chỉ tìm bài viết** (không tìm người dùng hay địa điểm).
+
+- Không có route mới: thêm tham số `q` cho `GET /public-trip?q&page&limit`, nên kết quả dùng đúng phân trang, `likesCount`, `liked`, `saved` của danh sách. Câu trả lời có thêm `q` (từ khóa đã làm sạch; `""` là danh sách bình thường).
+- **Tìm ở phía database, không tải toàn bộ bài về frontend:** `tripPlanRepository.listPublic/countPublic(…, keyword)` lọc bằng regex `$or` trên `nameTrip`, `location` và `postContent` (lời giới thiệu của COMMUNITY-007). MongoDB không có text index phù hợp cho tiếng Việt / tìm theo chuỗi con, nên dùng regex. Phân trang bằng `skip / limit`, `total` đếm bằng cùng bộ lọc.
+- **Không phân biệt hoa thường và dấu** (`utils/searchPattern.js`): "ha giang" tìm ra "Hà Giang", "đà nẵng" tìm ra "Da Nang". Từ khóa **không bao giờ là regex thô**: mọi ký tự đặc biệt (`. * ( [` ...) được escape nên là chữ thường, không thể gây ReDoS hay chèn truy vấn.
+- **Kiểm tra từ khóa và giới hạn request:** cắt khoảng trắng đầu cuối, gộp khoảng trắng liên tiếp, bỏ ký tự điều khiển; từ khóa trống là danh sách bình thường; **tối đa 100 ký tự** và phải là chuỗi (`?q=a&q=b`, `?q[$ne]=x` -> **400**, không truy vấn gì). `limit` tối đa 50, route vẫn qua `apiLimiter` (giới hạn request theo IP).
+- **Quyền truy cập:** bộ lọc `visibility: "public"` và chưa xóa luôn có trước, từ khóa chỉ thu hẹp thêm. Kế hoạch riêng tư, đã xóa hoặc đã chuyển lại riêng tư không bao giờ xuất hiện trong kết quả.
+- **Trạng thái:** không có kết quả -> 200 với `items: []`, `total: 0` (không phải lỗi); trang sau trang cuối -> `items: []`.
+- **UX:** web `ExplorePage` có ô tìm kiếm (`role="search"`), tự tìm sau 350 ms ngừng gõ hoặc khi nhấn Enter, nút **x** xóa từ khóa, từ khóa nằm trên địa chỉ (`/explore?q=…`, dùng được nút Back và chia sẻ link), hiển thị số kết quả, trạng thái **không tìm thấy** (có nút xóa từ khóa), lỗi có nút Thử lại; đổi từ khóa thì về trang 1. Mobile `PublicTrips` có ô tìm kiếm tương tự (gõ / Enter, nút xóa, "Xem thêm" giữ nguyên từ khóa). Thẻ bài hiển thị lời giới thiệu nếu có.
+- **Test:** backend `utils/searchPattern`, `repositories/tripPlanRepositoryPosts`, `services/tripVisibilityService` (từ khóa), `integration/postSearch.test.js` (từ khóa, phân trang, trang trống, 400); web `ExplorePageSearch.test.tsx`, `featureApis`; mobile `postSearch.test.tsx`, `apiPostsReviews.test.ts`; Cypress `automation/backend/.../postSearch.cy.ts` (chạy với MongoDB thật: dấu, regex, riêng tư / đã xóa) và `automation/web/.../community/search.cy.ts`.
+
+### Đánh giá địa điểm (Destination Review, COMMUNITY-006)
+
+Ticket này **không có kiểm duyệt đánh giá** (Admin Moderation là ticket khác).
+
+- **Địa điểm = tỉnh / thành của app** (cùng danh sách 63 tỉnh với form tạo kế hoạch của web và mobile, `backend/src/utils/provinces.js`). App chưa có model Destination riêng nên review gắn vào **tên tỉnh chính xác**. Địa điểm không có trong danh sách (thiếu, sai kiểu, sai chữ) -> **404** `Destination not found`.
+- Dữ liệu: model `DestinationReview` = `{ destination, userId, rating, content, createdAt, updatedAt }`. **Quy tắc đánh giá:** điểm là **số sao nguyên từ 1 đến 5** (`"4"` từ form được chấp nhận; 0, 6, 4.5, `"abc"`, `null` -> 400), nhận xét **bắt buộc, tối đa 1000 ký tự**, và **mỗi người chỉ một review cho mỗi địa điểm** (muốn đổi thì sửa review cũ). Chỉ mục **unique** `(userId, destination)` chặn trùng kể cả khi hai request chạy song song (lỗi E11000 -> **409**); chỉ mục `(destination, createdAt)` cho danh sách mới nhất trước.
+- **Điểm trung bình tính ở database** (`$group` / `$avg` trên **toàn bộ** review của địa điểm, không tính từ trang đang tải), làm tròn 1 chữ số (4,33 -> 4,3), `null` khi chưa có review. Mọi thao tác tạo / sửa / xóa trả luôn `summary: { average, count }` mới.
+| Route | Quyền |
+| --- | --- |
+| `GET /destination-reviews?destination&page&limit` | **Công khai** (`optionalAuth`, `Cache-Control: no-store`). Trả `{ destination, summary, page, limit, total, items, myReview }`; `limit` mặc định 10, tối đa 50. `myReview` là review của người đang đăng nhập (null với khách); mỗi review có `mine` |
+| `POST /destination-reviews` | user, admin: `{ destination, rating, content }`, 201; trùng -> 409 |
+| `PUT /destination-reviews/:id` | user, admin **và là tác giả**: `{ rating?, content? }`. Chỉ đổi điểm / nhận xét, không bao giờ đổi `destination` hay tác giả |
+| `DELETE /destination-reviews/:id` | user, admin **và là tác giả** |
+
+- **Kiểm tra quyền sửa / xóa:** tác giả lấy từ token, không từ body. Review của người khác -> **403** và không đổi gì; `:id` sai định dạng hoặc không tồn tại -> **404** (không truy vấn với id sai). Chưa đăng nhập -> 401.
+- **Bảo vệ dữ liệu tác giả:** mỗi review chỉ lộ `author: { _id, username, image }` (như trang cá nhân công khai), không có e-mail hay trường khác.
+- **UX:** web trang công khai `/destination/:name` (`DestinationPage`): điểm trung bình + số sao + số review, danh sách phân trang, form (chọn sao bằng radio, ô nhận xét có đếm ký tự, lỗi từng ô), "Đánh giá của bạn" với nút **Sửa / Xóa** (xóa có hộp xác nhận, không dùng `window.confirm`), trang "không tìm thấy" cho địa điểm sai; mở từ nút **Đánh giá về …** ở trang bài viết công khai. Mobile màn `DestinationReviews` (mở từ `PublicTripDetail`) có cùng chức năng, "Xem thêm đánh giá" để tải trang tiếp.
+- **Test:** backend model, repository, service, `integration/destinationReview.test.js`; web `DestinationPage`, `StarRating`, `reviewsApi`, `PublicTripPagePost`; mobile `destinationReviews.test.tsx`, `apiPostsReviews.test.ts`; Cypress `automation/backend/.../destinationReview.cy.ts` (trung bình, trùng, 403, 404 với MongoDB thật) và `automation/web/.../community/destinationReview.cy.ts`.
+
+### Chia sẻ chuyến đi thành bài viết (Share Trip as Post, COMMUNITY-007)
+
+**Bài viết là chính kế hoạch công khai**, nên "chia sẻ thành bài viết" = công khai kế hoạch **kèm lời giới thiệu của tác giả**. Ticket này **không** làm cộng tác chỉnh sửa chuyến đi (bài luôn chỉ đọc).
+
+- **Liên kết Post - Trip:** không sao chép dữ liệu chuyến đi và không có model Post mới. `TripPlan` có thêm `postContent` (tối đa 1000 ký tự) và `postedAt`; bài viết mở ra luôn là kế hoạch hiện tại qua `GET /public-trip/:id`, nên mọi thay đổi của kế hoạch thể hiện ngay. Thẻ ở danh sách và trang chi tiết có thêm `postContent`, `postedAt`.
+- **Không tự công khai kế hoạch riêng tư:** chỉ hành động **Chia sẻ** rõ ràng của chủ sở hữu (hộp thoại nói rõ "đăng bài sẽ đặt kế hoạch ở chế độ công khai, chỉ xem") mới đặt `visibility: "public"`. Người xem chỉ thấy phần kế hoạch (whitelist của `buildPublicTripView`): không thấy chủ sở hữu, tiến độ, ảnh check-in, ghi chú hay cài đặt chia sẻ.
+
+| Route (chủ sở hữu, `ownTrip`) | Mô tả |
+| --- | --- |
+| `GET /trip-plan/:id/post` | `{ isPosted, visibility, content, postedAt, publicUrl }` |
+| `POST /trip-plan/:id/post` | `{ content? }`: công khai kế hoạch kèm lời giới thiệu (cắt khoảng trắng; không phải chuỗi hoặc > 1000 ký tự -> 400). Kế hoạch **chưa có ngày nào** -> 400 (chưa có gì để xem). **Idempotent:** chia sẻ lại chỉ đổi lời giới thiệu, `postedAt` giữ ngày đầu |
+| `DELETE /trip-plan/:id/post` | **Xóa bài viết theo quy tắc hiện tại:** kế hoạch về `private`, **thu hồi link chia sẻ** (giống `PUT /visibility` = private) và xóa lời giới thiệu; kế hoạch **không bị xóa**. Idempotent |
+
+- Người không phải chủ sở hữu, kế hoạch đã xóa hoặc `:id` sai -> **404** (không ghi gì); chưa đăng nhập -> 401. Đưa kế hoạch về riêng tư bằng `PUT /visibility` cũng xóa lời giới thiệu (kế hoạch riêng tư không còn là bài viết), và xóa kế hoạch làm bài biến mất khỏi danh sách.
+- **UX:** web nút **Đăng bài** ở trang chi tiết kế hoạch mở `SharePostDialog` (trạng thái hiện tại, ô lời giới thiệu có đếm ký tự, nút Đăng / Cập nhật, link mở bài, **Xóa bài viết** có hộp xác nhận); lời giới thiệu hiện ở thẻ Khám phá và đầu trang `/trip/:id`. Mobile: nút "Đăng thành bài viết" ở `TripDetail` mở `SharePostModal`; `PublicTripDetail` hiện lời giới thiệu.
+- **Test:** backend `services/tripPostService`, `repositories/tripPlanRepositoryPosts`, `integration/tripPost.test.js` (chia sẻ, quyền, không lộ dữ liệu riêng tư, gỡ bài); web `SharePostDialog`, `PublicTripPagePost`, `TripDetailPage`; mobile `postShareReport.test.tsx`, `screensTrips`; Cypress `automation/backend/.../tripPost.cy.ts` và `automation/web/.../community/sharePost.cy.ts`.
+
+### Báo cáo bài viết (Report Post, COMMUNITY-008)
+
+Ticket này **không** làm Admin Moderation (duyệt / xử lý báo cáo).
+
+- **Dùng lại hệ thống báo cáo có sẵn:** `ContentReport` (cùng collection mà Moderation của admin đang đọc). Thêm `post` vào `REPORT_TYPES`, thêm lý do `misinformation` và `other`, thêm `targetId` (id bài) và `details` (mô tả của người báo cáo, tối đa 500 ký tự). Admin thấy báo cáo trong trang Moderation hiện có (nhãn mới "Bài viết cộng đồng"). `POST /reports` chung **không nhận** loại `post` (bài viết có route riêng để kiểm tra bài).
+- `POST /public-trip/:id/report` (user, admin): `{ reason, description? }`, trả **201** `{ message }` và **không có gì khác**.
+  - **Lý do** thuộc `spam, inappropriate, wrongLocation, copyright, misinformation, other`; lý do khác -> 400. `description` phải là chuỗi, tối đa 500 ký tự; **bắt buộc khi lý do là `other`**.
+  - **Kiểm tra bài và người dùng:** bài phải công khai và chưa xóa (riêng tư / đã xóa / không tồn tại / `:id` sai định dạng -> **404**, không ghi gì); người báo cáo là tài khoản đăng nhập (token, không từ body; chưa đăng nhập -> 401); **tác giả không báo cáo được bài của mình** (400).
+  - **Chặn báo cáo trùng:** mỗi người **một báo cáo cho một bài** -> lần sau **409**. Có thêm chỉ mục unique (partial) `(type, targetId, reporterId)` để hai request song song không tạo hai dòng (E11000 -> 409). Người khác vẫn báo cáo được cùng bài.
+  - Dòng báo cáo lưu `content` = tên bài - địa điểm lúc báo cáo, `authorName` = tên tác giả, `reporterId`, `targetId`, `reason`, `details`, `status: "pending"`.
+- **Bảo vệ người báo cáo:** `reporterId` chỉ lưu cho admin (danh sách Moderation không trả trường này). Tác giả và mọi người khác không nhận được dấu hiệu nào về người báo cáo hay việc bài đã bị báo cáo (không có trường mới ở `GET /public-trip`, `GET /public-trip/:id` hay trong lỗi); hộp thoại báo cáo nói rõ điều này.
+- **UX:** web nút **Báo cáo** ở trang `/trip/:id` (`ReportPostButton`; khách chưa đăng nhập thấy đường dẫn đăng nhập) mở hộp thoại: danh sách lý do (radio), mô tả (tối đa 500, bắt buộc khi "Lý do khác"), thông báo gửi thành công, thông báo riêng cho 409 / 404 / bài của mình / mất mạng. Mobile: `ReportPostModal` mở từ `PublicTripDetail`.
+- **Test:** backend model `contentReportPost`, `services/postReportService`, `integration/postReport.test.js`, `contentService`; web `ReportPostButton`, `PublicTripPagePost`, `featureApis`, `adminUtils`; mobile `postShareReport.test.tsx`; Cypress `automation/backend/.../postReport.cy.ts` (kể cả việc admin thấy báo cáo, MongoDB thật) và `automation/web/.../community/report.cy.ts`.
+
 ### Quy ước khi triển khai một ticket mới
 
 Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:
@@ -506,7 +594,7 @@ Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, 
 5. **Trước khi báo xong:** chạy `npx vitest run` (backend và web, web thêm `npx tsc -b` và `npx eslint src`), `npx jest` (mobile). Lỗi `tsc` / eslint có sẵn ở mobile `RootNavigator.tsx` và `TripDetail.tsx` không thuộc ticket.
 6. **Cập nhật README này:** thêm mục mô tả tính năng (endpoint, quyền, giới hạn, hành vi khi lỗi, nơi hiển thị trên web / mobile) và cập nhật danh sách model / bảng phân quyền.
 
-Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002), Like Post (COMMUNITY-003), Save Post (COMMUNITY-004).
+Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Sharing, Trip Visibility, Trip Notes, AI Itinerary Editing, AI Destination Recommendation (AI-002, gồm tạo kế hoạch từ gợi ý, thêm gợi ý vào chuyến đi có sẵn, lịch sử gợi ý và tự lưu bản nháp), AI Travel Preferences (AI-006), Follow User (COMMUNITY-001), Unfollow User (COMMUNITY-002), Like Post (COMMUNITY-003), Save Post (COMMUNITY-004), Search Posts (COMMUNITY-005), Destination Review (COMMUNITY-006), Share Trip as Post (COMMUNITY-007), Report Post (COMMUNITY-008).
 
 ### API quản trị — `/admin/*` (role admin)
 
@@ -514,9 +602,10 @@ Các tính năng đã làm: Duplicate Trip, Favorite Trip, Export PDF, Trip Shar
 | --- | --- |
 | Tổng quan | `GET /dashboard`, `GET /alerts`, `GET /reports?period=7d\|30d\|90d`, `GET /ai`, `GET /logs`, `GET /roles` |
 | Người dùng | `GET /users`, `POST /users`, `GET /users/:id`, `PATCH /users/:id` (`fullname`, `email`, `phone`, `image`, `role`, `status`, `suspendReason`), `DELETE /users/:id` (xóa mềm), `POST /users/bulk-status` |
-| Chuyến đi | `GET /trips`, `GET /trips/:id`, `DELETE /trips/:id` (xóa mềm) |
+| Chuyến đi | `GET /trips` (kèm `visibility`, `likes`, `saves`), `GET /trips/:id`, `POST /trips/:id/unpublish` (gỡ bài viết), `DELETE /trips/:id` (xóa mềm) |
+| Đánh giá | `GET /reviews`, `DELETE /reviews/:id` |
 | Thử thách | `GET /challenges`, `PATCH /challenges/:id`, `DELETE /challenges/:id` |
-| Kiểm duyệt | `GET /moderation`, `PATCH /moderation/:id` (`approved` / `rejected`) |
+| Kiểm duyệt | `GET /moderation` (kèm `details`, `targetId`), `PATCH /moderation/:id` (`approved` / `rejected`; từ chối báo cáo `post` gỡ bài, trả `postRemoved`) |
 | Video | `GET /videos`, `POST /videos`, `PATCH /videos/:id`, `DELETE /videos/:id` |
 | Trang chủ app | `GET /showcase`, `POST /showcase` (`kind`: `banner` hoặc `suggestion`, `imageUrl`, `title`, `location`, `status`, `sortOrder`), `PATCH /showcase/:id`, `DELETE /showcase/:id` |
 | Thông báo | `GET /announcements`, `POST /announcements`, `PATCH /announcements/:id`, `DELETE /announcements/:id` |

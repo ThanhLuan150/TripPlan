@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {
   ScrollView,
@@ -12,6 +13,7 @@ import {useQueryClient} from '@tanstack/react-query';
 import {tripsApi} from '../api';
 import {BackPill, ErrorText} from '../components';
 import LikeButton from '../components/LikeButton';
+import ReportPostModal from '../components/ReportPostModal';
 import SaveButton from '../components/SaveButton';
 import {PleaseWait} from '../components/GenerateStatus';
 import {queryKeys, usePublicTrip} from '../hooks/queries';
@@ -29,6 +31,7 @@ export default function PublicTripDetail() {
   const navigation = useNavigation<any>();
   const qc = useQueryClient();
   const trip = usePublicTrip(id);
+  const [reporting, setReporting] = useState(false);
   const save = useApiMutation(() => tripsApi.copyPublic(id), {
     onSuccess: ({tripId}) => {
       qc.invalidateQueries({queryKey: queryKeys.trips});
@@ -64,6 +67,12 @@ export default function PublicTripDetail() {
           )}`}
         </Text>
         <Text style={styles.meta}>{data.location}</Text>
+        {!!data.postContent && (
+          <View style={styles.note}>
+            <Text style={styles.noteTitle}>{t('trips.publicAuthorNote')}</Text>
+            <Text style={styles.noteText}>{data.postContent}</Text>
+          </View>
+        )}
         <View style={styles.likeRow}>
           <LikeButton
             tripId={id}
@@ -81,6 +90,36 @@ export default function PublicTripDetail() {
           <Ionicons name="bookmark-outline" size={18} color="#fff" />
           <Text style={styles.saveText}>{t('trips.publicSave')}</Text>
         </TouchableOpacity>
+        <View style={styles.links}>
+          {!!data.location && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t('trips.publicReviewsLink', {
+                place: data.location,
+              })}
+              style={styles.link}
+              onPress={() =>
+                navigation.navigate('DestinationReviews', {
+                  destination: data.location,
+                })
+              }>
+              <Ionicons name="star-outline" size={16} color={colors.primary} />
+              <Text style={styles.linkText}>
+                {t('trips.publicReviewsLink', {place: data.location})}
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t('trips.reportOpen')}
+            style={styles.link}
+            onPress={() => setReporting(true)}>
+            <Ionicons name="flag-outline" size={16} color={colors.error} />
+            <Text style={[styles.linkText, styles.reportText]}>
+              {t('trips.reportOpen')}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {data.dataTripDays.map((day, index) => (
           <View key={index} style={styles.day}>
@@ -99,6 +138,11 @@ export default function PublicTripDetail() {
           </View>
         ))}
       </ScrollView>
+      <ReportPostModal
+        tripId={id}
+        visible={reporting}
+        onClose={() => setReporting(false)}
+      />
     </View>
   );
 }
@@ -136,6 +180,29 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveText: {color: '#fff', fontWeight: '700', fontSize: 15},
+  note: {
+    backgroundColor: colors.tint,
+    borderRadius: radius.lg,
+    padding: 14,
+    gap: 4,
+  },
+  noteTitle: {color: colors.primaryDeep, fontWeight: '700', fontSize: 12},
+  noteText: {color: colors.body, fontSize: 14},
+  links: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  link: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  linkText: {color: colors.primary, fontWeight: '600', fontSize: 13},
+  reportText: {color: colors.error},
   disabled: {opacity: 0.6},
   day: {
     backgroundColor: colors.card,

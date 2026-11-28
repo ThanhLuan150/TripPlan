@@ -1,5 +1,6 @@
 import adminService from "../services/adminService.js";
 import contentService from "../services/contentService.js";
+import adminPdfService from "../services/adminPdfService.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 // Thin HTTP layer of the admin panel (every route needs the "admin" role).
@@ -7,7 +8,15 @@ const ok = (handler) => asyncHandler(async (req, res) => {
     res.status(200).json(await handler(req));
 });
 
+// PDF of a table the admin sees (users, activity log, report): the client sends the rows, the file matches the filters.
+const exportPdf = asyncHandler(async (req, res) => {
+    const { filename, buffer } = await adminPdfService.exportTable(req.body);
+    res.attachment(filename); // also sets Content-Type: application/pdf from the extension
+    res.send(buffer);
+});
+
 export default {
+    exportPdf,
     dashboard: ok(() => adminService.dashboard()),
     alerts: ok(() => adminService.alerts()),
 
@@ -21,6 +30,11 @@ export default {
     listTrips: ok(() => adminService.listTrips()),
     getTrip: ok((req) => adminService.getTrip(req.params.id)),
     deleteTrip: ok((req) => adminService.deleteTrip(req.user, req.params.id)),
+    revokeShare: ok((req) => adminService.revokeShare(req.user, req.params.id)),
+    unpublishTrip: ok((req) => adminService.unpublishTrip(req.user, req.params.id)),
+
+    listReviews: ok(() => adminService.listReviews()),
+    deleteReview: ok((req) => adminService.deleteReview(req.user, req.params.id)),
 
     listChallenges: ok(() => adminService.listChallenges()),
     updateChallenge: ok((req) => adminService.updateChallenge(req.user, req.params.id, req.body)),

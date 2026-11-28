@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, LikeState, SaveState, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, LikeState, SaveState, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripPost, TripVisibility, ReportReason} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -35,6 +35,24 @@ export const tripsApi = {
 
   setVisibility: async (id: string, visibility: TripVisibility) =>
     (await api.put<{visibility: TripVisibility}>(`/trip-plan/${id}/visibility`, {visibility})).data,
+
+  // share the plan as a post of the Travel Community (owner only): the post is the plan made public
+  // with an introduction; removing it makes the plan private again
+  postStatus: async (id: string) => (await api.get<TripPost>(`/trip-plan/${id}/post`)).data,
+
+  sharePost: async (id: string, content: string) =>
+    (await api.post<TripPost>(`/trip-plan/${id}/post`, {content})).data,
+
+  removePost: async (id: string) => (await api.delete<TripPost>(`/trip-plan/${id}/post`)).data,
+
+  // report a public post (signed in): the reporter is never shown to the author
+  reportPost: async (id: string, reason: ReportReason, description?: string) =>
+    (
+      await api.post<{message: string}>(`/public-trip/${encodeURIComponent(id)}/report`, {
+        reason,
+        ...(description ? {description} : {}),
+      })
+    ).data,
 
   // AI itinerary editing (owner only): propose changes (nothing saved), then apply the accepted proposal
   proposeAiEdit: async (id: string, instruction: string) =>
@@ -113,9 +131,9 @@ export const tripsApi = {
     return {...tripDatas, likesCount, liked, saved};
   },
 
-  // public trips of everyone (cards only), newest first
-  listPublic: async (page: number) =>
-    (await api.get<PublicTripsPage>('/public-trip', {params: {page}})).data,
+  // public trips of everyone (cards only), newest first; q (optional) searches name, place and introduction
+  listPublic: async (page: number, q = '') =>
+    (await api.get<PublicTripsPage>('/public-trip', {params: q ? {page, q} : {page}})).data,
 
   // keep a private copy of a public trip (signed in)
   copyPublic: async (id: string) =>

@@ -12,6 +12,7 @@ import geoRoutes from "./geoRoutes.js";
 import sharedTripRoutes from "./sharedTripRoutes.js";
 import publicTripRoutes from "./publicTripRoutes.js";
 import destinationRoutes from "./destinationRoutes.js";
+import destinationReviewRoutes from "./destinationReviewRoutes.js";
 
 // Same base paths as before, so existing clients keep working.
 const router = Router();
@@ -21,6 +22,7 @@ router.use("/user", userRoutes);
 router.use("/chat", chatRoutes);
 router.use("/trip-plan", tripPlanRoutes);
 router.use("/destinations", destinationRoutes); // POST /destinations/recommend: AI destination suggestions, nothing saved
+router.use("/destination-reviews", destinationReviewRoutes); // reviews (1-5 stars) of a destination: public read, signed-in write
 router.use("/shared", sharedTripRoutes); // GET /shared/:token: public, read only view of a shared trip
 router.use("/public-trip", publicTripRoutes); // GET /public-trip/:id: read only view of a public trip, no sign-in
 router.use("/rankings", rankingRoutes);

@@ -72,6 +72,8 @@ export const buildPublicTripView = async (trip) => {
         transportCostTotal: trip.transportCostTotal,
         foodCostTotal: trip.foodCostTotal,
         otherCostTotal: trip.otherCostTotal,
+        postContent: trip.postContent,
+        postedAt: trip.postedAt,
         dataTripDays,
     };
 };

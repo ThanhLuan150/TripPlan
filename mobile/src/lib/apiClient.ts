@@ -51,6 +51,10 @@ api.interceptors.response.use(
 export const apiMessage = (e: unknown): string | undefined =>
   (e as {response?: {data?: {message?: string}}})?.response?.data?.message;
 
+// HTTP status of a failed request (undefined: no answer, e.g. the network is down)
+export const apiStatus = (e: unknown): number | undefined =>
+  (e as {response?: {status?: number}})?.response?.status;
+
 export const errorText = (e: unknown) =>
   apiMessage(e) ??
   i18n.t(

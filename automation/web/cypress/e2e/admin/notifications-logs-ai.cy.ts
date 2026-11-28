@@ -1,7 +1,7 @@
 import {mockActivityLogs, mockAiOverview, mockAnnouncements} from '@/__tests__/fixtures/admin/data';
 import {announcementState} from '@/features/admin/notifications/state';
 import {bodyRows, openAdmin} from '../../support/admin';
-import {callsTo, expectCall, expectNoCall, stubDownloads, t} from '../../support/helpers';
+import {callsTo, expectCall, expectNoCall, reply, stubDownloads, t} from '../../support/helpers';
 
 const item = mockAnnouncements[0];
 const saveButton = () => cy.findByRole('button', {name: t('admin.users.dialogs.saveChanges')});
@@ -20,13 +20,13 @@ describe('admin: notifications', () => {
     openAdmin('/admin/notifications');
     bodyRows().should('have.length', 8);
 
-    cy.findByLabelText(t('admin.notifications.columns.status')).select('scheduled');
+    cy.findByLabelText(t('admin.notifications.columns.status')).pick('scheduled');
     bodyRows().should('have.length', 3);
 
-    cy.findByLabelText(t('admin.notifications.columns.status')).select('draft');
+    cy.findByLabelText(t('admin.notifications.columns.status')).pick('draft');
     bodyRows().should('have.length', mockAnnouncements.filter(a => announcementState(a) === 'draft').length);
 
-    cy.findByLabelText(t('admin.notifications.columns.status')).select('all');
+    cy.findByLabelText(t('admin.notifications.columns.status')).pick('all');
     cy.findByRole('searchbox', {name: t('admin.notifications.search')}).type('hoan thanh ho so');
     bodyRows().should('have.length', 1);
   });
@@ -42,7 +42,7 @@ describe('admin: notifications', () => {
 
     dialog().findByLabelText(t('admin.notifications.columns.title')).type('Bảo trì');
     dialog().findByLabelText(t('admin.notifications.fields.message')).type('Tối nay 22h');
-    dialog().findByLabelText(t('admin.common.status')).select('published');
+    dialog().findByLabelText(t('admin.common.status')).pick('published');
     saveButton().click();
 
     cy.findByText(t('admin.notifications.created')).should('be.visible');
@@ -86,11 +86,11 @@ describe('admin: activity log', () => {
     openAdmin('/admin/activity-logs');
     bodyRows().should('have.length', 10);
 
-    cy.findByLabelText(t('admin.activityLogs.columns.level')).select('warning');
+    cy.findByLabelText(t('admin.activityLogs.columns.level')).pick('warning');
     bodyRows().should('have.length', mockActivityLogs.filter(l => l.level === 'warning').length);
 
-    cy.findByLabelText(t('admin.activityLogs.columns.level')).select('all');
-    cy.findByLabelText(t('admin.activityLogs.columns.action')).select('deleteUser');
+    cy.findByLabelText(t('admin.activityLogs.columns.level')).pick('all');
+    cy.findByLabelText(t('admin.activityLogs.columns.action')).pick('deleteUser');
     bodyRows().should('have.length', Math.min(10, mockActivityLogs.filter(l => l.action === 'deleteUser').length));
   });
 
@@ -104,14 +104,24 @@ describe('admin: activity log', () => {
     bodyRows().should('have.length', 10);
   });
 
-  it('exports the filtered log as a CSV file', () => {
-    openAdmin('/admin/activity-logs');
+  it('exports the filtered log as a PDF file', () => {
+    const calls = openAdmin('/admin/activity-logs', {'POST /admin/export/pdf': {}});
     bodyRows().should('have.length', 10);
     const downloads = stubDownloads();
 
     cy.findByRole('button', {name: t('admin.common.export')}).click();
 
-    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.csv$/));
+    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.pdf$/));
+    expectCall(calls, 'POST', '/admin/export/pdf').its('body').should('include', {title: t('admin.export.logs.title')});
+  });
+
+  it('shows the error when the PDF cannot be made', () => {
+    openAdmin('/admin/activity-logs', {'POST /admin/export/pdf': reply(500, {message: 'boom'})});
+    bodyRows().should('have.length', 10);
+
+    cy.findByRole('button', {name: t('admin.common.export')}).click();
+
+    cy.findByText(t('admin.common.actionFailed')).should('be.visible');
   });
 });
 

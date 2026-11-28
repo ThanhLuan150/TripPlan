@@ -32,7 +32,7 @@ describe('ExplorePage', () => {
     expect(link).toHaveAttribute('href', '/trip/a1');
     expect(screen.getAllByText(t('trips.explore.cost', {amount: '350.000'}))).toHaveLength(2);
     expect(screen.queryByRole('navigation', {name: t('trips.explore.pagination')})).not.toBeInTheDocument();
-    expect(tripsApi.listPublic).toHaveBeenCalledWith(1);
+    expect(tripsApi.listPublic).toHaveBeenCalledWith(1, '');
   });
 
   it('pages through the plans', async () => {
@@ -46,11 +46,11 @@ describe('ExplorePage', () => {
     await userEvent.click(screen.getByRole('button', {name: t('trips.explore.next')}));
 
     expect(await screen.findByText('Second plan')).toBeInTheDocument();
-    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(2);
+    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(2, '');
     expect(screen.getByRole('button', {name: t('trips.explore.next')})).toBeDisabled();
 
     await userEvent.click(screen.getByRole('button', {name: t('trips.explore.prev')}));
-    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(1);
+    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(1, '');
   });
 
   it('falls back to the place and a zero cost when a card has no name or prices', async () => {

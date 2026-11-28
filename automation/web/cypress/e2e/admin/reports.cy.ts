@@ -1,5 +1,5 @@
 import {openAdmin} from '../../support/admin';
-import {callsTo, stubDownloads, t} from '../../support/helpers';
+import {callsTo, expectCall, stubDownloads, t} from '../../support/helpers';
 
 const number = new Intl.NumberFormat('vi');
 
@@ -7,7 +7,7 @@ describe('admin: reports', () => {
   it('shows the last 30 days and the figures of the period', () => {
     openAdmin('/admin/reports');
 
-    cy.findByLabelText(t('admin.reports.period')).should('have.value', '30d');
+    cy.findByLabelText(t('admin.reports.period')).should('have.attr', 'data-value', '30d');
     cy.findByText(number.format(1763)).should('be.visible');
     cy.findByText('64%').should('be.visible');
   });
@@ -25,19 +25,20 @@ describe('admin: reports', () => {
     const calls = openAdmin('/admin/reports');
     cy.findByText(number.format(1763)).should('be.visible');
 
-    cy.findByLabelText(t('admin.reports.period')).select('7d');
+    cy.findByLabelText(t('admin.reports.period')).pick('7d');
 
     cy.findByText('410').should('be.visible');
     cy.wrap(calls).should(list => expect(callsTo(list, 'GET', '/admin/reports').map(call => call.query.period)).to.deep.eq(['30d', '7d']));
   });
 
-  it('exports the report as a CSV file', () => {
-    openAdmin('/admin/reports');
+  it('exports the report as a PDF file', () => {
+    const calls = openAdmin('/admin/reports', {'POST /admin/export/pdf': {}});
     cy.findByText(number.format(1763)).should('be.visible');
     const downloads = stubDownloads();
 
     cy.findByRole('button', {name: t('admin.common.export')}).click();
 
-    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.csv$/));
+    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.pdf$/));
+    expectCall(calls, 'POST', '/admin/export/pdf').its('body').should('include', {title: t('admin.export.report.title')});
   });
 });

@@ -363,4 +363,16 @@ describe('export PDF button', () => {
     await user.click(button);
     expect(tripsApi.exportPdf).toHaveBeenCalledTimes(1);
   });
+
+  it('opens the "share as a post" dialog for the owner, with the current status of the post', async () => {
+    vi.mocked(tripsApi.postStatus).mockResolvedValue({isPosted: false, visibility: 'private', content: '', postedAt: null});
+    const user = userEvent.setup();
+    render();
+
+    await user.click(await screen.findByRole('button', {name: t('trips.post.openLabel')}));
+
+    expect(await screen.findByRole('dialog', {name: t('trips.post.title')})).toBeInTheDocument();
+    expect(tripsApi.postStatus).toHaveBeenCalledWith('t1');
+    expect(await screen.findByText(t('trips.post.notPosted'))).toBeInTheDocument();
+  });
 });

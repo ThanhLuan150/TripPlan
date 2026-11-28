@@ -31,4 +31,13 @@ const savedTripIds = async (userId, tripIds) => {
     return rows.map((row) => String(row.tripId));
 };
 
-export default { add, remove, exists, tripIdsByUser, savedTripIds };
+// How many users saved each of these posts: { tripId: count } (one query for the whole page).
+const countByTrips = async (tripIds) => {
+    if (tripIds.length === 0) {
+        return {};
+    }
+    const rows = await SavedPost.aggregate([{ $match: { tripId: { $in: tripIds } } }, { $group: { _id: "$tripId", count: { $sum: 1 } } }]);
+    return Object.fromEntries(rows.map((row) => [String(row._id), row.count]));
+};
+
+export default { countByTrips, add, remove, exists, tripIdsByUser, savedTripIds };

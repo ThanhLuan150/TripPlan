@@ -51,9 +51,14 @@ export interface PublicTripCard {
   transportCostTotal?: number;
   foodCostTotal?: number;
   otherCostTotal?: number;
+  // the author's introduction when the plan was shared as a post
+  postContent?: string;
+  postedAt?: string;
 }
 
 export interface PublicTripsPage {
+  // the keyword of the search (empty: the plain list)
+  q?: string;
   page: number;
   limit: number;
   total: number;
@@ -84,6 +89,21 @@ export interface SaveState {
 
 export type TripVisibility = 'public' | 'private';
 
+// A plan shared as a post of the Travel Community (the post is the public plan itself)
+export const MAX_POST_LENGTH = 1000;
+
+export interface TripPost {
+  isPosted: boolean;
+  visibility: TripVisibility;
+  content: string;
+  postedAt: string | null;
+}
+
+// Why a post can be reported (same list as the backend)
+export const REPORT_REASONS = ['spam', 'inappropriate', 'wrongLocation', 'copyright', 'misinformation', 'other'] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+export const MAX_REPORT_LENGTH = 500;
+
 export interface ShareStatus {
   isShared: boolean;
   permission: 'view' | null;
@@ -97,6 +117,9 @@ export interface SharedTrip {
   likesCount?: number;
   liked?: boolean;
   saved?: boolean;
+  // the author's introduction when the plan was shared as a post
+  postContent?: string;
+  postedAt?: string;
   nameTrip?: string;
   location: string;
   startDate: string;

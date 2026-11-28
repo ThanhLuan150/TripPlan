@@ -1,4 +1,5 @@
 import {api} from '@/lib/apiClient';
+import type {PdfTable} from './exports';
 import type {
   AdminActivityLog,
   AdminAiOverview,
@@ -9,6 +10,7 @@ import type {
   AdminDashboard,
   AdminModerationItem,
   AdminReport,
+  AdminReview,
   AdminRoles,
   AdminSettings,
   AdminShowcase,
@@ -32,6 +34,7 @@ export const fetchAi = () => get<AdminAiOverview>('/admin/ai');
 export const fetchReport = (period: ReportPeriod) => get<AdminReport>('/admin/reports', {period});
 export const fetchLogs = () => get<AdminActivityLog[]>('/admin/logs');
 export const fetchModeration = () => get<AdminModerationItem[]>('/admin/moderation');
+export const fetchReviews = () => get<AdminReview[]>('/admin/reviews');
 export const fetchVideos = () => get<AdminVideo[]>('/admin/videos');
 export const fetchAnnouncements = () => get<AdminAnnouncement[]>('/admin/announcements');
 export const fetchShowcase = () => get<AdminShowcase[]>('/admin/showcase');
@@ -39,6 +42,15 @@ export const fetchSettings = () => get<AdminSettings>('/admin/settings');
 export const fetchRoles = () => get<AdminRoles>('/admin/roles');
 
 export const deleteTrip = async (id: string) => (await api.delete(`/admin/trips/${id}`)).data;
+// takes a community post down: the trip goes back to private (kept for its owner)
+export const unpublishTrip = async (id: string) => (await api.post(`/admin/trips/${id}/unpublish`)).data;
+// PDF of a table of the panel (users, activity log, report), laid out by the backend (Vietnamese font)
+export const exportPdf = async (table: PdfTable) =>
+  (await api.post<Blob>('/admin/export/pdf', table, {responseType: 'blob'})).data;
+
+// turns the share link of a trip off (the old link stops working)
+export const revokeShare = async (id: string) => (await api.delete(`/admin/trips/${id}/share`)).data;
+export const deleteReview = async (id: string) => (await api.delete(`/admin/reviews/${id}`)).data;
 
 export type ChallengeUpdate = Partial<Pick<AdminChallenge, 'nameLocation' | 'challengeSummary' | 'points'>>;
 
@@ -46,6 +58,7 @@ export const patchChallenge = async (id: string, update: ChallengeUpdate) =>
   (await api.patch<AdminChallenge>(`/admin/challenges/${id}`, update)).data;
 export const deleteChallenge = async (id: string) => (await api.delete(`/admin/challenges/${id}`)).data;
 
+// a rejected report of a post also takes the post down (answer: postRemoved)
 export const decideModeration = async (id: string, status: 'approved' | 'rejected') =>
   (await api.patch<AdminModerationItem>(`/admin/moderation/${id}`, {status})).data;
 

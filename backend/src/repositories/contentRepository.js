@@ -90,6 +90,9 @@ const countPendingReports = () => ContentReport.countDocuments({ status: "pendin
 
 const createReport = (data) => ContentReport.create(data);
 
+// Has this user already reported that record (e.g. a post)?
+const reportExists = async (reporterId, type, targetId) => Boolean(await ContentReport.exists({ reporterId, type, targetId }));
+
 const decideReport = (id, status, adminId) =>
     ContentReport.findByIdAndUpdate(
         id,
@@ -122,5 +125,6 @@ export default {
     listReports,
     countPendingReports,
     createReport,
+    reportExists,
     decideReport,
 };

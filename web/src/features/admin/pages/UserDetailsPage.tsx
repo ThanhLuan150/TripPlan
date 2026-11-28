@@ -6,7 +6,11 @@ import {
   IoChatbubblesOutline,
   IoCheckmarkDoneOutline,
   IoCompassOutline,
+  IoDocumentTextOutline,
+  IoPeopleOutline,
+  IoPersonAddOutline,
   IoSparklesOutline,
+  IoStarOutline,
   IoTrophyOutline,
 } from 'react-icons/io5';
 import {adminRoutes} from '@/app/routes';
@@ -73,6 +77,15 @@ export default function UserDetailsPage() {
         <AdminStatCard label={t('admin.users.stats.points')} value={format.number(user.experience)} icon={IoSparklesOutline} />
         <AdminStatCard label={t('admin.users.stats.aiConversations')} value={format.number(data.aiConversations)} icon={IoChatbubblesOutline} />
       </section>
+
+      {data.community && (
+        <section aria-label={t('admin.users.community')} className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <AdminStatCard label={t('admin.users.stats.posts')} value={format.number(data.community.posts)} icon={IoDocumentTextOutline} />
+          <AdminStatCard label={t('admin.users.stats.reviews')} value={format.number(data.community.reviews)} icon={IoStarOutline} />
+          <AdminStatCard label={t('admin.users.stats.followers')} value={format.number(data.community.followers)} icon={IoPeopleOutline} />
+          <AdminStatCard label={t('admin.users.stats.following')} value={format.number(data.community.following)} icon={IoPersonAddOutline} />
+        </section>
+      )}
 
       <UserDetailTabs detail={data} />
 

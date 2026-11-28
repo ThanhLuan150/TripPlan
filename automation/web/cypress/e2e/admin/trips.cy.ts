@@ -3,6 +3,8 @@ import {bodyRows, openAdmin} from '../../support/admin';
 import {callsTo, expectNoCall, reply, t} from '../../support/helpers';
 
 const trip = mockTrips[0];
+// a deleted plan is not listed unless the status filter asks for it
+const active = mockTrips.filter(item => item.status === 'active').length;
 
 describe('admin: trips', () => {
   it('lists the trips with their place, owner and status', () => {
@@ -10,7 +12,7 @@ describe('admin: trips', () => {
 
     cy.findByRole('table', {name: t('admin.trips.title')}).should('be.visible');
     bodyRows().should('have.length', 8);
-    cy.findByText(t('admin.pagination.summary', {from: 1, to: 8, total: 30})).should('be.visible');
+    cy.findByText(t('admin.pagination.summary', {from: 1, to: 8, total: active})).should('be.visible');
     bodyRows().first().should('contain.text', trip.nameTrip).and('contain.text', trip.owner);
   });
 
@@ -29,7 +31,7 @@ describe('admin: trips', () => {
     bodyRows().should('have.length', 8);
     const inPlace = mockTrips.filter(item => item.location === trip.location).length;
 
-    cy.findByLabelText(t('admin.trips.destination')).select(trip.location);
+    cy.findByLabelText(t('admin.trips.destination')).pick(trip.location);
 
     bodyRows().should('have.length', Math.min(8, inPlace));
   });
@@ -49,7 +51,7 @@ describe('admin: trips', () => {
 
     cy.findByRole('button', {name: t('admin.pagination.next')}).click();
 
-    cy.findByText(t('admin.pagination.summary', {from: 9, to: 16, total: 30})).should('be.visible');
+    cy.findByText(t('admin.pagination.summary', {from: 9, to: 16, total: active})).should('be.visible');
   });
 
   it('opens the details of a trip', () => {

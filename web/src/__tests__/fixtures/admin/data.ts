@@ -8,6 +8,7 @@ import type {
   AdminDashboard,
   AdminModerationItem,
   AdminReport,
+  AdminReview,
   AdminRoles,
   AdminSettings,
   AdminShowcase,
@@ -114,8 +115,33 @@ export const mockTrips: AdminTrip[] = Array.from({length: 30}, (_, i) => {
     otherCostTotal: between(i + 13, 1, 15) * 100_000,
     challenges: between(i + 5, 2, 8),
     status: i % 9 === 4 ? 'delete' : 'active',
+    // every fourth active plan is a post of the community
+    visibility: i % 4 === 0 && i % 9 !== 4 ? 'public' : 'private',
+    shared: i % 5 === 1 && i % 9 !== 4,
+    likes: i % 4 === 0 ? between(i + 21, 0, 40) : 0,
+    saves: i % 4 === 0 ? between(i + 22, 0, 15) : 0,
   };
 });
+
+const reviewTexts: [string, number, string][] = [
+  ['Hà Giang', 5, 'Cung đường đèo đẹp nhất Việt Nam'],
+  ['Đà Lạt', 4, 'Thời tiết mát, hơi đông vào cuối tuần'],
+  ['Hội An', 2, 'Quá đông và giá cao'],
+  ['Hà Giang', 3, 'Đường khó đi, cần tay lái vững'],
+  ['Phú Quốc', 5, 'Biển trong, hải sản tươi'],
+  ['Đà Lạt', 1, 'Liên hệ mình để mua tour giá rẻ!!!'],
+];
+
+export const mockReviews: AdminReview[] = reviewTexts.map(([destination, rating, content], i) => ({
+  id: mockId('rv', i),
+  destination,
+  rating,
+  content,
+  author: mockUsers[(i * 7 + 2) % mockUsers.length].username,
+  authorId: mockUsers[(i * 7 + 2) % mockUsers.length].id,
+  createdAt: ago(i * 1.3 + 0.2),
+  updatedAt: ago(i * 1.3 + 0.2),
+}));
 
 const challengeSpots: [string, string, string][] = [
   ['Cột cờ Lũng Cú', 'Đồng Văn', 'Hà Giang'],
@@ -177,6 +203,7 @@ export const mockAiOverview: AdminAiOverview = {
     activeUsers: {value: 9_870},
     avgMessages: {value: 6.9},
   },
+  features: {destinationSearches: 4_210, plansFromSuggestions: 1_386, budgetEstimates: 912, usersWithPreferences: 2_047},
   dailyMessages: series(300, 14, 1, 4_800, 1_400),
   chats: Array.from({length: 26}, (_, i) => ({
     id: mockId('chat', i),
@@ -334,6 +361,8 @@ export const mockDashboard: AdminDashboard = {
     trips: {value: 3_912, delta: 0.081},
     challengesCompleted: {value: 8_754, delta: -0.032},
     aiChats: {value: 21_430, delta: 0.215},
+    posts: {value: 1_248, delta: 0.092},
+    reviews: {value: 3_406, delta: 0.137},
   },
   newUsers: Array.from({length: 12}, (_, i) => {
     const now = new Date();
@@ -357,6 +386,8 @@ const report = (seed: number, scale: number, points: number, stepDays: number): 
     tripsCreated: {value: Math.round(128 * scale), delta: 0.11 - seed / 50},
     completionRate: {value: 0.62 + seed / 100, delta: 0.021},
     avgTripCost: {value: 4_850_000 + seed * 120_000, delta: -0.018},
+    postsShared: {value: Math.round(46 * scale), delta: 0.07},
+    newReviews: {value: Math.round(83 * scale), delta: -0.04},
   },
   tripsCreated: series(seed * 50, points, stepDays, (128 * scale) / points, (40 * scale) / points),
   provinces: [

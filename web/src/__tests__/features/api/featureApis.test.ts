@@ -213,6 +213,40 @@ describe('tripsApi / challengeApi', () => {
     note: 'Hồ Xuân Hương',
   };
 
+  it('search of public posts: the keyword is sent only when there is one', async () => {
+    get.mockResolvedValue(reply({q: 'lat', page: 2, limit: 12, total: 13, items: [{_id: 't1'}]}));
+
+    await expect(tripsApi.listPublic(2, 'lat')).resolves.toMatchObject({total: 13});
+    expect(get).toHaveBeenLastCalledWith('/public-trip', {params: {page: 2, q: 'lat'}});
+    await tripsApi.listPublic(1);
+    expect(get).toHaveBeenLastCalledWith('/public-trip', {params: {page: 1}});
+    await tripsApi.listPublic(1, '');
+    expect(get).toHaveBeenLastCalledWith('/public-trip', {params: {page: 1}});
+  });
+
+  it('share as a post: status, share with the introduction, remove', async () => {
+    const status = {isPosted: true, visibility: 'public', content: 'Hi', postedAt: '2026-01-01'};
+    get.mockResolvedValue(reply(status));
+    post.mockResolvedValue(reply(status));
+    del.mockResolvedValue(reply({...status, isPosted: false}));
+
+    await expect(tripsApi.postStatus('t1')).resolves.toEqual(status);
+    await expect(tripsApi.sharePost('t1', 'Hi')).resolves.toEqual(status);
+    await expect(tripsApi.removePost('t1')).resolves.toMatchObject({isPosted: false});
+    expect(get).toHaveBeenCalledWith('/trip-plan/t1/post');
+    expect(post).toHaveBeenCalledWith('/trip-plan/t1/post', {content: 'Hi'});
+    expect(del).toHaveBeenCalledWith('/trip-plan/t1/post');
+  });
+
+  it('report a post: the reason, and the description only when there is one', async () => {
+    post.mockResolvedValue(reply({message: 'Report sent successfully'}));
+
+    await expect(tripsApi.reportPost('t 1', 'spam')).resolves.toEqual({message: 'Report sent successfully'});
+    expect(post).toHaveBeenLastCalledWith('/public-trip/t%201/report', {reason: 'spam'});
+    await tripsApi.reportPost('t1', 'other', 'Rude');
+    expect(post).toHaveBeenLastCalledWith('/public-trip/t1/report', {reason: 'other', description: 'Rude'});
+  });
+
   it('list / get / remove', async () => {
     get.mockResolvedValueOnce(reply({dataTrip: [{_id: 't1'}]})).mockResolvedValueOnce(reply({tripDatas: {location: 'x'}}));
     del.mockResolvedValue(reply({message: 'deleted'}));

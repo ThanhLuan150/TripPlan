@@ -469,7 +469,15 @@
       "pagination": "Pages",
       "prev": "Previous",
       "next": "Next",
-      "page": "Page {{page}} / {{pages}}"
+      "page": "Page {{page}} / {{pages}}",
+      "searchLabel": "Search plans",
+      "searchPlaceholder": "Search by name, place or description",
+      "clearSearch": "Clear search",
+      "searchHint": "Up to {{max}} characters",
+      "results": "Results for \"{{q}}\": {{count}}",
+      "noResults": "No plans found for \"{{q}}\".",
+      "noResultsHint": "Check the spelling or try another keyword.",
+      "searchFailed": "Could not search the plans."
     },
     "like": {
       "like": "Like",
@@ -486,7 +494,10 @@
       "signInToSave": "Sign in to save this plan",
       "readOnly": "Public plan · view only",
       "invalidTitle": "This plan is not available",
-      "invalidText": "The plan does not exist, or the owner made it private."
+      "invalidText": "The plan does not exist, or the owner made it private.",
+      "authorNote": "From the author",
+      "reviewsLink": "Reviews of {{place}}",
+      "sharedOn": "Shared on {{date}}"
     },
     "shared": {
       "readOnly": "Shared plan · view only",
@@ -544,6 +555,63 @@
       "empty": "You have not saved any plan yet. Tap the bookmark on a plan in Explore to keep it here.",
       "error": "Could not load your saved posts",
       "goExplore": "Explore plans"
+    },
+    "post": {
+      "open": "Post",
+      "openLabel": "Share this plan as a post",
+      "title": "Share as a post",
+      "subtitle": "Post this plan to the Travel Community so other travelers can read it.",
+      "contentLabel": "Introduction (optional)",
+      "contentPlaceholder": "Tell travelers about this trip...",
+      "counter": "{{count}} / {{max}}",
+      "tooLong": "The introduction can have at most {{max}} characters.",
+      "notice": "Posting makes this plan public (view only). Your notes, check-in photos and account details are never shown.",
+      "posted": "This plan is shared as a post.",
+      "notPosted": "This plan is private. Only you can see it.",
+      "share": "Share post",
+      "update": "Update post",
+      "saving": "Saving...",
+      "remove": "Remove post",
+      "removing": "Removing...",
+      "removeTitle": "Remove this post?",
+      "removeText": "The plan goes back to private and the post disappears from the community. Your plan is not deleted.",
+      "removeAction": "Yes, remove",
+      "shared": "Your plan is now a post",
+      "updated": "Post updated",
+      "removed": "Post removed, your plan is private again",
+      "noDays": "Add at least one day to the plan before sharing it.",
+      "failed": "Could not share the plan.",
+      "removeFailed": "Could not remove the post.",
+      "loadFailed": "Could not load the post status.",
+      "viewPost": "Open the post"
+    },
+    "report": {
+      "open": "Report",
+      "title": "Report this post",
+      "subtitle": "Tell us what is wrong with this post. Your report is private: the author never sees who sent it.",
+      "reasonLabel": "Reason",
+      "reasons": {
+        "spam": "Spam or advertising",
+        "inappropriate": "Inappropriate content",
+        "wrongLocation": "Wrong or misleading location",
+        "copyright": "Copyright violation",
+        "misinformation": "False information",
+        "other": "Other"
+      },
+      "descriptionLabel": "Details",
+      "descriptionOptional": "Details (optional)",
+      "descriptionPlaceholder": "Add anything that helps us review the post",
+      "descriptionRequired": "Please describe the problem.",
+      "tooLong": "The details can have at most {{max}} characters.",
+      "submit": "Send report",
+      "sending": "Sending...",
+      "success": "Report sent",
+      "successText": "Thank you. We will review this post. The author is not told who reported it.",
+      "duplicate": "You already reported this post.",
+      "own": "You cannot report your own post.",
+      "unavailable": "This post is no longer available.",
+      "failed": "Could not send the report.",
+      "signIn": "Sign in to report this post"
     }
   },
   "destinations": {
@@ -819,7 +887,8 @@
       "activityLogs": "Activity logs",
       "roles": "Roles & permissions",
       "settings": "Settings",
-      "home": "App home page"
+      "home": "App home page",
+      "reviews": "Reviews"
     },
     "layout": {
       "home": "Admin",
@@ -850,7 +919,7 @@
       "status": "Status",
       "allStatuses": "All statuses",
       "refresh": "Refresh",
-      "export": "Export",
+      "export": "Export PDF",
       "delete": "Delete",
       "viewItem": "View {{name}}",
       "editItem": "Edit {{name}}",
@@ -911,7 +980,9 @@
         "users": "Users",
         "trips": "Trip plans",
         "challengesCompleted": "Challenges completed",
-        "aiChats": "AI conversations"
+        "aiChats": "AI conversations",
+        "posts": "Community posts",
+        "reviews": "Destination reviews"
       },
       "newUsers": "New users",
       "newUsersHint": "Sign-ups per month, last 12 months",
@@ -927,7 +998,7 @@
     "users": {
       "title": "User Management",
       "description": "Manage Aloca user accounts and activity.",
-      "exportUsers": "Export users",
+      "exportUsers": "Export users (PDF)",
       "search": "Search by name or email",
       "allRoles": "All roles",
       "registrationDate": "Registration date",
@@ -962,7 +1033,11 @@
         "completedTrips": "Completed trips",
         "challengesJoined": "Challenges joined",
         "points": "Total points",
-        "aiConversations": "AI conversations"
+        "aiConversations": "AI conversations",
+        "posts": "Posts",
+        "reviews": "Reviews",
+        "followers": "Followers",
+        "following": "Following"
       },
       "columns": {
         "user": "User",
@@ -1011,7 +1086,7 @@
         "label": "Bulk actions",
         "selected_one": "{{count}} user selected",
         "selected_other": "{{count}} users selected",
-        "export": "Export selected",
+        "export": "Export selected (PDF)",
         "suspend": "Suspend selected",
         "reactivate": "Reactivate selected",
         "clear": "Clear selection"
@@ -1124,7 +1199,8 @@
         "exported_other": "{{count}} users exported",
         "created": "Account created"
       },
-      "add": "Add user"
+      "add": "Add user",
+      "community": "Community"
     },
     "trips": {
       "title": "Trips",
@@ -1138,13 +1214,33 @@
         "dates": "Departure",
         "challenges": "Challenges",
         "cost": "Total cost",
-        "status": "Status"
+        "status": "Status",
+        "visibility": "Community",
+        "activity": "Likes / saves"
       },
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",
       "deleteTitle": "Delete this trip?",
       "deleteText": "The plan \"{{name}}\" will be hidden from the user's list.",
-      "deleted": "Trip \"{{name}}\" deleted"
+      "deleted": "Trip \"{{name}}\" deleted",
+      "visibility": {
+        "public": "Post",
+        "private": "Private"
+      },
+      "visibilityFilter": "Community",
+      "allVisibility": "All plans",
+      "activityValue": "{{likes}} likes · {{saves}} saves",
+      "unpublish": "Take the post down",
+      "unpublishItem": "Take down the post {{name}}",
+      "unpublishTitle": "Take this post down?",
+      "unpublishText": "\"{{name}}\" goes back to private: it leaves the community and its share link stops working. The plan itself is kept for its owner.",
+      "unpublished": "Post taken down: {{name}}",
+      "sharedLink": "Share link on",
+      "revokeItem": "Turn off the share link of {{name}}",
+      "revokeTitle": "Turn off this share link?",
+      "revokeText": "The link of \"{{name}}\" stops working for good. The owner can share the plan again, which makes a new link.",
+      "revoke": "Turn off link",
+      "revoked": "Share link turned off: {{name}}"
     },
     "challenges": {
       "title": "Challenges",
@@ -1201,6 +1297,13 @@
         "response": "Avg. response",
         "updated": "Updated",
         "status": "Status"
+      },
+      "tools": "Other AI tools",
+      "features": {
+        "destinationSearches": "Destination suggestions",
+        "plansFromSuggestions": "Plans started from a suggestion",
+        "budgetEstimates": "Budget estimates",
+        "usersWithPreferences": "Accounts with travel preferences"
       }
     },
     "videos": {
@@ -1285,7 +1388,9 @@
         "newUsers": "New users",
         "tripsCreated": "Trip plans created",
         "completionRate": "Challenge completion rate",
-        "avgTripCost": "Avg. cost per trip"
+        "avgTripCost": "Avg. cost per trip",
+        "postsShared": "Posts shared",
+        "newReviews": "New reviews"
       },
       "tripsCreated": "Trip plans created",
       "byProvince": "By province",
@@ -1306,13 +1411,16 @@
         "challengePhoto": "Challenge photo",
         "chatMessage": "Message",
         "profile": "Profile",
-        "video": "Video"
+        "video": "Video",
+        "post": "Community post"
       },
       "reasons": {
         "spam": "Spam",
         "inappropriate": "Inappropriate",
         "wrongLocation": "Wrong location",
-        "copyright": "Copyright"
+        "copyright": "Copyright",
+        "misinformation": "False information",
+        "other": "Other"
       },
       "approve": "Approve",
       "reject": "Reject",
@@ -1324,7 +1432,12 @@
       "rejectText": "The content will be hidden and its author notified.",
       "emptyTitle": "Nothing waiting for moderation",
       "approved": "Content approved",
-      "rejected": "Content rejected"
+      "rejected": "Content rejected",
+      "openPost": "Open the post",
+      "reporterNote": "Reporter's note",
+      "rejectPostText": "The reported post will be taken down: the plan goes back to private and leaves the community. The plan itself is kept for its owner.",
+      "approvePostText": "The post stays in the community. The reporter cannot report it again.",
+      "rejectedPostRemoved": "Report rejected, the post was taken down"
     },
     "activityLogs": {
       "title": "Activity logs",
@@ -1360,7 +1473,10 @@
         "manageVideo": "Managed a video",
         "manageAnnouncement": "Managed a notification",
         "moderate": "Moderated content",
-        "manageShowcase": "Managed a home page picture"
+        "manageShowcase": "Managed a home page picture",
+        "removePost": "Took a post down",
+        "deleteReview": "Deleted a review",
+        "revokeShare": "Turned off a share link"
       }
     },
     "rolesPage": {
@@ -1472,6 +1588,73 @@
         "imageRequired": "Please choose a picture.",
         "order": "The order is a whole number from 0 to 9999."
       }
+    },
+    "reviews": {
+      "title": "Destination reviews",
+      "description": "Reviews travelers wrote about destinations. Remove the ones that break the rules; the average rating follows.",
+      "search": "Search by review, author or destination",
+      "destination": "Destination",
+      "allDestinations": "All destinations",
+      "rating": "Rating",
+      "allRatings": "All ratings",
+      "stars": "{{count}} stars",
+      "columns": {
+        "review": "Review",
+        "author": "Author",
+        "rating": "Rating",
+        "destination": "Destination",
+        "date": "Written"
+      },
+      "edited": "edited",
+      "deleteTitle": "Delete this review?",
+      "deleteText": "The review of {{author}} about {{destination}} will be removed and the average rating will be updated. This cannot be undone.",
+      "deleted": "Review deleted",
+      "deleteItem": "Delete the review of {{name}}"
+    },
+    "export": {
+      "count": "{{count}} rows",
+      "users": {
+        "title": "Aloca users",
+        "columns": {
+          "fullname": "Name",
+          "username": "Username",
+          "email": "Email",
+          "phone": "Phone",
+          "role": "Role",
+          "status": "Status",
+          "createdAt": "Joined",
+          "lastActiveAt": "Last active",
+          "totalTrips": "Plans",
+          "completedTrips": "Completed plans",
+          "challengesJoined": "Challenges joined",
+          "points": "Points"
+        }
+      },
+      "logs": {
+        "title": "Aloca activity log",
+        "columns": {
+          "time": "Time",
+          "actor": "Who",
+          "action": "Action",
+          "target": "Target",
+          "ip": "IP",
+          "level": "Level"
+        }
+      },
+      "report": {
+        "title": "Aloca report",
+        "columns": {
+          "section": "Section",
+          "name": "Item",
+          "value": "Value",
+          "extra": "Details"
+        },
+        "sections": {
+          "stats": "Key figures",
+          "trips": "Plans created",
+          "provinces": "Destinations (plans / average cost)"
+        }
+      }
     }
   },
   "route": {
@@ -1514,5 +1697,56 @@
     "blocked": "This account is not available.",
     "loadFailed": "Could not load this profile.",
     "failed": "Could not update. Please try again."
+  },
+  "reviews": {
+    "pageTitle": "Reviews of {{place}}",
+    "subtitle": "What travelers say about this destination.",
+    "back": "Back",
+    "plansLink": "See plans for {{place}}",
+    "average": "Average rating",
+    "averageValue": "{{average}} / 5",
+    "noAverage": "No rating yet",
+    "count_one": "{{count}} review",
+    "count_other": "{{count}} reviews",
+    "empty": "No reviews yet. Be the first to share your experience.",
+    "loadFailed": "Could not load the reviews.",
+    "notFoundTitle": "Destination not found",
+    "notFoundText": "We could not find this destination.",
+    "formTitle": "Write a review",
+    "editTitle": "Edit your review",
+    "ratingLabel": "Your rating",
+    "star_one": "{{count}} star",
+    "star_other": "{{count}} stars",
+    "starsOf": "{{count}} out of 5 stars",
+    "commentLabel": "Your experience",
+    "commentPlaceholder": "Tell others what you liked and what to know before going...",
+    "counter": "{{count}} / {{max}}",
+    "errRating": "Choose a rating from 1 to 5 stars.",
+    "errContent": "Please write your review.",
+    "errContentLong": "The review can have at most {{max}} characters.",
+    "submit": "Post review",
+    "saving": "Saving...",
+    "update": "Save changes",
+    "cancel": "Cancel",
+    "yourReview": "Your review",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete your review?",
+    "deleteText": "Your review will be removed and the average rating will be updated.",
+    "deleteAction": "Delete review",
+    "edited": "edited",
+    "created": "Review posted",
+    "updated": "Review updated",
+    "deleted": "Review deleted",
+    "duplicate": "You already reviewed this destination. Edit your review instead.",
+    "notAllowed": "You can only change your own review.",
+    "reviewGone": "This review no longer exists.",
+    "failed": "Could not save the review.",
+    "deleteFailed": "Could not delete the review.",
+    "signIn": "Sign in to write a review",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} / {{pages}}",
+    "pagination": "Pages"
   }
 }

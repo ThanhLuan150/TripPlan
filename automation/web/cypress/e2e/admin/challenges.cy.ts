@@ -20,10 +20,10 @@ describe('admin: challenges', () => {
     openAdmin('/admin/challenges');
     bodyRows().should('have.length', 8);
 
-    cy.findByLabelText(t('admin.challenges.columns.province')).select('Hà Giang');
+    cy.findByLabelText(t('admin.challenges.columns.province')).pick('Hà Giang');
     bodyRows().should('have.length', mockChallenges.filter(c => c.province === 'Hà Giang').length);
 
-    cy.findByLabelText(t('admin.challenges.columns.province')).select('all');
+    cy.findByLabelText(t('admin.challenges.columns.province')).pick('all');
     cy.findByRole('searchbox', {name: t('admin.challenges.search')}).type('fansipan');
     bodyRows().should('have.length', 1);
   });

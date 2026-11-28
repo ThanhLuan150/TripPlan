@@ -1,5 +1,6 @@
 import { Router } from "express";
 import tripPlanController from "../controllers/tripPlanController.js";
+import tripPostController from "../controllers/tripPostController.js";
 import tripNoteController from "../controllers/tripNoteController.js";
 import tripBudgetController from "../controllers/tripBudgetController.js";
 import tripRouteController from "../controllers/tripRouteController.js";
@@ -31,6 +32,9 @@ router.post("/:id/share", ownTrip, tripPlanController.enableShare);      // role
 router.delete("/:id/share", ownTrip, tripPlanController.disableShare);   // role: user|admin + owner of the trip — revokes the link
 router.get("/:id/visibility", ownTrip, tripPlanController.getVisibility);   // role: user|admin + owner of the trip
 router.put("/:id/visibility", ownTrip, tripPlanController.setVisibility);   // role: user|admin + owner of the trip — { visibility: "public" | "private" }
+router.get("/:id/post", ownTrip, tripPostController.getPost);              // role: user|admin + owner of the trip — is the trip shared as a post, and its introduction
+router.post("/:id/post", ownTrip, tripPostController.sharePost); // role: user|admin + owner of the trip — { content? }; makes the trip public as a post (idempotent)
+router.delete("/:id/post", ownTrip, tripPostController.removePost);        // role: user|admin + owner of the trip — removes the post: the trip goes private (idempotent)
 router.get("/:id/notes", ownTrip, tripNoteController.listNotes);         // role: user|admin + owner of the trip — only the caller's own notes
 router.post("/:id/notes", ownTrip, tripNoteController.createNote);       // role: user|admin + owner of the trip — { content }
 router.put("/:id/notes/:noteId", ownTrip, ownNote, tripNoteController.updateNote);    // role: user|admin + owner of the trip and of the note — { content }

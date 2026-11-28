@@ -17,6 +17,7 @@ export const useAdminReports = (period: ReportPeriod) =>
   useQuery({queryKey: ['admin', 'reports', period], queryFn: () => api.fetchReport(period)});
 export const useAdminActivityLogs = () => useQuery({queryKey: ['admin', 'logs'], queryFn: api.fetchLogs});
 export const useAdminModeration = () => useQuery({queryKey: ['admin', 'moderation'], queryFn: api.fetchModeration});
+export const useAdminReviews = () => useQuery({queryKey: ['admin', 'reviews'], queryFn: api.fetchReviews});
 export const useAdminVideos = () => useQuery({queryKey: ['admin', 'videos'], queryFn: api.fetchVideos});
 export const useAdminAnnouncements = () =>
   useQuery({queryKey: ['admin', 'announcements'], queryFn: api.fetchAnnouncements});
@@ -36,12 +37,16 @@ const useChange = <V, R>(fn: (variables: V) => Promise<R>, keys: string[]) => {
 
 export const useDeleteTrip = () => useChange((id: string) => api.deleteTrip(id), ['trips', 'users']);
 
+export const useUnpublishTrip = () => useChange((id: string) => api.unpublishTrip(id), ['trips', 'users']);
+export const useRevokeShare = () => useChange((id: string) => api.revokeShare(id), ['trips']);
+export const useDeleteReview = () => useChange((id: string) => api.deleteReview(id), ['reviews', 'users']);
+
 export const useUpdateChallenge = () =>
   useChange(({id, update}: {id: string; update: api.ChallengeUpdate}) => api.patchChallenge(id, update), ['challenges']);
 export const useDeleteChallenge = () => useChange((id: string) => api.deleteChallenge(id), ['challenges']);
 
 export const useDecideModeration = () =>
-  useChange(({id, status}: {id: string; status: 'approved' | 'rejected'}) => api.decideModeration(id, status), ['moderation']);
+  useChange(({id, status}: {id: string; status: 'approved' | 'rejected'}) => api.decideModeration(id, status), ['moderation', 'trips']);
 
 export const useSaveVideo = () =>
   useChange(

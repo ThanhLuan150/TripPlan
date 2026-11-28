@@ -4,6 +4,7 @@ import {useTranslation} from 'react-i18next';
 import Toast from '@/components/ui/Toast';
 import {apiBody, apiMessage} from '@/lib/apiClient';
 import {fieldError} from '@/lib/forms';
+import AdminSelect from '../components/AdminSelect';
 import AdminModal from '../components/AdminModal';
 import {adminButton, adminInput} from '../components/styles';
 import {optionsOf, roleBadge} from '../status';
@@ -121,13 +122,12 @@ export default function UserCreateDialog({onClose, onCreated}: {onClose: () => v
           </FormField>
           <FormField label={t('admin.users.columns.role')}>
             {props => (
-              <select {...props} className={adminInput} {...bind('role')}>
-                {optionsOf(roleBadge, t).map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <AdminSelect
+                  id={props.id}
+                  value={values.role}
+                  onChange={value => formik.setFieldValue('role', value)}
+                  options={optionsOf(roleBadge, t)}
+                />
             )}
           </FormField>
         </div>

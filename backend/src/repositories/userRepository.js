@@ -34,7 +34,11 @@ const topByExperience = (limit = 100) =>
         { $project: { _id: "$_id", fullname: "$fullname", experience: "$experience", image: "$image" } },
     ]);
 
+// accounts that set AI travel preferences (admin panel)
+const countWithPreferences = () => User.countDocuments({ travelPreferences: { $exists: true } });
+
 export default {
+    countWithPreferences,
     findById,
     findByUsername,
     findByEmail,

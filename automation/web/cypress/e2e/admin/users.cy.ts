@@ -48,11 +48,11 @@ describe('admin: users list', () => {
     openAdmin('/admin/users');
     bodyRows().should('have.length', 10);
 
-    cy.findByLabelText(t('admin.users.columns.role')).select('admin');
+    cy.findByLabelText(t('admin.users.columns.role')).pick('admin');
     bodyRows().should('have.length', 2);
 
-    cy.findByLabelText(t('admin.users.columns.role')).select('all');
-    cy.findByLabelText(t('admin.users.columns.status')).select('suspended');
+    cy.findByLabelText(t('admin.users.columns.role')).pick('all');
+    cy.findByLabelText(t('admin.users.columns.status')).pick('suspended');
     bodyRows().should('have.length', mockUsers.filter(u => u.status === 'suspended').length);
   });
 
@@ -64,7 +64,7 @@ describe('admin: users list', () => {
     cy.findByText(t('admin.pagination.summary', {from: 11, to: 20, total: mockUsers.length})).should('be.visible');
     bodyRows().first().should('contain.text', mockUsers[10].fullname);
 
-    cy.findByLabelText(t('admin.users.pageSize')).select('20');
+    cy.findByLabelText(t('admin.users.pageSize')).pick('20');
     bodyRows().should('have.length', 20);
   });
 
@@ -78,15 +78,16 @@ describe('admin: users list', () => {
     cy.location('pathname').should('eq', `/admin/users/${mockUsers[1].id}`);
   });
 
-  it('exports the list as a CSV file', () => {
-    openAdmin('/admin/users');
+  it('exports the list as a PDF file', () => {
+    const calls = openAdmin('/admin/users', {'POST /admin/export/pdf': {}});
     bodyRows().should('have.length', 10);
     const downloads = stubDownloads();
 
     cy.findByRole('button', {name: t('admin.users.exportUsers')}).click();
 
-    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.csv$/));
+    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.pdf$/));
     cy.findByText(t('admin.users.toasts.exported', {count: mockUsers.length})).should('be.visible');
+    expectCall(calls, 'POST', '/admin/export/pdf').its('body.rows').should('have.length', mockUsers.length);
   });
 
   it('offers a retry when the users cannot be loaded', () => {
@@ -154,14 +155,15 @@ describe('admin: selecting users', () => {
   });
 
   it('exports only the selection', () => {
-    openAdmin('/admin/users');
+    const calls = openAdmin('/admin/users', {'POST /admin/export/pdf': {}});
     select(second.fullname).check();
     const downloads = stubDownloads();
 
     cy.findByRole('button', {name: t('admin.users.bulk.export')}).click();
 
-    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.csv$/));
+    cy.wrap(downloads).should(names => expect(names[0]).to.match(/\.pdf$/));
     cy.findByText(t('admin.users.toasts.exported', {count: 1})).should('be.visible');
+    expectCall(calls, 'POST', '/admin/export/pdf').its('body.rows').should('have.length', 1);
   });
 });
 

@@ -67,7 +67,7 @@ describe("trip visibility service", () => {
         tripPlanRepository.listPublic.mockResolvedValue([{ _id: ID }]);
         tripPlanRepository.countPublic.mockResolvedValue(30);
         expect(await tripVisibilityService.listPublicTrips({ page: "3", limit: "10" })).toMatchObject({ page: 3, limit: 10, total: 30, items: [{ _id: ID }] });
-        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(20, 10);
+        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(20, 10, "");
         for (const query of [undefined, {}, { page: { $gt: 1 }, limit: ["x"] }, { page: "0", limit: "-5" }]) {
             const res = await tripVisibilityService.listPublicTrips(query);
             expect(res.page).toBeGreaterThanOrEqual(1);
@@ -80,5 +80,35 @@ describe("trip visibility service", () => {
         tripPlanRepository.findPublicById.mockResolvedValue(null);
         await expect(tripVisibilityService.copyPublicTrip(ID, "u1")).rejects.toMatchObject({ status: 404 });
         await expect(tripVisibilityService.copyPublicTrip("nope", "u1")).rejects.toMatchObject({ status: 404 });
+    });
+});
+
+describe("search of public trips", () => {
+    beforeEach(() => {
+        tripPlanRepository.listPublic.mockResolvedValue([]);
+        tripPlanRepository.countPublic.mockResolvedValue(0);
+    });
+
+    it("passes the cleaned keyword to the list AND to the count, and answers it back", async () => {
+        const res = await tripVisibilityService.listPublicTrips({ q: "  Đà   Lạt ", page: "2", limit: "5" });
+
+        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(5, 5, "Đà Lạt");
+        expect(tripPlanRepository.countPublic).toHaveBeenLastCalledWith("Đà Lạt");
+        expect(res).toMatchObject({ q: "Đà Lạt", page: 2, limit: 5, total: 0, items: [] });
+    });
+
+    it("a missing or blank keyword is a plain list", async () => {
+        await tripVisibilityService.listPublicTrips({ q: "   " });
+        expect(tripPlanRepository.listPublic).toHaveBeenLastCalledWith(0, 12, "");
+        await tripVisibilityService.listPublicTrips({});
+        expect(tripPlanRepository.countPublic).toHaveBeenLastCalledWith("");
+    });
+
+    it.each([[["a", "b"]], [{ $ne: "x" }], ["a".repeat(101)]])("rejects the keyword %j with 400 before any query", async (q) => {
+        tripPlanRepository.listPublic.mockClear();
+
+        await expect(tripVisibilityService.listPublicTrips({ q })).rejects.toMatchObject({ status: 400 });
+        expect(tripPlanRepository.listPublic).not.toHaveBeenCalled();
+        expect(tripPlanRepository.countPublic).not.toHaveBeenCalled();
     });
 });

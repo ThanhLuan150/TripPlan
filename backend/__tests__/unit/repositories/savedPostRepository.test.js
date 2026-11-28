@@ -67,3 +67,22 @@ describe("savedPostRepository", () => {
         expect(SavedPost.find).not.toHaveBeenCalled();
     });
 });
+
+describe("savedPostRepository.countByTrips", () => {
+    it("counts how many users saved each post with one aggregate, keyed by trip id", async () => {
+        SavedPost.aggregate = vi.fn().mockResolvedValue([{ _id: 1, count: 4 }, { _id: 2, count: 1 }]);
+
+        await expect(savedPostRepository.countByTrips([1, 2, 3])).resolves.toEqual({ 1: 4, 2: 1 });
+        expect(SavedPost.aggregate).toHaveBeenCalledWith([
+            { $match: { tripId: { $in: [1, 2, 3] } } },
+            { $group: { _id: "$tripId", count: { $sum: 1 } } },
+        ]);
+    });
+
+    it("asks nothing for an empty page", async () => {
+        SavedPost.aggregate = vi.fn();
+
+        await expect(savedPostRepository.countByTrips([])).resolves.toEqual({});
+        expect(SavedPost.aggregate).not.toHaveBeenCalled();
+    });
+});

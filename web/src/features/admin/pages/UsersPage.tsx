@@ -4,12 +4,13 @@ import {useNavigate} from 'react-router-dom';
 import {IoAdd, IoAlertCircleOutline, IoDownloadOutline} from 'react-icons/io5';
 import {adminRoutes} from '@/app/routes';
 import {useProfile} from '@/hooks/useProfile';
+import AdminSelect from '../components/AdminSelect';
 import AdminCard from '../components/AdminCard';
 import AdminEmptyState from '../components/AdminEmptyState';
 import AdminPagination from '../components/AdminPagination';
 import AdminPageHeader from '../components/AdminPageHeader';
 import NoResults from '../components/NoResults';
-import {adminButton, adminInput} from '../components/styles';
+import {adminButton} from '../components/styles';
 import {useAdminUsers} from '../users/hooks';
 import UserBulkBar from '../users/UserBulkBar';
 import UserCreateDialog from '../users/UserCreateDialog';
@@ -17,7 +18,10 @@ import UserDialogs, {type UserDialogState} from '../users/UserDialogs';
 import UserFilterBar from '../users/UserFilterBar';
 import UserStats from '../users/UserStats';
 import UserTable from '../users/UserTable';
-import {downloadUsersCsv} from '../users/exportCsv';
+import {usersTable} from '../exports';
+import {useAdminFormat} from '../hooks/useAdminFormat';
+import {useAdminToast} from '../hooks/useAdminToast';
+import {downloadPdf} from '../pdf';
 import {canReactivate, canSelect, canSuspend, isSelf} from '../users/userRules';
 import {applyUserFilters, defaultFilters, isFiltered, type UserFilters} from '../users/userList';
 import Toast from '@/components/ui/Toast';
@@ -26,7 +30,9 @@ const PAGE_SIZES = [10, 20, 50];
 const SEARCH_DELAY_MS = 250;
 
 export default function UsersPage() {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
+  const format = useAdminFormat();
+  const toast = useAdminToast();
   const navigate = useNavigate();
   const {user: me} = useProfile();
   const {data, isLoading, isError, refetch} = useAdminUsers();
@@ -80,10 +86,11 @@ export default function UsersPage() {
       return next;
     });
 
-  const exportUsers = (list = filtered) => {
-    downloadUsersCsv(list);
-    Toast.show({type: 'success', text1: t('admin.users.toasts.exported', {count: list.length})});
-  };
+  const exportUsers = (list = filtered) =>
+    downloadPdf(usersTable(list, t, format, i18n.language)).then(
+      () => Toast.show({type: 'success', text1: t('admin.users.toasts.exported', {count: list.length})}),
+      toast.failed,
+    );
 
   return (
     <>
@@ -205,17 +212,13 @@ function Footer({
     <>
       <div className="flex items-center justify-end gap-2 px-4 pb-3 text-sm text-slate-500">
         <label htmlFor="users-page-size">{t('admin.users.pageSize')}</label>
-        <select
+        <AdminSelect
           id="users-page-size"
-          value={pageSize}
-          onChange={e => onPageSize(Number(e.target.value))}
-          className={`${adminInput} w-20 cursor-pointer`}>
-          {PAGE_SIZES.map(size => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
+          value={String(pageSize)}
+          onChange={value => onPageSize(Number(value))}
+          options={PAGE_SIZES.map(size => ({value: String(size), label: String(size)}))}
+          className="w-20"
+        />
       </div>
       <AdminPagination page={page} pageCount={pageCount} pageSize={pageSize} total={total} onPageChange={onPage} />
     </>

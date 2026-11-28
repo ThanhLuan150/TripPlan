@@ -44,10 +44,10 @@ describe('admin: moderation', () => {
     openAdmin('/admin/moderation');
     items().should('have.length', 6);
 
-    cy.findByLabelText(t('admin.moderation.type')).select('video');
+    cy.findByLabelText(t('admin.moderation.type')).pick('video');
     items().should('have.length', pending.filter(item => item.type === 'video').length);
 
-    cy.findByLabelText(t('admin.moderation.type')).select('all');
+    cy.findByLabelText(t('admin.moderation.type')).pick('all');
     cy.findByRole('searchbox', {name: t('admin.moderation.search')}).type('zzzz');
     cy.findByText(t('admin.common.noResults')).should('be.visible');
   });

@@ -1,13 +1,14 @@
 import {useMutation} from '@tanstack/react-query';
 import {Link, useLocation, useNavigate, useParams} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {IoBookmarkOutline} from 'react-icons/io5';
+import {IoBookmarkOutline, IoStarOutline} from 'react-icons/io5';
 import {routes} from '@/app/routes';
 import Toast from '@/components/ui/Toast';
 import {getUser} from '@/features/auth/store/session';
 import {connectionErrorKey} from '@/lib/apiClient';
 import {tripsApi} from '../api/tripsApi';
 import LikeButton from '../components/LikeButton';
+import ReportPostButton from '../components/ReportPostButton';
 import SaveButton from '../components/SaveButton';
 import {ReadOnlyTripPage} from './SharedTripPage';
 
@@ -60,6 +61,15 @@ export default function PublicTripPage() {
           />
           <SaveButton tripId={id!} saved={trip.saved} className="bg-white/20 text-white hover:bg-white/30" />
           {saveAction}
+          {trip.location && (
+            <Link
+              to={routes.Destination(trip.location)}
+              className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/30">
+              <IoStarOutline size={18} />
+              {t('trips.publicTrip.reviewsLink', {place: trip.location})}
+            </Link>
+          )}
+          <ReportPostButton tripId={id!} className="bg-white/20 text-white hover:bg-white/30" />
         </>
       )}
       textKeys={{

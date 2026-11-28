@@ -4,6 +4,13 @@ import adminRepository from "../repositories/adminRepository.js";
 import contentRepository from "../repositories/contentRepository.js";
 import tripPlanRepository from "../repositories/tripPlanRepository.js";
 import userRepository from "../repositories/userRepository.js";
+import destinationReviewRepository from "../repositories/destinationReviewRepository.js";
+import postLikeRepository from "../repositories/postLikeRepository.js";
+import savedPostRepository from "../repositories/savedPostRepository.js";
+import followRepository from "../repositories/followRepository.js";
+import destinationSearchRepository from "../repositories/destinationSearchRepository.js";
+import tripBudgetEstimateRepository from "../repositories/tripBudgetEstimateRepository.js";
+import tripVisibilityService, { visibilityOf } from "./tripVisibilityService.js";
 import { ROLES } from "../models/User.js";
 import HttpError from "../utils/HttpError.js";
 import { isEmail } from "../utils/validators.js";
@@ -40,6 +47,8 @@ const dashboard = async () => {
         completed, completedNow, completedPrev,
         chats, chatsNow, chatsPrev,
         signups, destinations,
+        posts, postsNow, postsPrev,
+        reviews, reviewsNow, reviewsPrev,
     ] = await Promise.all([
         adminRepository.countUsers(),
         adminRepository.countUsersBetween(last30, to),
@@ -55,6 +64,12 @@ const dashboard = async () => {
         adminRepository.countChatsBetween(previous30, last30),
         adminRepository.signupsByMonth(firstMonth),
         adminRepository.topDestinations(5),
+        tripPlanRepository.countPosts(),
+        tripPlanRepository.countPostsBetween(last30, to),
+        tripPlanRepository.countPostsBetween(previous30, last30),
+        destinationReviewRepository.countAll(),
+        destinationReviewRepository.countBetween(last30, to),
+        destinationReviewRepository.countBetween(previous30, last30),
     ]);
 
     const signupsOfMonth = new Map(signups.map(({ _id, value }) => [`${_id.y}-${_id.m}`, value]));
@@ -69,6 +84,8 @@ const dashboard = async () => {
             trips: { value: trips, delta: growth(tripsNow, tripsPrev) },
             challengesCompleted: { value: completed, delta: growth(completedNow, completedPrev) },
             aiChats: { value: chats, delta: growth(chatsNow, chatsPrev) },
+            posts: { value: posts, delta: growth(postsNow, postsPrev) },
+            reviews: { value: reviews, delta: growth(reviewsNow, reviewsPrev) },
         },
         newUsers,
         topDestinations: destinations.map(({ _id, trips: count }) => ({ name: _id ?? "", trips: count })),
@@ -148,12 +165,16 @@ const getUser = async (id) => {
     if (!user) {
         throw new HttpError(404, "User not found");
     }
-    const [stats, trips, progress, aiConversations, logs] = await Promise.all([
+    const [stats, trips, progress, aiConversations, logs, posts, reviews, followers, following] = await Promise.all([
         statsOfUsers(),
         adminRepository.listUserTrips(user._id, PROFILE_LIMIT),
         adminRepository.listUserProgress(user._id, PROFILE_LIMIT),
         adminRepository.countUserChats(user._id),
         contentRepository.listLogsByActor(user._id, PROFILE_LIMIT),
+        tripPlanRepository.countPostsByUser(user._id),
+        destinationReviewRepository.countByUser(user._id),
+        followRepository.countFollowers(user._id),
+        followRepository.countFollowing(user._id),
     ]);
     const [found, challengesOfTrip] = await Promise.all([
         adminRepository.findChallengesByIds(progress.map((row) => row.chaId)),
@@ -165,6 +186,8 @@ const getUser = async (id) => {
     return {
         user: toUser(user, stats.get(String(user._id))),
         aiConversations,
+        // what the account does in the community
+        community: { posts, reviews, followers, following },
         trips: trips.map((trip) => toTrip(trip, owners, challengesOfTrip)),
         challenges: progress.map((row) => {
             const challenge = challenges.get(String(row.chaId));
@@ -414,7 +437,10 @@ const tripPhase = ({ startDate, endDate }) => {
     return now > new Date(endDate).getTime() + DAY_MS - 1 ? "completed" : "ongoing";
 };
 
-const toTrip = (trip, owners, challenges) => ({
+// Community side of a trip: is it a post (public), its introduction and how many users liked / saved it.
+const NO_SOCIAL = { likes: new Map(), saves: new Map() };
+
+const toTrip = (trip, owners, challenges, social = NO_SOCIAL) => ({
     id: String(trip._id),
     nameTrip: trip.nameTrip || "",
     location: trip.location || "",
@@ -431,16 +457,30 @@ const toTrip = (trip, owners, challenges) => ({
     phase: tripPhase(trip),
     challenges: challenges.get(String(trip._id)) ?? 0,
     status: trip.status || "active",
+    visibility: visibilityOf(trip),
+    // a share link is on (anyone with the link can read the trip, even a private one)
+    shared: trip.shareEnabled === true,
+    postContent: trip.postContent || "",
+    postedAt: trip.postedAt ?? null,
+    likes: social.likes.get(String(trip._id)) ?? 0,
+    saves: social.saves.get(String(trip._id)) ?? 0,
 });
+
+// likes / saves of these trips: Map tripId -> count (two queries for the whole list)
+const socialOf = async (tripIds) => {
+    const [likes, saves] = await Promise.all([postLikeRepository.countByTrips(tripIds), savedPostRepository.countByTrips(tripIds)]);
+    return { likes: new Map(Object.entries(likes)), saves: new Map(Object.entries(saves)) };
+};
 
 const listTrips = async () => {
     const trips = await adminRepository.listTrips(LIST_LIMIT);
-    const [people, challenges] = await Promise.all([
+    const [people, challenges, social] = await Promise.all([
         adminRepository.findUsersByIds(trips.map((trip) => trip.userId)),
         adminRepository.challengesPerTrip(trips.map((trip) => trip._id)),
+        socialOf(trips.map((trip) => trip._id)),
     ]);
     const owners = new Map(people.map((person) => [String(person._id), person.fullname || person.username]));
-    return trips.map((trip) => toTrip(trip, owners, challenges));
+    return trips.map((trip) => toTrip(trip, owners, challenges, social));
 };
 
 // One trip with its days (what the user planned).
@@ -450,14 +490,15 @@ const getTrip = async (id) => {
     if (!trip) {
         throw new HttpError(404, "Trip not found");
     }
-    const [people, challenges, days] = await Promise.all([
+    const [people, challenges, days, social] = await Promise.all([
         adminRepository.findUsersByIds([trip.userId]),
         adminRepository.challengesPerTrip([trip._id]),
         adminRepository.listTripDays(trip._id),
+        socialOf([trip._id]),
     ]);
     const owners = new Map(people.map((person) => [String(person._id), person.fullname || person.username]));
     return {
-        ...toTrip(trip, owners, challenges),
+        ...toTrip(trip, owners, challenges, social),
         ownerId: trip.userId ? String(trip.userId) : "",
         plan: days.map((day) => ({
             id: String(day._id),
@@ -479,6 +520,65 @@ const deleteTrip = async (actor, id) => {
     }
     await activityLogService.record({ actor, action: "deleteTrip", target: trip.nameTrip, level: "warning" });
     return { message: "Delete trip successfully" };
+};
+
+// Turns the share link of a trip off: the old link never works again (sharing again makes a new one). Idempotent.
+const revokeShare = async (actor, id) => {
+    validId(id, "Trip not found");
+    const trip = await tripPlanRepository.findById(id);
+    if (!trip || trip.status === "delete") {
+        throw new HttpError(404, "Trip not found");
+    }
+    if (trip.shareEnabled === true) {
+        await tripPlanRepository.disableShare(trip._id);
+        await activityLogService.record({ actor, action: "revokeShare", target: trip.nameTrip, level: "warning" });
+    }
+    return { message: "Sharing turned off", id: String(trip._id), shared: false };
+};
+
+// Takes a post down: the trip goes back to private (its share link is revoked and the introduction
+// dropped, like when the owner removes the post). The trip itself is kept. Idempotent.
+const unpublishTrip = async (actor, id) => {
+    validId(id, "Trip not found");
+    const trip = await tripPlanRepository.findById(id);
+    if (!trip || trip.status === "delete") {
+        throw new HttpError(404, "Trip not found");
+    }
+    if (visibilityOf(trip) === "public") {
+        await tripVisibilityService.setVisibility(trip, "private");
+        await activityLogService.record({ actor, action: "removePost", target: trip.nameTrip, level: "warning" });
+    }
+    return { message: "Post removed", id: String(trip._id), visibility: "private" };
+};
+
+// ---- destination reviews ----------------------------------------------------------
+
+const listReviews = async () => {
+    const reviews = await destinationReviewRepository.listRecent(LIST_LIMIT);
+    const people = await adminRepository.findUsersByIds(reviews.map((review) => review.userId));
+    const names = new Map(people.map((person) => [String(person._id), person.username]));
+    return reviews.map((review) => ({
+        id: String(review._id),
+        destination: review.destination,
+        rating: review.rating,
+        content: review.content,
+        author: names.get(String(review.userId)) ?? "",
+        authorId: String(review.userId),
+        createdAt: review.createdAt,
+        updatedAt: review.updatedAt,
+    }));
+};
+
+// Moderation of a review that breaks the rules: removes it (the average follows).
+const deleteReview = async (actor, id) => {
+    validId(id, "Review not found");
+    const review = await destinationReviewRepository.findById(id);
+    if (!review) {
+        throw new HttpError(404, "Review not found");
+    }
+    await destinationReviewRepository.deleteById(review._id);
+    await activityLogService.record({ actor, action: "deleteReview", target: `${review.destination}: ${String(review.content).slice(0, 80)}`, level: "warning" });
+    return { message: "Delete review successfully" };
 };
 
 // ---- challenges ------------------------------------------------------------------
@@ -564,7 +664,7 @@ const aiOverview = async () => {
     const today = startOfUtcDay(now);
     const chartFrom = today - (AI_CHART_DAYS - 1) * DAY_MS;
 
-    const [conversations, now30, prev30, messages, chatUsers, perDay, chats] = await Promise.all([
+    const [conversations, now30, prev30, messages, chatUsers, perDay, chats, searches, fromSuggestions, estimates, withPreferences] = await Promise.all([
         adminRepository.countChats(),
         adminRepository.countChatsBetween(last30, to),
         adminRepository.countChatsBetween(previous30, last30),
@@ -572,6 +672,10 @@ const aiOverview = async () => {
         adminRepository.distinctChatUsers(),
         adminRepository.messagesPerDay(new Date(chartFrom)),
         adminRepository.listChats(LIST_LIMIT),
+        destinationSearchRepository.countAll(),
+        destinationSearchRepository.countCreated(),
+        tripBudgetEstimateRepository.countAll(),
+        userRepository.countWithPreferences(),
     ]);
     const [people, perChat] = await Promise.all([
         adminRepository.findUsersByIds(chats.map((chat) => chat.userId)),
@@ -586,6 +690,13 @@ const aiOverview = async () => {
             messages: { value: messages },
             activeUsers: { value: chatUsers.length },
             avgMessages: { value: conversations ? Math.round((messages / conversations) * 10) / 10 : 0 },
+        },
+        // the other AI tools of the app (what persists: proposals of edits / routes expire after an hour)
+        features: {
+            destinationSearches: searches,
+            plansFromSuggestions: fromSuggestions,
+            budgetEstimates: estimates,
+            usersWithPreferences: withPreferences,
         },
         dailyMessages: Array.from({ length: AI_CHART_DAYS }, (_, i) => {
             const time = chartFrom + i * DAY_MS;
@@ -654,7 +765,7 @@ const reports = async (period) => {
     const previousFrom = from - days * DAY_MS;
     const [start, middle, finish] = [new Date(previousFrom), new Date(from), new Date(end)];
 
-    const [usersNow, usersPrev, tripsNow, tripsPrev, progressNow, progressPrev, costNow, costPrev, perDay, provinces] =
+    const [usersNow, usersPrev, tripsNow, tripsPrev, progressNow, progressPrev, costNow, costPrev, perDay, provinces, postsNow, postsPrev, reviewsNow, reviewsPrev] =
         await Promise.all([
             adminRepository.countUsersBetween(middle, finish),
             adminRepository.countUsersBetween(start, middle),
@@ -666,6 +777,10 @@ const reports = async (period) => {
             adminRepository.averageTripCost(start, middle),
             adminRepository.tripsPerDay(middle, finish),
             adminRepository.provincesInPeriod(middle, finish),
+            tripPlanRepository.countPostsBetween(middle, finish),
+            tripPlanRepository.countPostsBetween(start, middle),
+            destinationReviewRepository.countBetween(middle, finish),
+            destinationReviewRepository.countBetween(start, middle),
         ]);
     const averageCost = (rows) => Math.round(rows[0]?.avgCost ?? 0);
 
@@ -675,6 +790,8 @@ const reports = async (period) => {
             tripsCreated: { value: tripsNow, delta: growth(tripsNow, tripsPrev) },
             completionRate: { value: rateOf(progressNow), delta: growth(rateOf(progressNow), rateOf(progressPrev)) },
             avgTripCost: { value: averageCost(costNow), delta: growth(averageCost(costNow), averageCost(costPrev)) },
+            postsShared: { value: postsNow, delta: growth(postsNow, postsPrev) },
+            newReviews: { value: reviewsNow, delta: growth(reviewsNow, reviewsPrev) },
         },
         tripsCreated: trendOf(perDay, from, days),
         provinces: provinces.map(({ _id, trips, avgCost }) => ({ name: _id ?? "", trips, avgCost: Math.round(avgCost ?? 0) })),
@@ -702,11 +819,16 @@ const toReport = (report) => ({
     author: report.authorName,
     reportedAt: report.createdAt,
     status: report.status,
+    // what the reporter wrote and the post it is about (type "post"); NEVER who reported it
+    details: report.details || "",
+    targetId: report.targetId ? String(report.targetId) : null,
+    decidedAt: report.decidedAt ?? null,
 });
 
 const listReports = async () => (await contentRepository.listReports(LIST_LIMIT)).map(toReport);
 
-// Approve (keep the content) or reject (remove it) a reported item.
+// Approve (keep the content) or reject (remove it) a reported item. Rejecting a reported POST really takes
+// it down: the trip goes back to private (see unpublishTrip), so it leaves the community at once.
 const decideReport = async (actor, id, status) => {
     validId(id, "Report not found");
     if (!["approved", "rejected"].includes(status)) {
@@ -717,7 +839,16 @@ const decideReport = async (actor, id, status) => {
         throw new HttpError(404, "Report not found");
     }
     await activityLogService.record({ actor, action: "moderate", target: `${status}: ${report.content}` });
-    return toReport(report);
+    let postRemoved = false;
+    if (status === "rejected" && report.type === "post" && report.targetId) {
+        const post = await tripPlanRepository.findById(report.targetId);
+        if (post && post.status !== "delete" && visibilityOf(post) === "public") {
+            await tripVisibilityService.setVisibility(post, "private");
+            await activityLogService.record({ actor, action: "removePost", target: post.nameTrip, level: "warning" });
+            postRemoved = true;
+        }
+    }
+    return { ...toReport(report), postRemoved };
 };
 
 export default {
@@ -731,6 +862,10 @@ export default {
     getTrip,
     listTrips,
     deleteTrip,
+    unpublishTrip,
+    revokeShare,
+    listReviews,
+    deleteReview,
     listChallenges,
     deleteChallenge,
     roles,

@@ -185,9 +185,25 @@ export const tripsApi = {
     (await api.post<ShareStatus>(`/trip-plan/${id}/share`)).data,
   disableShare: async (id: string) =>
     (await api.delete<ShareStatus>(`/trip-plan/${id}/share`)).data,
-  // public trips of everyone (cards only), newest first; no sign-in needed
-  listPublic: async (page: number) =>
-    (await api.get<PublicTripsPage>('/public-trip', {params: {page}})).data,
+  // public trips of everyone (cards only), newest first; q (optional) searches name, place and introduction
+  listPublic: async (page: number, q = '') =>
+    (await api.get<PublicTripsPage>('/public-trip', {params: q ? {page, q} : {page}})).data,
+  // share the plan as a post of the Travel Community (owner only): the post is the plan made public
+  // with an introduction; removing it makes the plan private again
+  postStatus: async (id: string) =>
+    (await api.get<TripPost>(`/trip-plan/${id}/post`)).data,
+  sharePost: async (id: string, content: string) =>
+    (await api.post<TripPost>(`/trip-plan/${id}/post`, {content})).data,
+  removePost: async (id: string) =>
+    (await api.delete<TripPost>(`/trip-plan/${id}/post`)).data,
+  // report a public post: the reporter is never shown to the author
+  reportPost: async (id: string, reason: ReportReason, description?: string) =>
+    (
+      await api.post<{message: string}>(`/public-trip/${id}/report`, {
+        reason,
+        ...(description ? {description} : {}),
+      })
+    ).data,
   // one public trip, read only (404: private, deleted or unknown)
   // (carries the like state of the post: likesCount and liked)
   getPublic: async (id: string): Promise<PublicTrip> => {
@@ -269,6 +285,60 @@ export const tripsApi = {
 };
 
 export type TripVisibility = 'public' | 'private';
+
+// A plan shared as a post of the Travel Community (the post is the public plan itself)
+export const MAX_POST_LENGTH = 1000;
+export interface TripPost {
+  isPosted: boolean;
+  visibility: TripVisibility;
+  content: string;
+  postedAt: string | null;
+}
+
+// Why a post can be reported (same list as the backend)
+export const REPORT_REASONS = [
+  'spam',
+  'inappropriate',
+  'wrongLocation',
+  'copyright',
+  'misinformation',
+  'other',
+] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+export const MAX_REPORT_LENGTH = 500;
+
+// Reviews of a destination (a province): 1-5 stars and a comment, one review per user per destination
+export const MAX_REVIEW_LENGTH = 1000;
+export interface ReviewSummary {
+  // average of all the ratings (one decimal), null while there is no review
+  average: number | null;
+  count: number;
+}
+export interface Review {
+  _id: string;
+  destination: string;
+  rating: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {_id: string; username: string; image: string | null};
+  // written by the signed-in user (the only one who may edit or delete it)
+  mine: boolean;
+}
+export interface ReviewsPage {
+  destination: string;
+  summary: ReviewSummary;
+  page: number;
+  limit: number;
+  total: number;
+  items: Review[];
+  // the user's own review of this destination, wherever it is in the list
+  myReview: Review | null;
+}
+export interface ReviewResult {
+  review: Review;
+  summary: ReviewSummary;
+}
 
 // AI budget estimation: an ESTIMATE of the cost of the trip, never an expense or money actually spent
 export const BUDGET_CATEGORIES = ['accommodation', 'food', 'transport', 'activities', 'other'] as const;
@@ -470,8 +540,13 @@ export interface PublicTripCard {
   transportCostTotal?: number;
   foodCostTotal?: number;
   otherCostTotal?: number;
+  // the author's introduction when the plan was shared as a post
+  postContent?: string;
+  postedAt?: string;
 }
 export interface PublicTripsPage {
+  // the keyword of the search (empty: the plain list)
+  q?: string;
   page: number;
   limit: number;
   total: number;
@@ -615,6 +690,37 @@ export const communityApi = {
     (await api.post<FollowState>(`/user/${id}/follow`)).data,
   unfollow: async (id: string) =>
     (await api.delete<FollowState>(`/user/${id}/follow`)).data,
+};
+
+// Reviews of a destination: public to read, one review per user per destination, only the author edits / deletes
+export const reviewsApi = {
+  list: async (destination: string, page: number) =>
+    (
+      await api.get<ReviewsPage>('/destination-reviews', {
+        params: {destination, page},
+      })
+    ).data,
+  create: async (destination: string, rating: number, content: string) =>
+    (
+      await api.post<ReviewResult>('/destination-reviews', {
+        destination,
+        rating,
+        content,
+      })
+    ).data,
+  update: async (id: string, rating: number, content: string) =>
+    (
+      await api.put<ReviewResult>(`/destination-reviews/${id}`, {
+        rating,
+        content,
+      })
+    ).data,
+  remove: async (id: string) =>
+    (
+      await api.delete<{summary: ReviewSummary}>(
+        `/destination-reviews/${id}`,
+      )
+    ).data,
 };
 
 export const challengeApi = {

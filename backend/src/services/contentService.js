@@ -323,10 +323,13 @@ const saveSettings = async (actor, body = {}) => {
 
 // ---- reported content (from the app) ------------------------------------------------------
 
+// A post is reported through its own route (POST /public-trip/:id/report), which checks the post.
+const GENERIC_REPORT_TYPES = REPORT_TYPES.filter((type) => type !== "post");
+
 // A signed-in user reports some content; it waits for an admin in "Moderation".
 const reportContent = async (user, body = {}) => {
-    if (!REPORT_TYPES.includes(body.type)) {
-        throw bad(`type must be one of: ${REPORT_TYPES.join(", ")}`);
+    if (!GENERIC_REPORT_TYPES.includes(body.type)) {
+        throw bad(`type must be one of: ${GENERIC_REPORT_TYPES.join(", ")}`);
     }
     if (!REPORT_REASONS.includes(body.reason)) {
         throw bad(`reason must be one of: ${REPORT_REASONS.join(", ")}`);

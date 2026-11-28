@@ -106,7 +106,7 @@ describe('PublicTrips', () => {
     pressText(tree, t('trips.exploreMore'));
     await flush();
 
-    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(2);
+    expect(tripsApi.listPublic).toHaveBeenLastCalledWith(2, '');
     expect(allText(tree)).toContain('First plan');
     expect(allText(tree)).toContain('Second plan');
     expect(allText(tree)).not.toContain(t('trips.exploreMore'));

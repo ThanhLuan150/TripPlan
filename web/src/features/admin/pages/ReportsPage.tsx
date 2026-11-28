@@ -1,6 +1,14 @@
 import {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {IoDownloadOutline, IoMapOutline, IoPersonAddOutline, IoTrophyOutline, IoWalletOutline} from 'react-icons/io5';
+import {
+  IoDocumentTextOutline,
+  IoDownloadOutline,
+  IoMapOutline,
+  IoPersonAddOutline,
+  IoStarOutline,
+  IoTrophyOutline,
+  IoWalletOutline,
+} from 'react-icons/io5';
 import AdminBarChart from '../components/AdminBarChart';
 import AdminCard from '../components/AdminCard';
 import AdminDataTable, {type AdminColumn} from '../components/AdminDataTable';
@@ -11,7 +19,9 @@ import AdminStatCard from '../components/AdminStatCard';
 import {adminButton} from '../components/styles';
 import {useAdminReports} from '../hooks/useAdminData';
 import {useAdminFormat} from '../hooks/useAdminFormat';
-import {downloadCsv} from '../csv';
+import {reportTable} from '../exports';
+import {useAdminToast} from '../hooks/useAdminToast';
+import {downloadPdf} from '../pdf';
 import type {AdminReport, ReportPeriod} from '../types';
 
 type ProvinceRow = AdminReport['provinces'][number];
@@ -22,23 +32,10 @@ const periods: Record<ReportPeriod, string> = {
   '90d': 'admin.reports.periods.90d',
 };
 
-const exportReport = (report: AdminReport, period: ReportPeriod) =>
-  downloadCsv(
-    ['section', 'name', 'value', 'extra'],
-    [
-      ['stat', 'newUsers', report.stats.newUsers.value, ''],
-      ['stat', 'tripsCreated', report.stats.tripsCreated.value, ''],
-      ['stat', 'completionRate', report.stats.completionRate.value, ''],
-      ['stat', 'avgTripCost', report.stats.avgTripCost.value, ''],
-      ...report.tripsCreated.map(point => ['trips', point.date, point.value, ''] as const).map(row => [...row]),
-      ...report.provinces.map(row => ['province', row.name, row.trips, row.avgCost]),
-    ],
-    `aloca-report-${period}.csv`,
-  );
-
 export default function ReportsPage() {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const format = useAdminFormat();
+  const toast = useAdminToast();
   const [period, setPeriod] = useState<ReportPeriod>('30d');
   const {data: report} = useAdminReports(period);
   const vsPrevious = t('admin.common.vsPreviousPeriod');
@@ -72,7 +69,7 @@ export default function ReportsPage() {
               onChange={value => setPeriod(value as ReportPeriod)}
               options={(Object.keys(periods) as ReportPeriod[]).map(value => ({value, label: t(periods[value])}))}
             />
-            <button type="button" className={adminButton.secondary} disabled={!report} onClick={() => report && exportReport(report, period)}>
+            <button type="button" className={adminButton.secondary} disabled={!report} onClick={() => report && downloadPdf(reportTable(report, period, t, format, i18n.language)).catch(toast.failed)}>
               <IoDownloadOutline size={16} aria-hidden />
               {t('admin.common.export')}
             </button>
@@ -84,7 +81,7 @@ export default function ReportsPage() {
         <AdminLoadingState variant="cards" />
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-6">
             <AdminStatCard
               label={t('admin.reports.stats.newUsers')}
               value={format.number(report.stats.newUsers.value)}
@@ -112,6 +109,20 @@ export default function ReportsPage() {
               delta={report.stats.avgTripCost.delta}
               deltaLabel={vsPrevious}
               icon={IoWalletOutline}
+            />
+            <AdminStatCard
+              label={t('admin.reports.stats.postsShared')}
+              value={format.number(report.stats.postsShared.value)}
+              delta={report.stats.postsShared.delta}
+              deltaLabel={vsPrevious}
+              icon={IoDocumentTextOutline}
+            />
+            <AdminStatCard
+              label={t('admin.reports.stats.newReviews')}
+              value={format.number(report.stats.newReviews.value)}
+              delta={report.stats.newReviews.delta}
+              deltaLabel={vsPrevious}
+              icon={IoStarOutline}
             />
           </div>
 

@@ -6,6 +6,7 @@ import {
   contentApi,
   profileApi,
   rankingApi,
+  reviewsApi,
   tripsApi,
 } from '../api';
 
@@ -24,6 +25,9 @@ export const queryKeys = {
   tripNotes: (id: string) => ['tripNotes', id] as const,
   tripBudget: (id: string) => ['tripBudget', id] as const,
   publicTrips: ['publicTrips'] as const,
+  tripPost: (id: string) => ['tripPost', id] as const,
+  destinationReviews: (destination: string) =>
+    ['destinationReviews', destination] as const,
   savedPosts: ['savedPosts'] as const,
   destinationHistory: ['destinationHistory'] as const,
   publicTrip: (id: string) => ['publicTrip', id] as const,
@@ -84,10 +88,11 @@ export const useTripBudget = (id: string) =>
     queryFn: () => tripsApi.budgetEstimate(id),
   });
 
-export const usePublicTrips = () =>
+// q: the keyword of the search (empty: every public plan); a new keyword starts again at page 1
+export const usePublicTrips = (q = '') =>
   useInfiniteQuery({
-    queryKey: queryKeys.publicTrips,
-    queryFn: ({pageParam}) => tripsApi.listPublic(pageParam),
+    queryKey: [...queryKeys.publicTrips, q],
+    queryFn: ({pageParam}) => tripsApi.listPublic(pageParam, q),
     initialPageParam: 1,
     getNextPageParam: last =>
       last.page * last.limit < last.total ? last.page + 1 : undefined,
@@ -134,3 +139,22 @@ export const useGeneratedPlans = (params: GenerateParams) =>
 // Saved conversations (loaded when the history drawer opens).
 export const useChats = (enabled: boolean) =>
   useQuery({queryKey: queryKeys.chats, queryFn: chatApi.list, enabled});
+
+// Is the plan shared as a post (owner only), and its introduction
+export const useTripPost = (id: string, enabled = true) =>
+  useQuery({
+    queryKey: queryKeys.tripPost(id),
+    queryFn: () => tripsApi.postStatus(id),
+    enabled,
+  });
+
+// Reviews of a destination, page by page (the average is over ALL the reviews)
+export const useDestinationReviews = (destination: string) =>
+  useInfiniteQuery({
+    queryKey: queryKeys.destinationReviews(destination),
+    queryFn: ({pageParam}) => reviewsApi.list(destination, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: last =>
+      last.page * last.limit < last.total ? last.page + 1 : undefined,
+    retry: false,
+  });

@@ -2,10 +2,12 @@ import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {
   IoChatbubblesOutline,
+  IoDocumentTextOutline,
   IoMapOutline,
   IoPeopleOutline,
   IoRefresh,
   IoShieldCheckmarkOutline,
+  IoStarOutline,
   IoTrophyOutline,
 } from 'react-icons/io5';
 import {adminRoutes} from '@/app/routes';
@@ -29,6 +31,8 @@ const statCards: {key: keyof AdminDashboard['stats']; labelKey: string; icon: ty
   {key: 'trips', labelKey: 'admin.dashboard.stats.trips', icon: IoMapOutline},
   {key: 'challengesCompleted', labelKey: 'admin.dashboard.stats.challengesCompleted', icon: IoTrophyOutline},
   {key: 'aiChats', labelKey: 'admin.dashboard.stats.aiChats', icon: IoChatbubblesOutline},
+  {key: 'posts', labelKey: 'admin.dashboard.stats.posts', icon: IoDocumentTextOutline},
+  {key: 'reviews', labelKey: 'admin.dashboard.stats.reviews', icon: IoStarOutline},
 ];
 
 export default function DashboardPage() {
@@ -58,7 +62,7 @@ export default function DashboardPage() {
         <AdminLoadingState variant="cards" />
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-6">
             {statCards.map(card => (
               <AdminStatCard
                 key={card.key}

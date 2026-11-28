@@ -3,6 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {FlatList, Share, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ShareTripModal from '../components/ShareTripModal';
+import SharePostModal from '../components/SharePostModal';
 import {colors} from '../lib/theme';
 import {exportTripPdf} from '../lib/exportPdf';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -59,6 +60,7 @@ export default function TripDetail() {
   });
   const [retake, setRetake] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [posting, setPosting] = useState(false);
   const [confirmPublic, setConfirmPublic] = useState(false);
   const visibility = useTripVisibility(id);
   const changeVisibility = useApiMutation(
@@ -112,6 +114,13 @@ export default function TripDetail() {
         onPress={exportPdf}>
         <Ionicons name="document-text-outline" size={20} color="#fff" />
       </TouchableOpacity>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={t('trips.postOpen')}
+        style={[styles.share, styles.post]}
+        onPress={() => setPosting(true)}>
+        <Ionicons name="earth-outline" size={20} color="#fff" />
+      </TouchableOpacity>
       {visibility.data && (
         <TouchableOpacity
           accessibilityRole="button"
@@ -162,6 +171,11 @@ export default function TripDetail() {
         tripId={id}
         visible={sharing}
         onClose={() => setSharing(false)}
+      />
+      <SharePostModal
+        tripId={id}
+        visible={posting}
+        onClose={() => setPosting(false)}
       />
       <FlatList
         showsVerticalScrollIndicator={false}
@@ -225,7 +239,8 @@ const styles = StyleSheet.create({
   list: {paddingHorizontal: 15},
   pdf: {top: 88},
   visibility: {top: 136, flexDirection: 'row', alignItems: 'center', gap: 6},
-  publicLink: {top: 184},
+  post: {top: 184},
+  publicLink: {top: 232},
   visibilityText: {color: '#fff', fontWeight: '600', fontSize: 13},
   disabled: {opacity: 0.6},
   share: {
