@@ -7,6 +7,7 @@ import Toast from '@/components/ui/Toast';
 import {getUser} from '@/features/auth/store/session';
 import {connectionErrorKey} from '@/lib/apiClient';
 import {tripsApi} from '../api/tripsApi';
+import LikeButton from '../components/LikeButton';
 import {ReadOnlyTripPage} from './SharedTripPage';
 
 // Public, read only page of a trip its owner made public (no sign-in needed). A private,
@@ -32,7 +33,7 @@ export default function PublicTripPage() {
       }),
   });
 
-  const actions = getUser() ? (
+  const saveAction = getUser() ? (
     <button type="button" className="btn btn-primary" disabled={save.isPending} onClick={() => save.mutate()}>
       <IoBookmarkOutline size={18} />
       {t(save.isPending ? 'trips.publicTrip.saving' : 'trips.publicTrip.saveCopy')}
@@ -48,7 +49,17 @@ export default function PublicTripPage() {
       queryKey={['publicTrip', id]}
       id={id}
       load={tripsApi.getPublic}
-      actions={actions}
+      actions={trip => (
+        <>
+          <LikeButton
+            tripId={id!}
+            liked={trip.liked}
+            likesCount={trip.likesCount}
+            className="bg-white/20 text-white hover:bg-white/30"
+          />
+          {saveAction}
+        </>
+      )}
       textKeys={{
         readOnly: 'trips.publicTrip.readOnly',
         invalidTitle: 'trips.publicTrip.invalidTitle',

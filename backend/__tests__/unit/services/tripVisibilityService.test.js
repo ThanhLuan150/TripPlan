@@ -7,6 +7,12 @@ vi.mock("../../../src/repositories/tripPlanRepository.js", () => ({
     default: { setVisibility: vi.fn(), disableShare: vi.fn(), findPublicById: vi.fn(), listPublic: vi.fn(), countPublic: vi.fn() },
 }));
 vi.mock("../../../src/services/tripService.js", () => ({ default: { duplicateTrip: vi.fn() } }));
+vi.mock("../../../src/repositories/postLikeRepository.js", () => ({
+    default: {
+        exists: vi.fn().mockResolvedValue(false), countByTrip: vi.fn().mockResolvedValue(0),
+        countByTrips: vi.fn().mockResolvedValue({}), likedTripIds: vi.fn().mockResolvedValue([]),
+    },
+}));
 vi.mock("../../../src/repositories/tripDayRepository.js", () => ({ default: { findByTripId: vi.fn().mockResolvedValue([]) } }));
 vi.mock("../../../src/repositories/challengeRepository.js", () => ({ default: { findByTripDayId: vi.fn() } }));
 

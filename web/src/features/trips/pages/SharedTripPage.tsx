@@ -30,7 +30,7 @@ interface ReadOnlyProps {
   load: (id: string) => Promise<SharedTrip>;
   textKeys: {readOnly: string; invalidTitle: string; invalidText: string};
   // e.g. "save a copy" on a public trip
-  actions?: ReactNode;
+  actions?: ReactNode | ((trip: SharedTrip) => ReactNode);
 }
 
 // Layout shared by the pages that show a plan to visitors: share link and public trip.
@@ -96,7 +96,7 @@ export function ReadOnlyTripPage({queryKey, id: token, load, textKeys, actions}:
             <IoLocationOutline size={16} />
             {trip.location}
           </p>
-          {actions && <div className="mt-4">{actions}</div>}
+          {actions && <div className="mt-4 flex flex-wrap items-center gap-3">{typeof actions === 'function' ? actions(trip) : actions}</div>}
         </div>
 
         {trip.dataTripDays.map((day, i) => (

@@ -113,6 +113,13 @@ describe('MainLayout', () => {
     for (const nav of navs) {
       expect(within(nav).getByRole('link', {name: t('nav.home')})).toHaveAttribute('aria-current', 'page');
       expect(within(nav).getByRole('link', {name: t('nav.ranking')})).toHaveAttribute('href', '/ranking');
+      expect(within(nav).getByRole('link', {name: t('nav.explore')})).toHaveAttribute('href', '/explore');
+    }
+    // Explore sits between Assistant and Ranking
+    for (const nav of navs) {
+      const labels = within(nav).getAllByRole('link').map(link => link.textContent);
+      expect(labels.indexOf(t('nav.explore'))).toBe(labels.indexOf(t('nav.assistant')) + 1);
+      expect(labels.indexOf(t('nav.ranking'))).toBe(labels.indexOf(t('nav.explore')) + 1);
     }
     expect(await screen.findByText('Lan Nguyễn')).toBeInTheDocument();
     // no photo: the initial letter
@@ -142,11 +149,11 @@ describe('AssistantLayout', () => {
     expect(within(tabs).getByRole('link', {name: t('nav.chat')})).toHaveAttribute('aria-current', 'page');
   });
 
-  it('has an Explore tab next to Chat and Plans', () => {
+  it('no longer has an Explore tab (it is in the main navigation)', () => {
     renderLayout('/assistant/chat');
 
     const tabs = screen.getByRole('navigation', {name: t('nav.assistant')});
-    expect(within(tabs).getByRole('link', {name: t('nav.explore')})).toHaveAttribute('href', '/assistant/explore');
+    expect(within(tabs).queryByRole('link', {name: t('nav.explore')})).toBeNull();
   });
 
   it('hides the chat on the plans tab', () => {

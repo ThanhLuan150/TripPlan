@@ -38,6 +38,30 @@ describe('PublicTripPage', () => {
     expect(screen.getByText(t('trips.publicTrip.readOnly'))).toBeInTheDocument();
     expect(screen.getByText('Chụp ảnh Hồ Xuân Hương')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByTestId('likes-count')).toHaveTextContent('0');
+  });
+
+  describe('liking the plan', () => {
+    it('a signed-out visitor sees the total and a sign-in link', async () => {
+      vi.mocked(tripsApi.getPublic).mockResolvedValue({...trip, likesCount: 9, liked: false});
+      renderPage();
+
+      expect(await screen.findByRole('link', {name: t('trips.like.signIn')})).toHaveAttribute('href', '/login');
+      expect(screen.getByTestId('likes-count')).toHaveTextContent('9');
+    });
+
+    it('a signed-in user likes the plan and the total follows the server', async () => {
+      saveSession({message: 'ok', accessToken: 'a.b.c', data: {username: 'reader', role: 'user'}} as never);
+      vi.mocked(tripsApi.getPublic).mockResolvedValue({...trip, likesCount: 2, liked: false});
+      vi.mocked(tripsApi.likePublic).mockResolvedValue({liked: true, likesCount: 3});
+      renderPage();
+
+      await userEvent.click(await screen.findByRole('button', {name: t('trips.like.like')}));
+
+      expect(tripsApi.likePublic).toHaveBeenCalledWith('t1');
+      expect(await screen.findByRole('button', {name: t('trips.like.unlike')})).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('likes-count')).toHaveTextContent('3');
+    });
   });
 
   describe('keeping a copy', () => {

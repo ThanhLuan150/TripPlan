@@ -39,7 +39,7 @@ describe('explore public trips', () => {
       'GET /public-trip': {page: 1, limit: 12, total: 2, items: [card('a1', 'Đà Lạt 3 ngày'), card('b2', 'Huế 2 ngày')]},
       'GET /public-trip/a1': publicTrip,
     });
-    visit('/assistant/explore');
+    visit('/explore');
 
     cy.findByRole('link', {name: t('nav.explore')}).should('have.attr', 'aria-current', 'page');
     cy.findByText('Huế 2 ngày').should('be.visible');
@@ -52,7 +52,7 @@ describe('explore public trips', () => {
 
   it('says so when there is nothing public yet', () => {
     mockApi({'GET /public-trip': {page: 1, limit: 12, total: 0, items: []}});
-    visit('/assistant/explore');
+    visit('/explore');
 
     cy.findByText(t('trips.explore.empty')).should('be.visible');
   });

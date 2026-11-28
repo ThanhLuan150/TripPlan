@@ -23,10 +23,14 @@ vi.mock("../../src/repositories/tripDayRepository.js", () => ({ default: { findB
 vi.mock("../../src/repositories/challengeRepository.js", () => ({ default: { findByTripDayId: vi.fn(), create: vi.fn() } }));
 vi.mock("../../src/repositories/challengeProgressRepository.js", () => ({ default: { create: vi.fn() } }));
 vi.mock("../../src/repositories/chatRepository.js", () => ({ default: {} }));
+vi.mock("../../src/repositories/postLikeRepository.js", () => ({
+    default: { add: vi.fn(), remove: vi.fn(), exists: vi.fn(), countByTrip: vi.fn(), countByTrips: vi.fn(), likedTripIds: vi.fn() },
+}));
 vi.mock("../../src/services/activityLogService.js", () => ({ default: { record: vi.fn() } }));
 
 const { default: app } = await import("../../src/app.js");
 const db = await import("../../src/config/db.js");
+const { default: postLikeRepository } = await import("../../src/repositories/postLikeRepository.js");
 const { default: userRepository } = await import("../../src/repositories/userRepository.js");
 const { default: tripPlanRepository } = await import("../../src/repositories/tripPlanRepository.js");
 const { default: tripDayRepository } = await import("../../src/repositories/tripDayRepository.js");
@@ -49,6 +53,10 @@ const publicTrip = {
 
 beforeEach(() => {
     vi.resetAllMocks();
+    postLikeRepository.exists.mockResolvedValue(false);
+    postLikeRepository.countByTrip.mockResolvedValue(0);
+    postLikeRepository.countByTrips.mockResolvedValue({});
+    postLikeRepository.likedTripIds.mockResolvedValue([]);
     db.isDatabaseConnected.mockReturnValue(true);
     db.isDatabaseDown.mockReturnValue(false);
     userRepository.findById.mockImplementation(async (id) => user(id));

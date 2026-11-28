@@ -306,7 +306,10 @@
     "publicNotAvailable": "This plan is not available. It does not exist, or the owner made it private.",
     "publicSave": "Save to my plans",
     "publicSaved": "Saved to your plans",
-    "publicSaveFailed": "Could not save this plan"
+    "publicSaveFailed": "Could not save this plan",
+    "like": "Like",
+    "unlike": "Unlike",
+    "likeFailed": "Could not update your like"
   },
   "recommend": {
     "open": "Get destination ideas from AI",
@@ -406,7 +409,8 @@
     "ranking": "Ranking",
     "account": "Account",
     "chat": "Chat",
-    "plans": "Plans"
+    "plans": "Plans",
+    "explore": "Explore"
   },
   "auth": {
     "showPassword": "Show password",

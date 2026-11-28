@@ -461,6 +461,13 @@
       "next": "Sau",
       "page": "Trang {{page}} / {{pages}}"
     },
+    "like": {
+      "like": "Thích",
+      "unlike": "Bỏ thích",
+      "signIn": "Đăng nhập để thích kế hoạch này",
+      "failed": "Không cập nhật được lượt thích",
+      "unavailable": "Kế hoạch này không còn nữa"
+    },
     "publicTrip": {
       "saveCopy": "Lưu về kế hoạch của tôi",
       "saving": "Đang lưu...",

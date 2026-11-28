@@ -3,6 +3,7 @@ import tripPlanRepository from "../repositories/tripPlanRepository.js";
 import { buildPublicTripView } from "./tripShareService.js";
 import env from "../config/env.js";
 import tripService from "./tripService.js";
+import postLikeService from "./postLikeService.js";
 import HttpError from "../utils/HttpError.js";
 
 export const VISIBILITIES = ["private", "public"];
@@ -39,12 +40,17 @@ const setVisibility = async (trip, visibility) => {
 
 // Read only view for anyone (no sign-in). Private, deleted, unknown or malformed id all
 // give the same 404, so the answer never tells whether a private trip exists.
-const getPublicTrip = async (id) => {
+// viewer: the signed-in user or null; the answer carries the like state of the post.
+const getPublicTrip = async (id, viewer = null) => {
     const trip = mongoose.isValidObjectId(id) ? await tripPlanRepository.findPublicById(String(id)) : null;
     if (!trip) {
         throw new HttpError(404, "Data Trip not found!");
     }
-    return { message: "Get public trip successfully", tripDatas: await buildPublicTripView(trip) };
+    return {
+        message: "Get public trip successfully",
+        tripDatas: await buildPublicTripView(trip),
+        ...(await postLikeService.getState(viewer, trip._id)),
+    };
 };
 
 const DEFAULT_LIMIT = 12;
@@ -57,14 +63,14 @@ const intOr = (value, fallback, min, max) => {
 };
 
 // Public trips for everyone to browse (no sign-in): cards only, newest first, paged.
-const listPublicTrips = async ({ page, limit } = {}) => {
+const listPublicTrips = async ({ page, limit } = {}, viewer = null) => {
     const size = intOr(limit, DEFAULT_LIMIT, 1, MAX_LIMIT);
     const current = intOr(page, 1, 1, 100000);
     const [items, total] = await Promise.all([
         tripPlanRepository.listPublic((current - 1) * size, size),
         tripPlanRepository.countPublic(),
     ]);
-    return { message: "Get public trips successfully", page: current, limit: size, total, items };
+    return { message: "Get public trips successfully", page: current, limit: size, total, items: await postLikeService.decorate(viewer, items) };
 };
 
 // A signed-in user keeps a copy of a public trip: the copy is theirs and private, the

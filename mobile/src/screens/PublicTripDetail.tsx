@@ -11,6 +11,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
 import {tripsApi} from '../api';
 import {BackPill, ErrorText} from '../components';
+import LikeButton from '../components/LikeButton';
 import {PleaseWait} from '../components/GenerateStatus';
 import {queryKeys, usePublicTrip} from '../hooks/queries';
 import {useApiMutation} from '../hooks/useApiMutation';
@@ -62,6 +63,13 @@ export default function PublicTripDetail() {
           )}`}
         </Text>
         <Text style={styles.meta}>{data.location}</Text>
+        <View style={styles.likeRow}>
+          <LikeButton
+            tripId={id}
+            liked={data.liked}
+            likesCount={data.likesCount}
+          />
+        </View>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel={t('trips.publicSave')}
@@ -119,6 +127,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginVertical: 8,
   },
+  likeRow: {alignItems: 'center'},
   saveText: {color: '#fff', fontWeight: '700', fontSize: 15},
   disabled: {opacity: 0.6},
   day: {

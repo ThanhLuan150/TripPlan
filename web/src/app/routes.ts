@@ -16,7 +16,7 @@ export const routes = {
   GenerateTripsScreen: '/assistant/trips/generate',
   DetailTripScreen: (idTrip: string) => `/assistant/trips/${idTrip}`,
   MapScreen: (idTrip: string) => `/assistant/trips/${idTrip}/map`,
-  Explore: '/assistant/explore', // public trips of everyone
+  Explore: '/explore', // public trips of everyone
   Recommend: '/assistant/recommend', // AI destination suggestions
   PublicTrip: (id: string) => `/trip/${id}`, // public, read only view of a public trip
   SharedTrip: (token: string) => `/shared/${token}`, // public, read only

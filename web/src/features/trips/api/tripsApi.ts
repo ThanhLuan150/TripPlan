@@ -1,5 +1,5 @@
 import {api} from '@/lib/apiClient';
-import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
+import type {AddPlaceBody, AddPlaceResult, AiEditProposal, DayRegeneration, BudgetCategoryKey, BudgetEstimate, GenerateTripParams, SpendingLevel, Plan, PlanDay, PublicTripsPage, LikeState, RouteProposal, ShareStatus, SharedTrip, Trip, TripDetail, TripNote, TripVisibility} from '../types';
 
 export const tripsApi = {
   list: async () =>
@@ -105,8 +105,13 @@ export const tripsApi = {
     (await api.get<{tripDatas: SharedTrip}>(`/shared/${encodeURIComponent(token)}`)).data.tripDatas,
 
   // public: a trip its owner made public (404 when private, deleted or unknown)
-  getPublic: async (id: string) =>
-    (await api.get<{tripDatas: SharedTrip}>(`/public-trip/${encodeURIComponent(id)}`)).data.tripDatas,
+  // (carries the like state of the post: likesCount, and liked when signed in)
+  getPublic: async (id: string): Promise<SharedTrip> => {
+    const {tripDatas, likesCount, liked} = (
+      await api.get<{tripDatas: SharedTrip} & Partial<LikeState>>(`/public-trip/${encodeURIComponent(id)}`)
+    ).data;
+    return {...tripDatas, likesCount, liked};
+  },
 
   // public trips of everyone (cards only), newest first
   listPublic: async (page: number) =>
@@ -115,6 +120,13 @@ export const tripsApi = {
   // keep a private copy of a public trip (signed in)
   copyPublic: async (id: string) =>
     (await api.post<{tripId: string; nameTrip: string}>(`/public-trip/${encodeURIComponent(id)}/copy`)).data,
+
+  // like / unlike a public post (signed in); both answer with the real state
+  likePublic: async (id: string) =>
+    (await api.post<LikeState>(`/public-trip/${encodeURIComponent(id)}/like`)).data,
+
+  unlikePublic: async (id: string) =>
+    (await api.delete<LikeState>(`/public-trip/${encodeURIComponent(id)}/like`)).data,
 
   // favorites of the signed-in user (deleted trips are left out by the backend)
   favorites: async () =>

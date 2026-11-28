@@ -9,15 +9,15 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
-import {BackPill} from '../components';
 import EmptyState from '../components/EmptyState';
+import LikeButton from '../components/LikeButton';
 import ErrorText from '../components/ErrorText';
 import {usePublicTrips} from '../hooks/queries';
 import {formatDate} from '../lib/date';
 import {addCommas} from '../lib/money';
 import {colors, radius, shadow} from '../lib/theme';
 
-// Plans other people made public: open one to read it and keep a private copy.
+// The Explore tab: plans other people made public. Open one to read it, like it and keep a private copy.
 // Only the plan is listed (no owner, progress or photos).
 export default function PublicTrips() {
   const {t, i18n} = useTranslation();
@@ -27,7 +27,6 @@ export default function PublicTrips() {
 
   return (
     <View style={styles.container}>
-      <BackPill onPress={() => navigation.goBack()} />
       <Text style={styles.title}>{t('trips.exploreTitle')}</Text>
       {query.isLoading ? (
         <ActivityIndicator
@@ -47,42 +46,49 @@ export default function PublicTrips() {
             <EmptyState icon="compass-outline" text={t('trips.exploreEmpty')} />
           }
           renderItem={({item}) => (
-            <TouchableOpacity
-              accessibilityRole="button"
-              style={styles.card}
-              onPress={() =>
-                navigation.navigate('PublicTripDetail', {id: item._id})
-              }>
-              <Text style={styles.name} numberOfLines={1}>
-                {item.nameTrip ?? item.location}
-              </Text>
-              <View style={styles.row}>
-                <Ionicons name="location" size={14} color={colors.primary} />
-                <Text style={styles.meta}>{item.location}</Text>
-              </View>
-              <View style={styles.row}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={14}
-                  color={colors.muted}
-                />
-                <Text style={styles.meta}>
-                  {`${formatDate(item.startDate, i18n.language)} - ${formatDate(
-                    item.endDate,
-                    i18n.language,
-                  )}`}
+            <View style={styles.card}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                style={styles.cardBody}
+                onPress={() =>
+                  navigation.navigate('PublicTripDetail', {id: item._id})
+                }>
+                <Text style={styles.name} numberOfLines={1}>
+                  {item.nameTrip ?? item.location}
                 </Text>
-              </View>
-              <Text style={styles.meta}>
-                {t('trips.exploreCost', {
-                  amount: addCommas(
-                    (item.transportCostTotal ?? 0) +
-                      (item.foodCostTotal ?? 0) +
-                      (item.otherCostTotal ?? 0),
-                  ),
-                })}
-              </Text>
-            </TouchableOpacity>
+                <View style={styles.row}>
+                  <Ionicons name="location" size={14} color={colors.primary} />
+                  <Text style={styles.meta}>{item.location}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={14}
+                    color={colors.muted}
+                  />
+                  <Text style={styles.meta}>
+                    {`${formatDate(
+                      item.startDate,
+                      i18n.language,
+                    )} - ${formatDate(item.endDate, i18n.language)}`}
+                  </Text>
+                </View>
+                <Text style={styles.meta}>
+                  {t('trips.exploreCost', {
+                    amount: addCommas(
+                      (item.transportCostTotal ?? 0) +
+                        (item.foodCostTotal ?? 0) +
+                        (item.otherCostTotal ?? 0),
+                    ),
+                  })}
+                </Text>
+              </TouchableOpacity>
+              <LikeButton
+                tripId={item._id}
+                liked={item.liked}
+                likesCount={item.likesCount}
+              />
+            </View>
           )}
           ListFooterComponent={
             query.hasNextPage ? (
@@ -111,16 +117,17 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   loading: {marginTop: 40},
-  list: {paddingHorizontal: 15, paddingBottom: 30, gap: 12},
+  list: {paddingHorizontal: 15, paddingBottom: 110, gap: 12},
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: 16,
-    gap: 4,
+    gap: 8,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadow,
   },
+  cardBody: {gap: 4},
   name: {fontSize: 16, fontWeight: '700', color: colors.text},
   row: {flexDirection: 'row', alignItems: 'center', gap: 6},
   meta: {fontSize: 13, color: colors.muted},

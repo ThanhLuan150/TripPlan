@@ -77,10 +77,10 @@ describe('RootNavigator', () => {
     expect(mockNames).toEqual(['Landing', 'Login', 'Register', 'Verify', 'ForgotPassword', 'ResetCode', 'NewPassword']);
   });
 
-  it('offers the app to a signed-in user, with four tabs', () => {
+  it('offers the app to a signed-in user, with five tabs', () => {
     renderApp(<RootNavigator />);
     expect(mockNames).toEqual([
-      'Tabs', 'CreateTrip', 'GenerateTrips', 'TripDetail', 'TripMap', 'PublicTrips', 'Recommend', 'PublicTripDetail', 'Notifications', 'EditProfile', 'Preferences', 'UserProfile', 'Videos', 'WhatAloca', 'Benefit',
+      'Tabs', 'CreateTrip', 'GenerateTrips', 'TripDetail', 'TripMap', 'Recommend', 'PublicTripDetail', 'Notifications', 'EditProfile', 'Preferences', 'UserProfile', 'Videos', 'WhatAloca', 'Benefit',
     ]);
   });
 });
@@ -88,9 +88,9 @@ describe('RootNavigator', () => {
 describe('tabs', () => {
   const mountTabs = () => renderApp(<RootNavigator />);
 
-  it('has Home, Assistant, Ranking and Profile with a label and an icon each', () => {
+  it('has Home, Assistant, Explore, Ranking and Profile (in that order) with a label and an icon each', () => {
     mountTabs();
-    expect(mockTabOptions.map(t => t.name)).toEqual(['Home', 'Assistant', 'Ranking', 'Profile']);
+    expect(mockTabOptions.map(t => t.name)).toEqual(['Home', 'Assistant', 'Explore', 'Ranking', 'Profile']);
     mockTabOptions.forEach(({options}) => {
       expect(typeof options.tabBarLabel).toBe('string');
       expect(options.tabBarIcon({focused: true, color: '#000', size: 20})).toBeTruthy();
