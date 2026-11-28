@@ -581,7 +581,34 @@
     },
     "notificationsTitle": "Your notifications",
     "noNotifications": "You have no notifications yet.",
-    "notificationsFailed": "Could not load the notifications. Please try again."
+    "notificationsFailed": "Could not load the notifications. Please try again.",
+    "preferences": {
+      "link": "Travel preferences for AI",
+      "title": "Travel preferences",
+      "intro": "Tell the AI what you enjoy and it will personalize its suggestions and itineraries. This is optional: the AI works without it.",
+      "categories": "What do you like?",
+      "category": {
+        "nature": "Nature",
+        "food": "Food",
+        "culture": "Culture",
+        "shopping": "Shopping",
+        "discovery": "Discovery"
+      },
+      "notes": "Anything else? (optional)",
+      "notesPlaceholder": "e.g. quiet places, local food, not too crowded",
+      "delete": "Delete preferences",
+      "deleteTitle": "Delete your preferences?",
+      "deleteText": "The AI will stop using them. You can set them again at any time.",
+      "saved": "Your preferences have been saved",
+      "deleted": "Your preferences have been deleted",
+      "saveFailed": "Could not save your preferences",
+      "deleteFailed": "Could not delete your preferences",
+      "loadFailed": "Could not load your preferences.",
+      "errors": {
+        "empty": "Choose at least one group or write a note",
+        "notesLong": "The note is too long (300 characters at most)"
+      }
+    }
   },
   "common": {
     "success": "Success",

@@ -106,6 +106,11 @@ export default function Profile() {
 
       <View style={[styles.card, shadow]}>
         <Row
+          icon={<Ionicons name="sparkles-outline" size={20} color={colors.primaryDark} />}
+          label={t('profile.preferences.link')}
+          onPress={() => navigation.navigate('Preferences')}
+        />
+        <Row
           icon={
             <Image
               source={require('../assets/images/Vector.png')}

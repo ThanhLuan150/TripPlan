@@ -24,6 +24,7 @@ export const routes = {
   Profile: '/profile', // 'Tài khoản'
   // stack screens without the tab bar
   Editprofile: '/profile/edit',
+  Preferences: '/profile/preferences', // AI travel preferences
   Notification: '/notification',
   VideoTravel: '/videos',
   WhatAloca: '/what-aloca',

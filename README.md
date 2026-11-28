@@ -431,6 +431,18 @@ Sắp xếp lại thứ tự tham quan của **một ngày**. Không gợi ý đ
 - Dữ liệu: thêm `Challenge.order` (số, tùy chọn). Địa điểm có `order` xếp trước theo `order`, địa điểm chưa có xếp sau theo thời điểm tạo, nên chuyến đi cũ và địa điểm thêm sau vẫn đúng thứ tự.
 - **UX (web `RouteOptimizePanel`, mobile `RouteOptimizePanel`):** thẻ "Tối ưu tuyến đường" trong chi tiết chuyến đi: chọn ngày, bấm "Tối ưu tuyến đường", xem hai danh sách (hiện tại / đề xuất) với tổng quãng đường và thời gian, rồi **Chấp nhận** hoặc **Từ chối**.
 
+### Sở thích du lịch cho AI (AI Travel Preferences, AI-006)
+
+Người dùng tự thiết lập sở thích để AI cá nhân hóa gợi ý. **Không bắt buộc**: không thiết lập thì AI hoạt động đúng như trước.
+
+- Dữ liệu: `User.travelPreferences` = `{ categories, notes, updatedAt }`, lưu theo tài khoản (chưa thiết lập thì không có trường này). `categories` là tập con của 5 nhóm cố định: `nature` (thiên nhiên), `food` (ẩm thực), `culture` (văn hóa), `shopping` (mua sắm), `discovery` (khám phá); `notes` là ghi chú ngắn (≤ 300 ký tự).
+- `GET /user/preferences`: trả `{ preferences: { categories, notes, updatedAt } }` (rỗng nếu chưa có).
+- `PUT /user/preferences` body `{ categories?, notes? }`: tạo hoặc cập nhật; chỉ trường nào gửi lên mới đổi, trường còn lại giữ nguyên. 400 nếu nhóm không hợp lệ, ghi chú quá dài / sai kiểu, body rỗng, hoặc kết quả không còn nhóm lẫn ghi chú (muốn xóa hết thì dùng DELETE).
+- `DELETE /user/preferences`: xóa toàn bộ sở thích.
+- **Chỉ quản lý sở thích của chính mình**: mọi endpoint lấy id từ token đăng nhập, bỏ qua `userId` / `_id` do client gửi.
+- **Dùng trong AI**: `travelPreferenceService.promptSection(userId)` thêm một đoạn vào prompt của **gợi ý địa điểm** (`POST /destinations/recommend`) và **tạo lịch trình** (`POST /trip-plan`). Sở thích chỉ là dữ liệu để cá nhân hóa (ghi chú được bọc trong dấu nháy, không phải lệnh) và **không thắng yêu cầu trực tiếp** của người dùng trong cùng request. Không có sở thích, hoặc không đọc được, thì prompt giữ nguyên và request vẫn chạy bình thường. Không có hệ thống recommendation riêng nào trong ticket này.
+- **UX (web `PreferencesPage`, mobile `Preferences`):** mục "Sở thích du lịch cho AI" trong trang Tài khoản: chọn các nhóm bằng chip, nhập ghi chú, **Lưu**; nút **Xóa sở thích** (chỉ hiện khi đã có) hỏi xác nhận bằng hộp thoại của ứng dụng trước khi xóa.
+
 ### Quy ước khi triển khai một ticket mới
 
 Mỗi tính năng (ticket) làm đủ các lớp trong **cùng một lượt**, theo đúng các tính năng ở trên:

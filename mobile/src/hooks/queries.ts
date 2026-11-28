@@ -26,6 +26,7 @@ export const queryKeys = {
   destinationHistory: ['destinationHistory'] as const,
   publicTrip: (id: string) => ['publicTrip', id] as const,
   notifications: ['notifications'] as const,
+  preferences: ['travelPreferences'] as const,
   chats: ['chats'] as const,
   generate: (params: GenerateParams) => ['generate', params] as const,
 };
@@ -91,6 +92,9 @@ export const usePublicTrip = (id: string) =>
 
 export const useTrip = (id: string) =>
   useQuery({queryKey: queryKeys.trip(id), queryFn: () => tripsApi.get(id)});
+
+export const usePreferences = () =>
+  useQuery({queryKey: queryKeys.preferences, queryFn: profileApi.preferences});
 
 export const useNotifications = () =>
   useQuery({

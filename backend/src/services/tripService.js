@@ -3,6 +3,7 @@ import favoriteTripRepository from "../repositories/favoriteTripRepository.js";
 import tripDayRepository from "../repositories/tripDayRepository.js";
 import challengeRepository from "../repositories/challengeRepository.js";
 import challengeProgressRepository from "../repositories/challengeProgressRepository.js";
+import travelPreferenceService from "./travelPreferenceService.js";
 import HttpError from "../utils/HttpError.js";
 import { buildTripPdf, pdfFileName } from "./tripPdfService.js";
 import { startChat, getResponseText } from "../utils/gemini.js";
@@ -24,12 +25,12 @@ const noteLine = (note, location) => {
         """${text.replace(/"""/g, "'''")}"""`;
 };
 
-const buildPrompt = ({ location, numberOfPeople, budget, interest, numberOfDay, userLocation, note }) => `
+const buildPrompt = ({ location, numberOfPeople, budget, interest, numberOfDay, userLocation, note }, preferences = "") => `
         - Địa điểm:${location}
         - Số lượng người: ${numberOfPeople}
         - Ngân sách: ${budget}
         - Sở thích: ${interest}
-        - Tôi hiện tại sống ở: ${userLocation}${noteLine(note, location)}
+        - Tôi hiện tại sống ở: ${userLocation}${preferences}${noteLine(note, location)}
         BẮT BUỘC phải tạo ra ít nhất 2 plan TRONG PHẠM VI ${location} và SỐ TIỀN TỔNG CHI PHÍ CỦA PLAN NÓ TRONG KHOẢNG ${budget} và có ĐẦY ĐỦ ${numberOfDay} ngày? Vui lòng cho ra tất cả trong chuỗi JSON format, với từ khóa là
         plannb:{
         "daynb": {
@@ -55,7 +56,7 @@ const generatePlans = async (userId, body) => {
         }
     }
     const chat = startChat({ maxOutputTokens: 14348 });
-    const result = await chat.sendMessage(buildPrompt(body));
+    const result = await chat.sendMessage(buildPrompt(body, await travelPreferenceService.promptSection(userId)));
     const text = getResponseText(result);
     if (text === null) {
         return { message: "An error occurred while creating the trip plan, try again" };

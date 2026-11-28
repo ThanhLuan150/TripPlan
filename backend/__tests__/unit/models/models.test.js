@@ -47,6 +47,14 @@ describe("User", () => {
         expect(user.createdAt).toBeInstanceOf(Date);
     });
 
+    it("has no travel preferences until the user sets them, and checks them when set", () => {
+        expect(validUser().travelPreferences).toBeUndefined();
+        expect(validUser({ travelPreferences: { categories: ["nature", "food"], notes: "ok" } }).validateSync()).toBeUndefined();
+        expect(validUser({ travelPreferences: { categories: ["beach"] } }).validateSync()).toBeDefined();
+        expect(validUser({ travelPreferences: { notes: "x".repeat(301) } }).validateSync()).toBeDefined();
+        expect(validUser({ travelPreferences: { categories: ["food"] } }).travelPreferences.notes).toBe("");
+    });
+
     it("only accepts the known roles", () => {
         expect(ROLES).toEqual(["user", "admin"]);
         expect(validUser({ role: "admin" }).validateSync()).toBeUndefined();

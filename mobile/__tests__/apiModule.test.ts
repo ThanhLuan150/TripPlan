@@ -174,6 +174,22 @@ describe('rankingApi', () => {
   });
 });
 
+describe('profileApi preferences', () => {
+  it('reads, saves and deletes the travel preferences', async () => {
+    const preferences = {categories: ['food'], notes: 'x', updatedAt: null};
+    const put = jest.spyOn(api, 'put').mockResolvedValue(reply({message: 'ok', preferences}));
+    get.mockResolvedValue(reply({preferences}));
+    del.mockResolvedValue(reply({message: 'ok', preferences}));
+    await expect(profileApi.preferences()).resolves.toEqual(preferences);
+    expect(get).toHaveBeenCalledWith('/user/preferences');
+    await profileApi.savePreferences({categories: ['food'], notes: 'x'});
+    expect(put).toHaveBeenCalledWith('/user/preferences', {categories: ['food'], notes: 'x'});
+    await profileApi.deletePreferences();
+    expect(del).toHaveBeenCalledWith('/user/preferences');
+    put.mockRestore();
+  });
+});
+
 describe('contentApi / profileApi', () => {
   it('reads home and videos', async () => {
     get.mockResolvedValue(reply({banners: []}));

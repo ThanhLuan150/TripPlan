@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 
 export const ROLES = ["user", "admin"];
 
+// Travel preference groups the AI can personalize with (see travelPreferenceService)
+export const PREFERENCE_CATEGORIES = ["nature", "food", "culture", "shopping", "discovery"];
+
 const UserSchema = mongoose.Schema({
     username: {
         type: String,
@@ -51,6 +54,16 @@ const UserSchema = mongoose.Schema({
     updatedAt: { type: Date, default: Date.now },
     role: { type: String, enum: ROLES, default: "user" },
     refreshToken: String,
+    // optional AI travel preferences of the account; absent until the user sets them
+    travelPreferences: {
+        type: {
+            categories: { type: [String], enum: PREFERENCE_CATEGORIES, default: [] },
+            notes: { type: String, default: "", maxlength: 300 },
+            updatedAt: Date,
+        },
+        default: undefined,
+        _id: false,
+    },
 });
 
 UserSchema.pre("save", function (next) {
